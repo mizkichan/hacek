@@ -1,8 +1,6 @@
 #ifndef CPP_H
 #define CPP_H
-#include <stdbool.h>
 
-bool write_to_cpp(char *);
 char *preprocess(char *);
 
 #endif

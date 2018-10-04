@@ -1,15 +1,16 @@
 #include "hacek.h"
-#include "utils.h"
 #include "cpp.h"
+#include "defs.h"
+#include "utils.h"
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 void usage(void) {
-  puts("Usage: hacek [options] file...\n"
-       "Options:\n"
-       "  -h         Display this information.\n"
-       "  -o <file>  Place the output into <file>.");
+  PANIC_IF(puts("Usage: hacek [options] file...\n"
+                "Options:\n"
+                "  -h         Display this information.\n"
+                "  -o <file>  Place the output into <file>.") == EOF);
 }
 
 bool parse_args(int argc, char **argv, struct Args *args) {
@@ -33,11 +34,6 @@ bool parse_args(int argc, char **argv, struct Args *args) {
   }
 
   args->input = argv[optind];
-  if (args->input == (char *)NULL) {
-    fprintf(stderr, "no input file\n");
-    return false;
-  }
-
   return true;
 }
 
@@ -48,15 +44,15 @@ int main(int argc, char **argv) {
     return EXIT_FAILURE;
   }
 
+  FAILURE_IF(args.input == (char *)NULL, "no input file");
+
   if (args.help) {
     usage();
     return EXIT_SUCCESS;
   }
 
   char *buf = read_from_file(args.input);
-  if (buf == (char*)NULL) {
-    return EXIT_FAILURE;
-  }
+  PANIC_IF(buf == (char *)NULL);
 
   // do something
   char *preprocessed = preprocess(buf);

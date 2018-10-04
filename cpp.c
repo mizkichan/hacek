@@ -1,57 +1,29 @@
-#include "hacek.h"
 #include "cpp.h"
+#include "defs.h"
 #include "utils.h"
 #include <stdio.h>
 #include <unistd.h>
-#include <string.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
 
 #define TMP_PATHNAME "/tmp/hacek"
 
-bool write_to_cpp(char *input) {
+char *preprocess(char *input) {
   FILE *fp = popen(
       "clang -E -std=c17 -Weverything - | sed 's/^#.*$//' > " TMP_PATHNAME,
       "w");
-  if (fp == (FILE *)NULL) {
-    ERROR();
-    return false;
-  }
+  PANIC_IF(fp == (FILE *)NULL);
 
   for (char *c = input; *c != '\0'; ++c) {
-    if (fputc(*c, fp) == EOF) {
-      ERROR();
-      DEBUG("fputc() returned EOF");
-      return false;
-    }
+    ERROR_IF((fputc(*c, fp) == EOF), "fputc() returned EOF");
   }
 
-  if (pclose(fp) == -1) {
-    ERROR();
-    return false;
-  }
+  PANIC_IF(pclose(fp) == -1);
 
-  return true;
-}
+  char *buf = read_from_file(TMP_PATHNAME);
+  PANIC_IF(buf == (char *)NULL);
 
-char *preprocess(char *input) {
-  if (!write_to_cpp(input)) {
-    return NULL;
-  }
+  WARN_IF(unlink(TMP_PATHNAME) == -1, TMP_PATHNAME);
 
-  char *result = read_from_file(TMP_PATHNAME);
-  if (result == (char *)NULL) {
-    return NULL;
-  }
-
-  if (unlink(TMP_PATHNAME) == -1) {
-    ERROR();
-    DEBUG(TMP_PATHNAME);
-    // return NULL;
-  }
-
-  return result;
+  return buf;
 }
 
 // vim: set ft=c ts=2 sw=2 et:

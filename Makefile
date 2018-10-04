@@ -1,5 +1,4 @@
-CC = clang
-CFLAGS += -std=c17 -g -O0 -Werror -Weverything -Wno-padded -D_POSIX_C_SOURCE=200809L
+CFLAGS += -std=c17 -g -O0 -Weverything -Wno-padded -D_POSIX_C_SOURCE=200809L
 
 TARGETS = hacek test
 SRCS = utils.c cpp.c
