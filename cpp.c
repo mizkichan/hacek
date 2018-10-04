@@ -1,3 +1,4 @@
+#include "hacek.h"
 #include "cpp.h"
 #include "utils.h"
 #include <stdio.h>
@@ -14,20 +15,20 @@ bool write_to_cpp(char *input) {
       "clang -E -std=c17 -Weverything - | sed 's/^#.*$//' > " TMP_PATHNAME,
       "w");
   if (fp == (FILE *)NULL) {
-    fprintf(stderr, "%s:%d: %s\n", __FILE__, __LINE__, strerror(errno));
+    ERROR();
     return false;
   }
 
   for (char *c = input; *c != '\0'; ++c) {
     if (fputc(*c, fp) == EOF) {
-      fprintf(stderr, "%s:%d: %s\n", __FILE__, __LINE__,
-              "fputc() returned EOF");
+      ERROR();
+      DEBUG("fputc() returned EOF");
       return false;
     }
   }
 
   if (pclose(fp) == -1) {
-    fprintf(stderr, "%s:%d: %s\n", __FILE__, __LINE__, strerror(errno));
+    ERROR();
     return false;
   }
 
@@ -45,8 +46,8 @@ char *preprocess(char *input) {
   }
 
   if (unlink(TMP_PATHNAME) == -1) {
-    fprintf(stderr, "%s:%d: %s: %s\n", __FILE__, __LINE__, TMP_PATHNAME,
-            strerror(errno));
+    ERROR();
+    DEBUG(TMP_PATHNAME);
     // return NULL;
   }
 

@@ -1,3 +1,4 @@
+#include "hacek.h"
 #include "utils.h"
 #include <unistd.h>
 #include <errno.h>
@@ -14,15 +15,15 @@ char *read_from_file(char *pathname) {
   /* open the file */
   fd = open(pathname, O_RDONLY);
   if (fd == -1) {
-    fprintf(stderr, "%s:%d: %s: %s\n", __FILE__, __LINE__, pathname,
-            strerror(errno));
+    ERROR();
+    DEBUG(pathname);
     return NULL;
   }
 
   /* get size of the file */
   if (fstat(fd, &statbuf) != 0 || !S_ISREG(statbuf.st_mode)) {
-    fprintf(stderr, "%s:%d: %s: %s\n", __FILE__, __LINE__, pathname,
-            strerror(errno));
+    ERROR();
+    DEBUG(pathname);
     close(fd);
     return NULL;
   }
@@ -33,9 +34,9 @@ char *read_from_file(char *pathname) {
   ssize_t result = read(fd, buf, size);
   if (result != (ssize_t)size) {
     if (result == -1) {
-      fprintf(stderr, "%s:%d: %s\n", __FILE__, __LINE__, strerror(errno));
+      ERROR();
     } else {
-      fprintf(stderr, "%s:%d: %s\n", __FILE__, __LINE__, "size mismatch");
+      DEBUG("size mismatch");
     }
     close(fd);
     return NULL;

@@ -1,6 +1,9 @@
 #ifndef HACEK_H
 #include <stdbool.h>
 
+#define DEBUG(msg) fprintf(stderr, "[%s:%d] %s\n", __FILE__, __LINE__, (msg))
+#define ERROR() DEBUG(strerror(errno))
+
 struct Args {
   char *input;
   char *output;
