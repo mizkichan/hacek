@@ -1,5 +1,6 @@
 #include "hacek.h"
 #include "utils.h"
+#include "cpp.h"
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -52,17 +53,16 @@ int main(int argc, char **argv) {
     return EXIT_SUCCESS;
   }
 
-  int bufsize = get_file_size(args.input);
-  if (bufsize == -1) {
-    return EXIT_FAILURE;
-  }
-
-  char buf[bufsize];
-  if (!read_from_file(args.input, (size_t)bufsize, buf)) {
+  char *buf = read_from_file(args.input);
+  if (buf == (char*)NULL) {
     return EXIT_FAILURE;
   }
 
   // do something
+  char *preprocessed = preprocess(buf);
+  if (preprocessed != (char *)NULL) {
+    puts(preprocessed);
+  }
 
   return EXIT_SUCCESS;
 }
