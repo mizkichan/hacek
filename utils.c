@@ -1,7 +1,8 @@
 #include "utils.h"
-#include "defs.h"
+#include "error.h"
 #include <errno.h>
 #include <fcntl.h>
+#include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -40,7 +41,8 @@ char *read_from_file(char *pathname) {
   char *buf = checked_malloc(sizeof(char) * (size + 1));
   ssize_t how_many_read = read(fd, buf, size);
   PANIC_IF(how_many_read == -1);
-  ERROR_IF(how_many_read != (ssize_t)size, "size mismatch");
+  ERROR_IF(how_many_read != (ssize_t)size,
+           "size mismatch (read() == %d, size == %d)", how_many_read, size);
   buf[size] = '\0';
 
   close(fd);

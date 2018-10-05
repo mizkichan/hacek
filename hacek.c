@@ -1,6 +1,6 @@
 #include "hacek.h"
 #include "cpp.h"
-#include "defs.h"
+#include "error.h"
 #include "utils.h"
 #include <getopt.h>
 #include <stdio.h>
@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
     return EXIT_FAILURE;
   }
 
-  FAILURE_IF(args.input == (char *)NULL, "no input file");
+  EXIT_MESSAGE_IF(args.input == (char *)NULL, "no input file\n");
 
   if (args.help) {
     usage();

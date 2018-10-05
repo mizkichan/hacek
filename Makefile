@@ -3,7 +3,7 @@ CPPFLAGS += -D_POSIX_C_SOURCE=200809L
 LDFLAGS +=
 
 TARGETS = hacek test
-SRCS = utils.c cpp.c
+SRCS = utils.c error.c cpp.c
 OBJS = $(SRCS:.c=.o)
 
 SHELL = /bin/sh

@@ -1,5 +1,5 @@
 #include "cpp.h"
-#include "defs.h"
+#include "error.h"
 #include "utils.h"
 #include <stdio.h>
 #include <unistd.h>
