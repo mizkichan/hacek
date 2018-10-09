@@ -4,9 +4,12 @@
 #include <errno.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <stdnoreturn.h>
 
-void exit_message(const char *, ...);
-void debug(char *, int, int, const char *, ...);
+noreturn void exit_message(const char *, ...)
+    __attribute__((format(printf, 1, 2), nonnull));
+void debug(char *, int, int, const char *, ...)
+    __attribute__((format(printf, 4, 5)));
 
 #define EXIT_MESSAGE(...) exit_message(__VA_ARGS__)
 #define EXIT_MESSAGE_IF(cond, ...)                                             \
@@ -19,11 +22,7 @@ void debug(char *, int, int, const char *, ...);
     WARN(__VA_ARGS__);                                                         \
     exit(EXIT_FAILURE);                                                        \
   } while (0)
-#define PANIC()                                                                \
-  do {                                                                         \
-    ERROR(NULL);                                                               \
-    exit(EXIT_FAILURE);                                                        \
-  } while (0)
+#define PANIC() ERROR(NULL)
 
 #define WARN_IF(cond, ...)                                                     \
   if ((cond))                                                                  \

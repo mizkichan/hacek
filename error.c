@@ -1,12 +1,10 @@
+#pragma GCC diagnostic ignored "-Wdisabled-macro-expansion"
+
 #include "error.h"
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
-#pragma GCC diagnostic ignored "-Wdisabled-macro-expansion"
-#pragma GCC diagnostic ignored "-Wformat-nonliteral"
-
-_Noreturn void exit_message(const char *format, ...) {
+void exit_message(const char *format, ...) {
   va_list ap;
 
   va_start(ap, format);

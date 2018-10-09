@@ -1,6 +1,7 @@
 #include "hacek.h"
 #include "cpp.h"
 #include "error.h"
+#include "tokens.h"
 #include "utils.h"
 #include <getopt.h>
 #include <stdio.h>
@@ -52,13 +53,9 @@ int main(int argc, char **argv) {
   }
 
   char *buf = read_from_file(args.input);
-  PANIC_IF(buf == (char *)NULL);
+  ERROR_IF(buf == (char *)NULL, "%s", args.input);
 
   // do something
-  char *preprocessed = preprocess(buf);
-  if (preprocessed != (char *)NULL) {
-    puts(preprocessed);
-  }
 
   return EXIT_SUCCESS;
 }

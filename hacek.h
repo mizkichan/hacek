@@ -9,8 +9,8 @@ struct Args {
   bool help;
 };
 
-void usage(void);
-bool parse_args(int, char **, struct Args *);
+void usage(void)__attribute__((pure));
+bool parse_args(int, char **, struct Args *) __attribute__((nonnull));
 
 #endif
 // vim: set ft=c ts=2 sw=2 et:

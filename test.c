@@ -1,3 +1,4 @@
+#pragma GCC diagnostic ignored "-Wdisabled-macro-expansion"
 #include "greatest/greatest.h"
 
 GREATEST_MAIN_DEFS();

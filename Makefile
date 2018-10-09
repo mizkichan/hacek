@@ -1,8 +1,8 @@
-CFLAGS += -std=c17 -Weverything -Wno-padded
+CFLAGS += -std=c17 -Weverything -Wno-unused-command-line-argument -Wno-padded
 CPPFLAGS += -D_POSIX_C_SOURCE=200809L
 LDFLAGS +=
 
-TARGETS = hacek test
+PROGRAMS = hacek test
 SRCS = utils.c error.c cpp.c
 OBJS = $(SRCS:.c=.o)
 
@@ -14,13 +14,14 @@ debug: all
 
 .PHONY: release
 release: CFLAGS += -O3 -march=native
+release: CPPFLAGS += -D_FORTIFY_SOURCE=2
 release: all
 
 .PHONY: all
-all: hacek
+all: $(PROGRAMS)
 
-$(TARGETS): %: %.o $(OBJS)
+$(PROGRAMS): %: %.o $(OBJS)
 
 .PHONY: clean
 clean:
-	$(RM) $(TARGETS) *.o
+	$(RM) $(PROGRAMS) *.o

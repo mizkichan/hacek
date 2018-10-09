@@ -29,10 +29,13 @@ char *read_from_file(char *pathname) {
   }
 
   /* get size of the file */
-  if (fstat(fd, &statbuf) == -1 || !S_ISREG(statbuf.st_mode)) {
+  if (fstat(fd, &statbuf) == -1) {
     int e = errno;
-    PANIC_IF(close(fd) == -1);
+    WARN_IF(close(fd) == -1, "%s", pathname);
     errno = e;
+    return NULL;
+  }
+  if (!S_ISREG(statbuf.st_mode)) {
     return NULL;
   }
   size_t size = (size_t)statbuf.st_size;
@@ -40,12 +43,12 @@ char *read_from_file(char *pathname) {
   /* read source file */
   char *buf = checked_malloc(sizeof(char) * (size + 1));
   ssize_t how_many_read = read(fd, buf, size);
-  PANIC_IF(how_many_read == -1);
+  ERROR_IF(how_many_read == -1, "%s", pathname);
   ERROR_IF(how_many_read != (ssize_t)size,
-           "size mismatch (read() == %d, size == %d)", how_many_read, size);
+           "size mismatch (read() == %ld, size == %ld)", how_many_read, size);
   buf[size] = '\0';
 
-  close(fd);
+  WARN_IF(close(fd) == -1, "%s", pathname);
   return buf;
 }
 
