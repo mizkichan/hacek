@@ -3,8 +3,10 @@
 
 #include "tokens.h"
 
-struct PreprocessingToken *preprocess(char *) __attribute__((nonnull));
-struct PreprocessingToken *cpp_tokenize(char *) __attribute__((nonnull));
+struct PreprocessingToken *preprocess(char *)
+    __attribute__((returns_nonnull, nonnull));
+struct PreprocessingToken *cpp_tokenize(char *)
+    __attribute__((returns_nonnull, nonnull));
 
 #endif
 // vim: set ft=c ts=2 sw=2 et:

@@ -9,7 +9,7 @@ struct Args {
   bool help;
 };
 
-void usage(void)__attribute__((pure));
+void usage(void) __attribute__((const));
 bool parse_args(int, char **, struct Args *) __attribute__((nonnull));
 
 #endif

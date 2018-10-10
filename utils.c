@@ -12,12 +12,6 @@ void *checked_malloc(size_t size) {
   return ptr;
 }
 
-void *checked_realloc(void *ptr, size_t size) {
-  ptr = realloc(ptr, size);
-  PANIC_IF(ptr == NULL && size > 0);
-  return ptr;
-}
-
 char *read_from_file(char *pathname) {
   int fd;
   struct stat statbuf;

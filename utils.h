@@ -3,8 +3,7 @@
 
 #include <stddef.h>
 
-void *checked_malloc(size_t) __attribute__((alloc_size(1)));
-void *checked_realloc(void *, size_t) __attribute__((alloc_size(2)));
+void *checked_malloc(size_t) __attribute__((returns_nonnull, alloc_size(1)));
 char *read_from_file(char *) __attribute__((nonnull));
 
 struct String {
