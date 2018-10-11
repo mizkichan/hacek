@@ -5,9 +5,19 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <assert.h>
+#include <string.h>
+#include <stdint.h>
 
 void *checked_malloc(size_t size) {
   void *ptr = malloc(size);
+  PANIC_IF(ptr == NULL);
+  return ptr;
+}
+
+void *checked_realloc(void *ptr, size_t size) {
+  assert(size > 0);
+  ptr = realloc(ptr, size);
   PANIC_IF(ptr == NULL);
   return ptr;
 }
@@ -44,6 +54,13 @@ char *read_from_file(char *pathname) {
 
   WARN_IF(close(fd) == -1, "%s", pathname);
   return buf;
+}
+
+void *push_back(void *vec, size_t vec_length, void *item, size_t item_size) {
+  vec = checked_realloc(vec, item_size * (vec_length + 1));
+  uintptr_t vec_addr = (uintptr_t)vec;
+  memcpy((void *)(vec_addr + item_size * vec_length), item, item_size);
+  return vec;
 }
 
 // vim: set ft=c ts=2 sw=2 et:

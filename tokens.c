@@ -92,10 +92,10 @@ const char *keyword_str(int x) {
   case WHILE:
     return "WHILE";
   }
-  PANIC();
+  ERROR("unknown enum variant: %d", x);
 }
 
-const char *Punctuator_str(int x) {
+const char *punctuator_str(int x) {
   switch ((enum Punctuator)x) {
   case LEFT_BRACKET:
     return "LEFT_BRACKET";
@@ -206,7 +206,7 @@ const char *Punctuator_str(int x) {
   case DIGRAPH_DOUBLE_SIGN:
     return "DIGRAPH_DOUBLE_SIGN";
   }
-  PANIC();
+  ERROR("unknown enum variant: %d", x);
 }
 
 const char *constant_kind_str(int x) {
@@ -220,17 +220,17 @@ const char *constant_kind_str(int x) {
   case CHARACTER_CONSTANT:
     return "CHARACTER_CONSTANT";
   }
-  PANIC();
+  ERROR("unknown enum variant: %d", x);
 }
 
-const char *header_name_kind(int x) {
+const char *header_name_kind_str(int x) {
   switch ((enum HeaderNameKind)x) {
   case H_CHAR_SEQUENCE:
     return "H_CHAR_SEQUENCE";
   case Q_CHAR_SEQUENCE:
     return "Q_CHAR_SEQUENCE";
   }
-  PANIC();
+  ERROR("unknown enum variant: %d", x);
 }
 
 const char *token_kind_str(int x) {
@@ -246,7 +246,7 @@ const char *token_kind_str(int x) {
   case TOKEN_PUNCTUATOR:
     return "TOKEN_PUNCTUATOR";
   }
-  PANIC();
+  ERROR("unknown enum variant: %d", x);
 }
 
 const char *pp_token_kind_str(int x) {
@@ -266,7 +266,7 @@ const char *pp_token_kind_str(int x) {
   case PP_NWSC:
     return "PP_NWSC";
   }
-  PANIC();
+  ERROR("unknown enum variant: %d", x);
 }
 
 // vim: set ft=c ts=2 sw=2 et:

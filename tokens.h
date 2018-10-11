@@ -164,9 +164,9 @@ struct PPToken {
 };
 
 const char *keyword_str(int);
-const char *Punctuator_str(int);
+const char *punctuator_str(int);
 const char *constant_kind_str(int);
-const char *header_name_kind(int);
+const char *header_name_kind_str(int);
 const char *token_kind_str(int);
 const char *pp_token_kind_str(int);
 

@@ -27,15 +27,34 @@ struct PPTokenList preprocess(char *input) {
 }
 
 struct PPTokenList cpp_tokenize(char *input) {
-  struct PPToken *pp_tokens = checked_malloc(sizeof(struct PPToken) * 1);
-  pp_tokens[0] = (struct PPToken){
-      .kind = PP_IDENTIFIER,
-      .chars = "foobar2000",
-  };
-  return (struct PPTokenList){
-      .length = 1,
-      .pp_tokens = pp_tokens,
-  };
+  size_t i = 0;
+  size_t token_count = 0;
+  struct PPToken *pp_tokens = NULL;
+
+  while (input[i] != '\0') {
+    switch (input[i]) {
+    case '#':
+      push_back(pp_tokens, token_count,
+                &(struct PPToken){.kind = PP_PUNCTUATOR, .punctuator = SIGN},
+                sizeof(struct PPToken));
+      ++token_count;
+      ++i;
+      break;
+
+    default:
+      if (is_nondigit(input[i])) {
+        // now it is identifier
+      }
+
+      ERROR("unexpected char: %c", input[i]);
+    }
+  }
+
+  return (struct PPTokenList){.length = token_count, .pp_tokens = pp_tokens};
+}
+
+bool is_nondigit(char x) {
+  return x == '_' || ('a' <= x && x <= 'z') || ('A' <= x && x <= 'Z');
 }
 
 // vim: set ft=c ts=2 sw=2 et:
