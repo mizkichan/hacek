@@ -6,10 +6,5 @@
 void *checked_malloc(size_t) __attribute__((returns_nonnull, alloc_size(1)));
 char *read_from_file(char *) __attribute__((nonnull));
 
-struct String {
-  size_t length;
-  char *chars;
-};
-
 #endif
 // vim: set ft=c ts=2 sw=2 et:

@@ -3,10 +3,13 @@
 
 #include "tokens.h"
 
-struct PreprocessingToken *preprocess(char *)
-    __attribute__((returns_nonnull, nonnull));
-struct PreprocessingToken *cpp_tokenize(char *)
-    __attribute__((returns_nonnull, nonnull));
+struct PPTokenList preprocess(char *) __attribute__((nonnull));
+struct PPTokenList cpp_tokenize(char *) __attribute__((nonnull));
+
+struct PPTokenList {
+  size_t length;
+  struct PPToken *pp_tokens;
+};
 
 #endif
 // vim: set ft=c ts=2 sw=2 et:

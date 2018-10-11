@@ -6,7 +6,7 @@
 
 #define TMP_PATHNAME "/tmp/hacek"
 
-struct PreprocessingToken *preprocess(char *input) {
+struct PPTokenList preprocess(char *input) {
   FILE *fp = popen(
       "clang -E -std=c17 -Weverything - | sed 's/^#.*$//' > " TMP_PATHNAME,
       "w");
@@ -26,6 +26,16 @@ struct PreprocessingToken *preprocess(char *input) {
   return cpp_tokenize(buf);
 }
 
-struct PreprocessingToken *cpp_tokenize(char *input) {}
+struct PPTokenList cpp_tokenize(char *input) {
+  struct PPToken *pp_tokens = checked_malloc(sizeof(struct PPToken) * 1);
+  pp_tokens[0] = (struct PPToken){
+      .kind = PP_IDENTIFIER,
+      .chars = "foobar2000",
+  };
+  return (struct PPTokenList){
+      .length = 1,
+      .pp_tokens = pp_tokens,
+  };
+}
 
 // vim: set ft=c ts=2 sw=2 et:

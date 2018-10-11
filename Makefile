@@ -2,9 +2,13 @@ CFLAGS += -std=c17 -Weverything -Wno-unused-command-line-argument -Wno-padded
 CPPFLAGS += -D_POSIX_C_SOURCE=200809L
 LDFLAGS +=
 
-PROGRAMS = hacek test
-SRCS = utils.c error.c cpp.c
-OBJS = $(SRCS:.c=.o)
+PROGRAMS = hacek
+PROGRAM_SRCS = utils.c error.c cpp.c tokens.c
+PROGRAM_OBJS = $(PROGRAM_SRCS:.c=.o)
+
+TESTS = test
+TEST_SRCS = $(PROGRAM_SRCS) cpp_test.c
+TEST_OBJS = $(TEST_SRCS:.c=.o)
 
 SHELL = /bin/sh
 
@@ -20,8 +24,12 @@ release: all
 .PHONY: all
 all: $(PROGRAMS)
 
-$(PROGRAMS): %: %.o $(OBJS)
+$(PROGRAMS): %: %.o $(PROGRAM_OBJS)
+
+$(TESTS): CFLAGS += -g -O0
+$(TESTS): %: %.o $(TEST_OBJS)
 
 .PHONY: clean
 clean:
-	$(RM) $(PROGRAMS) *.o
+	$(RM) $(PROGRAMS) $(PROGRAM_OBJS)
+	$(RM) $(TESTS) $(TEST_OBJS)

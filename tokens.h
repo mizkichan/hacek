@@ -1,5 +1,5 @@
-#ifndef CPP_H
-#define CPP_H
+#ifndef TOKENS_H
+#define TOKENS_H
 
 #include "utils.h"
 #include <stddef.h>
@@ -114,8 +114,23 @@ enum Punctuator {
   DIGRAPH_DOUBLE_SIGN,   // %:%:
 };
 
+struct Constant {
+  enum ConstantKind {
+    INTEGER_CONSTANT,
+    FLOATING_CONSTANT,
+    ENUMERATION_CONSTANT,
+    CHARACTER_CONSTANT,
+  } kind;
+  char *chars;
+};
+
+struct HeaderName {
+  enum HeaderNameKind { H_CHAR_SEQUENCE, Q_CHAR_SEQUENCE } kind;
+  char *chars;
+};
+
 struct Token {
-  enum {
+  enum TokenKind {
     TOKEN_KEYWORD,
     TOKEN_IDENTIFIER,
     TOKEN_CONSTANT,
@@ -125,14 +140,13 @@ struct Token {
   struct Position position;
   union {
     enum Keyword keyword;
-    struct Identifier identifier;
-    struct StringLiteral string_literal;
     enum Punctuator punctuator;
+    char *chars;
   };
 };
 
-struct PreprocessingToken {
-  enum {
+struct PPToken {
+  enum PPTokenKind {
     PP_HEADER_NAME,
     PP_IDENTIFIER,
     PP_NUMBER,
@@ -143,62 +157,18 @@ struct PreprocessingToken {
   } kind;
   union {
     struct HeaderName header_name;
-    struct Identifier identifier;
-    struct PP_Number number;
-    struct CharacterConstant character_constant;
-    struct StringLiteral string_literal;
     enum Punctuator punctuator;
     char nwsc;
+    char *chars;
   };
 };
 
-struct Identifier {
-  struct String value;
-};
-
-struct Constant {
-  enum {
-    INTEGER_CONSTANT,
-    FLOATING_CONSTANT,
-    ENUMERATION_CONSTANT,
-    CHARACTER_CONSTANT,
-  } kind;
-  union {
-    struct IntegerConstant integer_constant;
-    struct FloatingConstant floating_constant;
-    struct EnumerationConstant enumeration_constant;
-    struct CharacterConstant character_constant;
-  };
-};
-
-struct IntegerConstant {
-  struct String value;
-};
-
-struct FloatingConstant {
-  struct String value;
-};
-
-struct EnumerationConstant {
-  struct String value;
-};
-
-struct CharacterConstant {
-  struct String value;
-};
-
-struct StringLiteral {
-  struct String value;
-};
-
-struct HeaderName {
-  enum { H_CHAR_SEQUENCE, Q_CHAR_SEQUENCE } hq;
-  struct String value;
-};
-
-struct PP_Number {
-  struct String value;
-};
+const char *keyword_str(int);
+const char *Punctuator_str(int);
+const char *constant_kind_str(int);
+const char *header_name_kind(int);
+const char *token_kind_str(int);
+const char *pp_token_kind_str(int);
 
 #endif
 // vim: set ft=c ts=2 sw=2 et:
