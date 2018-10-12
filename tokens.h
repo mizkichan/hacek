@@ -5,11 +5,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-struct Position {
-  size_t line;
-  size_t column;
-};
-
 enum Keyword {
   ALIGNAS,
   ALIGNOF,
@@ -137,7 +132,6 @@ struct Token {
     TOKEN_STRING_LITERAL,
     TOKEN_PUNCTUATOR,
   } kind;
-  struct Position position;
   union {
     enum Keyword keyword;
     enum Punctuator punctuator;

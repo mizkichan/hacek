@@ -1,5 +1,5 @@
-#include "greatest/greatest.h"
 #include "cpp.h"
+#include "greatest/greatest.h"
 #include "tokens.h"
 
 SUITE(cpp);
