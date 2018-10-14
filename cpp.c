@@ -37,20 +37,47 @@ struct PPTokenList cpp_tokenize(char *input) {
   while (*input != '\0') {
     skip_whitespaces(&input);
 
+    // `header-name` may appear only just after `#include` directive (not
+    // `string`).
+    if (token_count >= 2) {
+      struct PPToken *one_before_last = &pp_tokens[token_count - 2],
+                     *last = &pp_tokens[token_count - 1];
+      if (one_before_last->kind == PP_PUNCTUATOR &&
+          one_before_last->punctuator == SIGN && last->kind == PP_IDENTIFIER &&
+          strcmp(last->chars, "include") == 0) {
+        if (match_header_name(&input, &tokenbuf)) {
+          pp_tokens = push_back(pp_tokens, token_count, &tokenbuf,
+                                sizeof(struct PPToken));
+          ++token_count;
+          continue;
+        }
+      }
+    }
+
     if (match_identifier(&input, &tokenbuf)) {
-      push_back(pp_tokens, token_count, &tokenbuf, sizeof(struct PPToken));
+      pp_tokens =
+          push_back(pp_tokens, token_count, &tokenbuf, sizeof(struct PPToken));
       ++token_count;
       continue;
     }
 
     if (match_pp_number(&input, &tokenbuf)) {
-      push_back(pp_tokens, token_count, &tokenbuf, sizeof(struct PPToken));
+      pp_tokens =
+          push_back(pp_tokens, token_count, &tokenbuf, sizeof(struct PPToken));
+      ++token_count;
+      continue;
+    }
+
+    if (match_string_literal(&input, &tokenbuf)) {
+      pp_tokens =
+          push_back(pp_tokens, token_count, &tokenbuf, sizeof(struct PPToken));
       ++token_count;
       continue;
     }
 
     if (match_punctuator(&input, &tokenbuf)) {
-      push_back(pp_tokens, token_count, &tokenbuf, sizeof(struct PPToken));
+      pp_tokens =
+          push_back(pp_tokens, token_count, &tokenbuf, sizeof(struct PPToken));
       ++token_count;
       continue;
     }
@@ -81,6 +108,39 @@ void skip_whitespaces(char **c) {
       }
     }
   }
+}
+
+bool match_header_name(char **c, struct PPToken *buf) {
+  size_t length;
+  ptrdiff_t diff;
+  char *begin = *c;
+  enum HeaderNameKind kind;
+
+  if (**c == '<') {
+    kind = H_CHAR_SEQUENCE;
+  } else if (**c == '"') {
+    kind = Q_CHAR_SEQUENCE;
+  } else {
+    return false;
+  }
+
+  do {
+    (*c) += 1;
+  } while (**c != '\n' && (kind == H_CHAR_SEQUENCE && **c != '>') &&
+           (kind == Q_CHAR_SEQUENCE && **c != '"'));
+
+  diff = *c - begin;
+  assert(diff > 0);
+  length = (size_t)diff;
+
+  char *chars = checked_malloc(sizeof(char) * length + 1);
+  strncpy(chars, begin, length);
+  chars[length] = '\0';
+
+  buf->kind = PP_HEADER_NAME;
+  buf->header_name.kind = kind;
+  buf->header_name.chars = chars;
+  return true;
 }
 
 bool match_identifier(char **c, struct PPToken *buf) {
@@ -139,6 +199,54 @@ bool match_pp_number(char **c, struct PPToken *buf) {
 
   buf->kind = PP_NUMBER;
   buf->chars = chars;
+  return true;
+}
+
+bool match_string_literal(char **c, struct PPToken *buf) {
+  size_t length;
+  ptrdiff_t diff;
+  char *begin;
+  enum EncodingPrefix encoding_prefix;
+
+  if ((*c)[0] == 'u') {
+    if ((*c)[1] == 8) {
+      encoding_prefix = PREFIX_UTF8;
+      (*c) += 2;
+    } else {
+      encoding_prefix = PREFIX_CHAR16;
+      (*c) += 1;
+    }
+  } else if ((*c)[0] == 'U') {
+    encoding_prefix = PREFIX_CHAR32;
+    (*c) += 1;
+  } else if ((*c)[0] == 'L') {
+    encoding_prefix = PREFIX_WCHAR;
+    (*c) += 1;
+  } else {
+    encoding_prefix = PREFIX_NONE;
+  }
+
+  begin = *c;
+
+  if (**c != '"') {
+    return false;
+  }
+
+  do {
+    (*c) += 1;
+  } while (**c != '"' && **c != '\n'); // TODO handle escape sequences
+
+  diff = *c - begin;
+  assert(diff > 0);
+
+  length = (size_t)diff;
+  char *chars = checked_malloc(sizeof(char) * length + 1);
+  strncpy(chars, begin, length);
+  chars[length] = '\0';
+
+  buf->kind = PP_STRING_LITERAL;
+  buf->string_literal.encoding_prefix = encoding_prefix;
+  buf->string_literal.chars = chars;
   return true;
 }
 

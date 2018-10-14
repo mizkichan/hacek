@@ -124,6 +124,17 @@ struct HeaderName {
   char *chars;
 };
 
+struct StringLiteral {
+  enum EncodingPrefix {
+    PREFIX_UTF8,
+    PREFIX_CHAR16,
+    PREFIX_CHAR32,
+    PREFIX_WCHAR,
+    PREFIX_NONE
+  } encoding_prefix;
+  char *chars;
+};
+
 struct Token {
   enum TokenKind {
     TOKEN_KEYWORD,
@@ -134,6 +145,7 @@ struct Token {
   } kind;
   union {
     enum Keyword keyword;
+    struct StringLiteral header_name;
     enum Punctuator punctuator;
     char *chars;
   };
@@ -151,6 +163,7 @@ struct PPToken {
   } kind;
   union {
     struct HeaderName header_name;
+    struct StringLiteral string_literal;
     enum Punctuator punctuator;
     char nwsc;
     char *chars;
