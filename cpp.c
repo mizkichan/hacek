@@ -90,6 +90,37 @@ void cpp_concat_string_literals(struct PPTokenList *token_list) {
   }
 }
 
+struct TokenList cpp_convert_into_token(struct PPTokenList *token_list) {
+  struct PPToken *pp_token;
+  for (size_t i = 0; i < token_list->length; ++i) {
+    pp_token=&token_list->pp_tokens[i];
+    switch (pp_token->kind) {
+    case PP_IDENTIFIER:
+      // identifier can be either keyword, identifier or enumeration constant.
+      ERROR("Not implemented yet");
+
+    case PP_NUMBER:
+      // number can be either integer constant or floating constant.
+      ERROR("Not implemented yet");
+
+    case PP_CHARACTER_CONSTANT:
+      // character constant can only be character constant.
+      ERROR("Not implemented yet");
+
+    case PP_STRING_LITERAL:
+      // string literal can only be string literal.
+      ERROR("Not implemented yet");
+
+    case PP_PUNCTUATOR:
+      // punctuator can only be punctuator.
+      ERROR("Not implemented yet");
+
+    default:
+      ERROR("Preprocessing token `%s` must not be appeared here.", pp_token_kind_str(pp_token->kind));
+    }
+  }
+}
+
 void skip_whitespaces(char **c) {
   while (is_whitespace(**c) && **c != '\n') {
     (*c) += 1;

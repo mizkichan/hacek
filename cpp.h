@@ -6,7 +6,9 @@
 
 struct PPTokenList preprocess(char *) __attribute__((nonnull));
 struct PPTokenList cpp_tokenize(char *) __attribute__((nonnull));
-void cpp_concat_string_literals(struct PPTokenList *);
+void cpp_concat_string_literals(struct PPTokenList *) __attribute__((nonnull));
+struct TokenList cpp_convert_into_token(struct PPTokenList *)
+    __attribute__((nonnull));
 
 void skip_whitespaces(char **);
 
@@ -26,6 +28,11 @@ bool is_whitespace(char);
 struct PPTokenList {
   size_t length;
   struct PPToken *pp_tokens;
+};
+
+struct TokenList {
+  size_t length;
+  struct Token *tokens;
 };
 
 #endif
