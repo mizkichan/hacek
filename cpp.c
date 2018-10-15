@@ -37,59 +37,43 @@ struct PPTokenList cpp_tokenize(char *input) {
   while (*input != '\0') {
     skip_whitespaces(&input);
 
-    // `header-name` may appear only just after `#include` directive (not
-    // `string`).
+    struct PPToken *last = NULL, *one_before_last = NULL;
     if (token_count >= 2) {
-      struct PPToken *one_before_last = &pp_tokens[token_count - 2],
-                     *last = &pp_tokens[token_count - 1];
-      if (one_before_last->kind == PP_PUNCTUATOR &&
-          one_before_last->punctuator == SIGN && last->kind == PP_IDENTIFIER &&
-          strcmp(last->chars, "include") == 0) {
-        if (match_header_name(&input, &tokenbuf)) {
-          pp_tokens = push_back(pp_tokens, token_count, &tokenbuf,
-                                sizeof(struct PPToken));
-          ++token_count;
-          continue;
-        }
+      last = &pp_tokens[token_count - 1];
+      one_before_last = &pp_tokens[token_count - 2];
+    }
+    if (!(((last != NULL && one_before_last != NULL) &&
+           (one_before_last->kind == PP_PUNCTUATOR &&
+            one_before_last->punctuator == SIGN) &&
+           (last->kind == PP_IDENTIFIER &&
+            strcmp(last->chars, "include") == 0) &&
+           match_header_name(&input, &tokenbuf)) ||
+
+          match_identifier(&input, &tokenbuf) ||
+          match_pp_number(&input, &tokenbuf) ||
+          match_character_constant(&input, &tokenbuf) ||
+          match_string_literal(&input, &tokenbuf) ||
+          match_punctuator(&input, &tokenbuf))) {
+      if (*input == '\n') {
+        // new-line character is retained
+        tokenbuf.kind = PP_NEWLINE;
+      } else {
+        // non-white-space character
+        tokenbuf.kind = PP_NWSC;
+        tokenbuf.nwsc = *input;
       }
+      ++input;
     }
-
-    if (match_identifier(&input, &tokenbuf)) {
-      pp_tokens =
-          push_back(pp_tokens, token_count, &tokenbuf, sizeof(struct PPToken));
-      ++token_count;
-      continue;
-    }
-
-    if (match_pp_number(&input, &tokenbuf)) {
-      pp_tokens =
-          push_back(pp_tokens, token_count, &tokenbuf, sizeof(struct PPToken));
-      ++token_count;
-      continue;
-    }
-
-    if (match_string_literal(&input, &tokenbuf)) {
-      pp_tokens =
-          push_back(pp_tokens, token_count, &tokenbuf, sizeof(struct PPToken));
-      ++token_count;
-      continue;
-    }
-
-    if (match_punctuator(&input, &tokenbuf)) {
-      pp_tokens =
-          push_back(pp_tokens, token_count, &tokenbuf, sizeof(struct PPToken));
-      ++token_count;
-      continue;
-    }
-
-    ERROR("Unexpected character: '%c' (0x%x)", *input, *input);
+    pp_tokens =
+        push_back(pp_tokens, token_count, &tokenbuf, sizeof(struct PPToken));
+    ++token_count;
   }
 
   return (struct PPTokenList){.length = token_count, .pp_tokens = pp_tokens};
 }
 
 void skip_whitespaces(char **c) {
-  while (is_whitespace(**c)) {
+  while (is_whitespace(**c) && **c != '\n') {
     (*c) += 1;
 
     if ((*c)[0] == '/') {
@@ -111,9 +95,7 @@ void skip_whitespaces(char **c) {
 }
 
 bool match_header_name(char **c, struct PPToken *buf) {
-  size_t length;
-  ptrdiff_t diff;
-  char *begin = *c;
+  char *begin, *end;
   enum HeaderNameKind kind;
 
   if (**c == '<') {
@@ -124,18 +106,23 @@ bool match_header_name(char **c, struct PPToken *buf) {
     return false;
   }
 
-  do {
+  (*c) += 1;
+  begin = *c;
+
+  while (**c != '\n' && ((kind == H_CHAR_SEQUENCE && **c != '>') ||
+                         (kind == Q_CHAR_SEQUENCE && **c != '"'))) {
     (*c) += 1;
-  } while (**c != '\n' && (kind == H_CHAR_SEQUENCE && **c != '>') &&
-           (kind == Q_CHAR_SEQUENCE && **c != '"'));
+  }
 
-  diff = *c - begin;
-  assert(diff > 0);
-  length = (size_t)diff;
+  end = *c;
 
-  char *chars = checked_malloc(sizeof(char) * length + 1);
-  strncpy(chars, begin, length);
-  chars[length] = '\0';
+  if ((kind == H_CHAR_SEQUENCE && **c != '>') ||
+      (kind == Q_CHAR_SEQUENCE && **c != '"')) {
+    return false;
+  }
+  (*c) += 1;
+
+  char *chars = clone_str_range(begin, end);
 
   buf->kind = PP_HEADER_NAME;
   buf->header_name.kind = kind;
@@ -144,8 +131,6 @@ bool match_header_name(char **c, struct PPToken *buf) {
 }
 
 bool match_identifier(char **c, struct PPToken *buf) {
-  size_t length;
-  ptrdiff_t diff;
   char *begin = *c;
 
   if (!is_nondigit(**c)) {
@@ -157,13 +142,7 @@ bool match_identifier(char **c, struct PPToken *buf) {
     // TODO handle universal-character-name
   } while (is_nondigit(**c) || is_digit(**c));
 
-  diff = *c - begin;
-  assert(diff > 0);
-  length = (size_t)diff;
-
-  char *chars = checked_malloc(sizeof(char) * length + 1);
-  strncpy(chars, begin, length);
-  chars[length] = '\0';
+  char *chars = clone_str_range(begin, *c);
 
   buf->kind = PP_IDENTIFIER;
   buf->chars = chars;
@@ -171,8 +150,6 @@ bool match_identifier(char **c, struct PPToken *buf) {
 }
 
 bool match_pp_number(char **c, struct PPToken *buf) {
-  size_t length;
-  ptrdiff_t diff;
   char *begin = *c;
 
   if (is_digit((*c)[0])) {
@@ -189,60 +166,87 @@ bool match_pp_number(char **c, struct PPToken *buf) {
     (*c) += 1;
   }
 
-  diff = *c - begin;
-  assert(diff > 0);
-
-  length = (size_t)diff;
-  char *chars = checked_malloc(sizeof(char) * length + 1);
-  strncpy(chars, begin, length);
-  chars[length] = '\0';
+  char *chars = clone_str_range(begin, *c);
 
   buf->kind = PP_NUMBER;
   buf->chars = chars;
   return true;
 }
 
+bool match_character_constant(char **c, struct PPToken *buf) {
+  enum CharacterConstantPrefix prefix;
+
+  if ((*c)[0] == 'L') {
+    prefix = CHARACTER_CONSTANT_PREFIX_WCHAR;
+    (*c) += 1;
+  } else if ((*c)[0] == 'u') {
+    prefix = CHARACTER_CONSTANT_PREFIX_CHAR16;
+    (*c) += 1;
+  } else if ((*c)[0] == 'U') {
+    prefix = CHARACTER_CONSTANT_PREFIX_CHAR32;
+    (*c) += 1;
+  } else {
+    prefix = CHARACTER_CONSTANT_PREFIX_NONE;
+  }
+
+  if (**c != '\'') {
+    return false;
+  }
+  ++(*c);
+
+  char *chars = NULL;
+  size_t length = 0;
+  while (**c != '\'') {
+    EXIT_MESSAGE_IF(
+        **c == '\n',
+        "Newline character must not be appear in a character constant.\n");
+    chars = push_back_char(chars, length++, read_char(c));
+  }
+  chars = push_back_char(chars, length, '\0');
+  ++(*c);
+
+  buf->kind = PP_CHARACTER_CONSTANT;
+  buf->character_constant.prefix = prefix;
+  buf->character_constant.chars = chars;
+  return true;
+}
+
 bool match_string_literal(char **c, struct PPToken *buf) {
-  size_t length;
-  ptrdiff_t diff;
-  char *begin;
   enum EncodingPrefix encoding_prefix;
 
   if ((*c)[0] == 'u') {
     if ((*c)[1] == 8) {
-      encoding_prefix = PREFIX_UTF8;
+      encoding_prefix = ENCODING_PREFIX_UTF8;
       (*c) += 2;
     } else {
-      encoding_prefix = PREFIX_CHAR16;
+      encoding_prefix = ENCODING_PREFIX_CHAR16;
       (*c) += 1;
     }
   } else if ((*c)[0] == 'U') {
-    encoding_prefix = PREFIX_CHAR32;
+    encoding_prefix = ENCODING_PREFIX_CHAR32;
     (*c) += 1;
   } else if ((*c)[0] == 'L') {
-    encoding_prefix = PREFIX_WCHAR;
+    encoding_prefix = ENCODING_PREFIX_WCHAR;
     (*c) += 1;
   } else {
-    encoding_prefix = PREFIX_NONE;
+    encoding_prefix = ENCODING_PREFIX_NONE;
   }
-
-  begin = *c;
 
   if (**c != '"') {
     return false;
   }
+  ++(*c);
 
-  do {
-    (*c) += 1;
-  } while (**c != '"' && **c != '\n'); // TODO handle escape sequences
-
-  diff = *c - begin;
-  assert(diff > 0);
-
-  length = (size_t)diff;
-  char *chars = checked_malloc(sizeof(char) * length + 1);
-  strncpy(chars, begin, length);
-  chars[length] = '\0';
+  char *chars = NULL;
+  size_t length = 0;
+  while (**c != '"') {
+    EXIT_MESSAGE_IF(
+        **c == '\n',
+        "Newline character must not be appear in a string literal.\n");
+    chars = push_back_char(chars, length++, read_char(c));
+  }
+  chars = push_back_char(chars, length, '\0');
+  ++(*c);
 
   buf->kind = PP_STRING_LITERAL;
   buf->string_literal.encoding_prefix = encoding_prefix;
@@ -430,6 +434,46 @@ bool match_punctuator(char **c, struct PPToken *buf) {
   buf->kind = PP_PUNCTUATOR;
   buf->punctuator = punctuator;
   return true;
+}
+
+char read_char(char **c) {
+  // FIXME only simple-escape-sequence is implemented
+  char tmp;
+
+  tmp = **c;
+  (*c) += 1;
+
+  if (tmp != '\\') {
+    return tmp;
+  }
+
+  tmp = **c;
+  (*c) += 1;
+  switch (tmp) {
+  case '\'':
+  case '"':
+  case '?':
+  case '\\':
+    return **c;
+
+  case 'a':
+    return '\a';
+  case 'b':
+    return '\b';
+  case 'f':
+    return '\f';
+  case 'n':
+    return '\n';
+  case 'r':
+    return '\r';
+  case 't':
+    return '\t';
+  case 'v':
+    return '\v';
+
+  default:
+    EXIT_MESSAGE("Invalid escape sequence: \\%c (\\x%x)", **c, **c);
+  }
 }
 
 bool is_nondigit(char c) { return isalpha(c) || c == '_'; }

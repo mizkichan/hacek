@@ -12,8 +12,11 @@ void skip_whitespaces(char **);
 bool match_header_name(char **, struct PPToken *);
 bool match_identifier(char **, struct PPToken *);
 bool match_pp_number(char **, struct PPToken *);
+bool match_character_constant(char **, struct PPToken *);
 bool match_string_literal(char **, struct PPToken *);
 bool match_punctuator(char **, struct PPToken *);
+
+char read_char(char **);
 
 bool is_nondigit(char);
 bool is_digit(char);

@@ -5,6 +5,12 @@
 #include <stddef.h>
 #include <stdint.h>
 
+struct Position {
+  char *name;
+  size_t line;
+  size_t column;
+};
+
 enum Keyword {
   ALIGNAS,
   ALIGNOF,
@@ -124,18 +130,29 @@ struct HeaderName {
   char *chars;
 };
 
+struct CharacterConstant {
+  enum CharacterConstantPrefix {
+    CHARACTER_CONSTANT_PREFIX_WCHAR,
+    CHARACTER_CONSTANT_PREFIX_CHAR16,
+    CHARACTER_CONSTANT_PREFIX_CHAR32,
+    CHARACTER_CONSTANT_PREFIX_NONE
+  } prefix;
+  char *chars;
+};
+
 struct StringLiteral {
   enum EncodingPrefix {
-    PREFIX_UTF8,
-    PREFIX_CHAR16,
-    PREFIX_CHAR32,
-    PREFIX_WCHAR,
-    PREFIX_NONE
+    ENCODING_PREFIX_UTF8,
+    ENCODING_PREFIX_CHAR16,
+    ENCODING_PREFIX_CHAR32,
+    ENCODING_PREFIX_WCHAR,
+    ENCODING_PREFIX_NONE
   } encoding_prefix;
   char *chars;
 };
 
 struct Token {
+  struct Position position;
   enum TokenKind {
     TOKEN_KEYWORD,
     TOKEN_IDENTIFIER,
@@ -152,6 +169,7 @@ struct Token {
 };
 
 struct PPToken {
+  struct Position position;
   enum PPTokenKind {
     PP_HEADER_NAME,
     PP_IDENTIFIER,
@@ -160,9 +178,11 @@ struct PPToken {
     PP_STRING_LITERAL,
     PP_PUNCTUATOR,
     PP_NWSC,
+    PP_NEWLINE
   } kind;
   union {
     struct HeaderName header_name;
+    struct CharacterConstant character_constant;
     struct StringLiteral string_literal;
     enum Punctuator punctuator;
     char nwsc;
@@ -176,6 +196,8 @@ const char *constant_kind_str(int);
 const char *header_name_kind_str(int);
 const char *token_kind_str(int);
 const char *pp_token_kind_str(int);
+const char *encoding_prefix_str(int);
+const char *character_constant_prefix_str(int);
 
 #endif
 // vim: set ft=c ts=2 sw=2 et:

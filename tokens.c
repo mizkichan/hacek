@@ -265,6 +265,38 @@ const char *pp_token_kind_str(int x) {
     return "PP_PUNCTUATOR";
   case PP_NWSC:
     return "PP_NWSC";
+  case PP_NEWLINE:
+    return "PP_NEWLINE";
+  }
+  ERROR("unknown enum variant: %d", x);
+}
+
+const char *encoding_prefix_str(int x) {
+  switch ((enum EncodingPrefix)x) {
+  case ENCODING_PREFIX_UTF8:
+    return "ENCODING_PREFIX_UTF8";
+  case ENCODING_PREFIX_CHAR16:
+    return "ENCODING_PREFIX_CHAR16";
+  case ENCODING_PREFIX_CHAR32:
+    return "ENCODING_PREFIX_CHAR32";
+  case ENCODING_PREFIX_WCHAR:
+    return "ENCODING_PREFIX_WCHAR";
+  case ENCODING_PREFIX_NONE:
+    return "ENCODING_PREFIX_NONE";
+  }
+  ERROR("unknown enum variant: %d", x);
+}
+
+const char *character_constant_prefix_str(int x) {
+  switch ((enum CharacterConstantPrefix)x) {
+  case CHARACTER_CONSTANT_PREFIX_WCHAR:
+    return "CHARACTER_CONSTANT_PREFIX_WCHAR";
+  case CHARACTER_CONSTANT_PREFIX_CHAR16:
+    return "CHARACTER_CONSTANT_PREFIX_CHAR16";
+  case CHARACTER_CONSTANT_PREFIX_CHAR32:
+    return "CHARACTER_CONSTANT_PREFIX_CHAR32";
+  case CHARACTER_CONSTANT_PREFIX_NONE:
+    return "CHARACTER_CONSTANT_PREFIX_NONE";
   }
   ERROR("unknown enum variant: %d", x);
 }

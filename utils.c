@@ -63,4 +63,20 @@ void *push_back(void *vec, size_t vec_length, void *item, size_t item_size) {
   return vec;
 }
 
+void *push_back_char(void *vec, size_t vec_length, char byte) {
+  return push_back(vec, vec_length, &byte, sizeof(char));
+}
+
+char *clone_str_range(const char *begin, const char *const end) {
+  char *buf = checked_malloc((uintptr_t)(end - begin) + 1);
+  char *ptr = buf;
+  while (begin != end) {
+    *ptr = *begin;
+    ++ptr;
+    ++begin;
+  }
+  *ptr = '\0';
+  return buf;
+}
+
 // vim: set ft=c ts=2 sw=2 et:
