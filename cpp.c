@@ -72,6 +72,24 @@ struct PPTokenList cpp_tokenize(char *input) {
   return (struct PPTokenList){.length = token_count, .pp_tokens = pp_tokens};
 }
 
+void cpp_concat_string_literals(struct PPTokenList *token_list) {
+  struct PPToken *current, *next, *end;
+
+  for (size_t i = 0; i < token_list->length - 1; ++i) {
+    current = &token_list->pp_tokens[i];
+    next = &token_list->pp_tokens[i + 1];
+    end = token_list->pp_tokens + token_list->length;
+
+    if (current->kind == PP_STRING_LITERAL && next->kind == PP_STRING_LITERAL) {
+      current->string_literal.chars =
+          append_str(current->string_literal.chars, next->string_literal.chars);
+    }
+
+    erase(next, end);
+    --token_list->length;
+  }
+}
+
 void skip_whitespaces(char **c) {
   while (is_whitespace(**c) && **c != '\n') {
     (*c) += 1;

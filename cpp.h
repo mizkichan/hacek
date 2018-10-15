@@ -6,6 +6,7 @@
 
 struct PPTokenList preprocess(char *) __attribute__((nonnull));
 struct PPTokenList cpp_tokenize(char *) __attribute__((nonnull));
+void cpp_concat_string_literals(struct PPTokenList *);
 
 void skip_whitespaces(char **);
 

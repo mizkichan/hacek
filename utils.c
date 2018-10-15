@@ -79,4 +79,27 @@ char *clone_str_range(const char *begin, const char *const end) {
   return buf;
 }
 
+void erase(void *const begin, void *const end) {
+  assert(begin != NULL);
+  assert(end != NULL);
+
+  uintptr_t begin_addr = (uintptr_t)begin, end_addr = (uintptr_t)end;
+
+  assert(begin_addr < end_addr);
+
+  size_t diff = end_addr - begin_addr;
+
+  while (begin_addr < end_addr) {
+    *(char *)begin_addr = *((char *)begin_addr + diff);
+    ++begin_addr;
+  }
+}
+
+char *append_str(char *head, char *tail) {
+  size_t len_head = strlen(head), len_tail = strlen(tail);
+  head = checked_realloc(head, sizeof(char) * (len_head + len_tail + 1));
+  strcat(head, tail);
+  return head;
+}
+
 // vim: set ft=c ts=2 sw=2 et:
