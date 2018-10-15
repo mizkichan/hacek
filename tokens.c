@@ -1,5 +1,101 @@
 #include "tokens.h"
 #include "error.h"
+#include <string.h>
+
+bool str_to_keyword(const char *str, enum Keyword *buf) {
+  if (strcmp(str, "_Alignas") == 0) {
+    *buf = ALIGNAS;
+  } else if (strcmp(str, "_Alignof") == 0) {
+    *buf = ALIGNOF;
+  } else if (strcmp(str, "_Atomic") == 0) {
+    *buf = ATOMIC;
+  } else if (strcmp(str, "auto") == 0) {
+    *buf = AUTO;
+  } else if (strcmp(str, "_Bool") == 0) {
+    *buf = BOOL;
+  } else if (strcmp(str, "break") == 0) {
+    *buf = BREAK;
+  } else if (strcmp(str, "case") == 0) {
+    *buf = CASE;
+  } else if (strcmp(str, "char") == 0) {
+    *buf = CHAR;
+  } else if (strcmp(str, "_Complex") == 0) {
+    *buf = COMPLEX;
+  } else if (strcmp(str, "const") == 0) {
+    *buf = CONST;
+  } else if (strcmp(str, "continue") == 0) {
+    *buf = CONTINUE;
+  } else if (strcmp(str, "default") == 0) {
+    *buf = DEFAULT;
+  } else if (strcmp(str, "do") == 0) {
+    *buf = DO;
+  } else if (strcmp(str, "double") == 0) {
+    *buf = DOUBLE;
+  } else if (strcmp(str, "else") == 0) {
+    *buf = ELSE;
+  } else if (strcmp(str, "enum") == 0) {
+    *buf = ENUM;
+  } else if (strcmp(str, "extern") == 0) {
+    *buf = EXTERN;
+  } else if (strcmp(str, "float") == 0) {
+    *buf = FLOAT;
+  } else if (strcmp(str, "for") == 0) {
+    *buf = FOR;
+  } else if (strcmp(str, "_Generic") == 0) {
+    *buf = GENERIC;
+  } else if (strcmp(str, "goto") == 0) {
+    *buf = GOTO;
+  } else if (strcmp(str, "if") == 0) {
+    *buf = IF;
+  } else if (strcmp(str, "_Imaginary") == 0) {
+    *buf = IMAGINARY;
+  } else if (strcmp(str, "inline") == 0) {
+    *buf = INLINE;
+  } else if (strcmp(str, "int") == 0) {
+    *buf = INT;
+  } else if (strcmp(str, "long") == 0) {
+    *buf = LONG;
+  } else if (strcmp(str, "_Noreturn") == 0) {
+    *buf = NORETURN;
+  } else if (strcmp(str, "register") == 0) {
+    *buf = REGISTER;
+  } else if (strcmp(str, "restrict") == 0) {
+    *buf = RESTRICT;
+  } else if (strcmp(str, "return") == 0) {
+    *buf = RETURN;
+  } else if (strcmp(str, "short") == 0) {
+    *buf = SHORT;
+  } else if (strcmp(str, "signed") == 0) {
+    *buf = SIGNED;
+  } else if (strcmp(str, "sizeof") == 0) {
+    *buf = SIZEOF;
+  } else if (strcmp(str, "static") == 0) {
+    *buf = STATIC;
+  } else if (strcmp(str, "_Static_assert") == 0) {
+    *buf = STATIC_ASSERT;
+  } else if (strcmp(str, "struct") == 0) {
+    *buf = STRUCT;
+  } else if (strcmp(str, "switch") == 0) {
+    *buf = SWITCH;
+  } else if (strcmp(str, "_Thread_local") == 0) {
+    *buf = THREAD_LOCAL;
+  } else if (strcmp(str, "typedef") == 0) {
+    *buf = TYPEDEF;
+  } else if (strcmp(str, "union") == 0) {
+    *buf = UNION;
+  } else if (strcmp(str, "unsigned") == 0) {
+    *buf = UNSIGNED;
+  } else if (strcmp(str, "void") == 0) {
+    *buf = VOID;
+  } else if (strcmp(str, "volatile") == 0) {
+    *buf = VOLATILE;
+  } else if (strcmp(str, "while") == 0) {
+    *buf = WHILE;
+  } else {
+    return false;
+  }
+  return true;
+}
 
 const char *keyword_str(int x) {
   switch ((enum Keyword)x) {

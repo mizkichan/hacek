@@ -1,7 +1,7 @@
 #ifndef TOKENS_H
 #define TOKENS_H
 
-#include "utils.h"
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -189,6 +189,8 @@ struct PPToken {
     char *chars;
   };
 };
+
+bool str_to_keyword(const char *, enum Keyword *);
 
 const char *keyword_str(int);
 const char *punctuator_str(int);

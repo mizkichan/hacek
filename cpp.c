@@ -1,5 +1,6 @@
 #include "cpp.h"
 #include "error.h"
+#include "tokens.h"
 #include "utils.h"
 #include <assert.h>
 #include <ctype.h>
@@ -7,26 +8,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#define TMP_PATHNAME "/tmp/hacek"
-
 struct PPTokenList preprocess(char *input) {
-  FILE *fp = popen(
-      "clang -E -std=c17 -Weverything - | sed 's/^#.*$//' > " TMP_PATHNAME,
-      "w");
-  PANIC_IF(fp == (FILE *)NULL);
-
-  for (char *c = input; *c != '\0'; ++c) {
-    ERROR_IF((fputc(*c, fp) == EOF), "fputc() returned EOF");
-  }
-
-  WARN_IF(pclose(fp) == -1, "failed to close pipe");
-
-  char *buf = read_from_file(TMP_PATHNAME);
-  ERROR_IF(buf == (char *)NULL, TMP_PATHNAME);
-
-  WARN_IF(unlink(TMP_PATHNAME) == -1, TMP_PATHNAME);
-
-  return cpp_tokenize(buf);
+  return cpp_tokenize(input);
 }
 
 struct PPTokenList cpp_tokenize(char *input) {
@@ -73,31 +56,44 @@ struct PPTokenList cpp_tokenize(char *input) {
 }
 
 void cpp_concat_string_literals(struct PPTokenList *token_list) {
-  struct PPToken *current, *next, *end;
+  struct PPToken *end, *current, *next;
+  end = token_list->pp_tokens + token_list->length;
 
   for (size_t i = 0; i < token_list->length - 1; ++i) {
     current = &token_list->pp_tokens[i];
     next = &token_list->pp_tokens[i + 1];
-    end = token_list->pp_tokens + token_list->length;
 
     if (current->kind == PP_STRING_LITERAL && next->kind == PP_STRING_LITERAL) {
       current->string_literal.chars =
           append_str(current->string_literal.chars, next->string_literal.chars);
     }
 
-    erase(next, end);
+    erase(end, next, next + 1);
     --token_list->length;
   }
 }
 
 struct TokenList cpp_convert_into_token(struct PPTokenList *token_list) {
   struct PPToken *pp_token;
+  struct Token tokenbuf;
+  struct Token *tokens = NULL;
+  size_t length = 0;
+
   for (size_t i = 0; i < token_list->length; ++i) {
-    pp_token=&token_list->pp_tokens[i];
+    pp_token = &token_list->pp_tokens[i];
+
     switch (pp_token->kind) {
     case PP_IDENTIFIER:
       // identifier can be either keyword, identifier or enumeration constant.
-      ERROR("Not implemented yet");
+
+      if (str_to_keyword(pp_token->chars, &tokenbuf.keyword)) {
+        tokenbuf.kind = TOKEN_KEYWORD;
+      } else {
+        // NOTE THAT THIS STUFF CAN BE ENUMERATION CONSTANT!
+        tokenbuf.kind = TOKEN_IDENTIFIER;
+        tokenbuf.chars = pp_token->chars;
+      }
+      break;
 
     case PP_NUMBER:
       // number can be either integer constant or floating constant.
@@ -115,10 +111,17 @@ struct TokenList cpp_convert_into_token(struct PPTokenList *token_list) {
       // punctuator can only be punctuator.
       ERROR("Not implemented yet");
 
-    default:
-      ERROR("Preprocessing token `%s` must not be appeared here.", pp_token_kind_str(pp_token->kind));
+    case PP_HEADER_NAME:
+    case PP_NWSC:
+    case PP_NEWLINE:
+      ERROR("Preprocessing token `%s` must not be appeared at this phase.",
+            pp_token_kind_str((int)pp_token->kind));
     }
+
+    tokens = push_back(tokens, length++, &tokenbuf, sizeof(struct Token));
   }
+
+  return (struct TokenList){.length = length, .tokens = tokens};
 }
 
 void skip_whitespaces(char **c) {

@@ -1,5 +1,5 @@
 CFLAGS += -std=c17 -Weverything -Wno-unused-command-line-argument -Wno-padded
-CPPFLAGS += -D_POSIX_C_SOURCE=200809L
+CPPFLAGS +=
 LDFLAGS +=
 
 PROGRAMS = hacek
@@ -7,7 +7,7 @@ PROGRAM_SRCS = utils.c error.c cpp.c tokens.c
 PROGRAM_OBJS = $(PROGRAM_SRCS:.c=.o)
 
 TESTS = test
-TEST_SRCS = $(PROGRAM_SRCS) cpp_test.c
+TEST_SRCS = $(PROGRAM_SRCS) cpp_test.c utils_test.c
 TEST_OBJS = $(TEST_SRCS:.c=.o)
 
 SHELL = /bin/sh

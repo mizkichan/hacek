@@ -16,7 +16,7 @@ void *push_back_char(void *, size_t, char)
     __attribute__((returns_nonnull, nonnull));
 char *append_str(char *, char *) __attribute__((returns_nonnull, nonnull));
 
-void erase(void *, void *) __attribute__((nonnull));
+void erase(void *, void *, void *) __attribute__((nonnull));
 
 #endif
 // vim: set ft=c ts=2 sw=2 et:

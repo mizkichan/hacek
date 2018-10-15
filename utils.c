@@ -79,19 +79,20 @@ char *clone_str_range(const char *begin, const char *const end) {
   return buf;
 }
 
-void erase(void *const begin, void *const end) {
-  assert(begin != NULL);
-  assert(end != NULL);
+void erase(void *const end, void *const erase_begin, void *const erase_end) {
+  assert(erase_begin!= NULL);
+  assert(erase_end!= NULL);
 
-  uintptr_t begin_addr = (uintptr_t)begin, end_addr = (uintptr_t)end;
+  uintptr_t erase_begin_addr = (uintptr_t)erase_begin;
+  uintptr_t erase_end_addr = (uintptr_t)erase_end;
+  uintptr_t end_addr = (uintptr_t)end;
 
-  assert(begin_addr < end_addr);
+  assert(erase_begin_addr< erase_end_addr);
+  size_t diff = erase_end_addr - erase_begin_addr;
 
-  size_t diff = end_addr - begin_addr;
-
-  while (begin_addr < end_addr) {
-    *(char *)begin_addr = *((char *)begin_addr + diff);
-    ++begin_addr;
+  while (erase_begin_addr < end_addr - diff) {
+    *(char *)erase_begin_addr = *((char *)erase_begin_addr + diff);
+    ++erase_begin_addr;
   }
 }
 
