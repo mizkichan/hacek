@@ -213,9 +213,16 @@ bool match_pp_number(char **c, struct PPToken *buf) {
   }
 
   // TODO handle universal-character-name
-  while (is_digit(**c) || is_nondigit(**c) || **c == 'e' || **c == 'E' ||
-         **c == 'p' || **c == 'P' || **c == '.') {
-    (*c) += 1;
+  while (true) {
+    if (((*c)[0] == 'e' || (*c)[0] == 'E' || (*c)[0] == 'p' ||
+         (*c)[0] == 'P') &&
+        ((*c)[1] == '+' || (*c)[1] == '-')) {
+      (*c) += 2;
+    } else if (is_digit(**c) || is_nondigit(**c) || **c == '.') {
+      (*c) += 1;
+    } else {
+      break;
+    }
   }
 
   char *chars = clone_str_range(begin, *c);
