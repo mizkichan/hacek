@@ -4,181 +4,249 @@
 
 SUITE(cpp);
 
-TEST test_cpp_tokenize(void) {
-  char *src = "#include <stdio.h>\n"
-              "#if 0\n"
-              "#include \"hello.h\"\n"
-              "#endif\n"
-              "\n"
-              "int main(void) {\n"
-              "  printf(\"Hello, world!\");\n"
-              "  putchar('\\n');\n"
-              "}\n"
-              "`@\n";
-  struct PPTokenList results = cpp_tokenize(src);
-  struct PPToken actual;
-  size_t i = 0;
+TEST test_match_header_name_q(void) {
+  struct PPToken buf;
+  char *src;
 
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_PUNCTUATOR, actual.kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(SIGN, actual.punctuator, punctuator_str);
+  src = "\"hello.h\"";
+  ASSERT(match_header_name(&src, &buf));
+  ASSERT_ENUM_EQ(PP_HEADER_NAME, buf.kind, pp_token_kind_str);
+  ASSERT_ENUM_EQ(Q_CHAR_SEQUENCE, buf.header_name.kind, header_name_kind_str);
+  ASSERT_STR_EQ("hello.h", buf.header_name.chars);
 
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_IDENTIFIER, actual.kind, pp_token_kind_str);
-  ASSERT_STR_EQ("include", actual.chars);
+  PASS();
+}
 
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_HEADER_NAME, actual.kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(H_CHAR_SEQUENCE, actual.header_name.kind,
-                 header_name_kind_str);
-  ASSERT_STR_EQ("stdio.h", actual.header_name.chars);
+TEST test_match_header_name_h(void) {
+  struct PPToken buf;
+  char *src;
 
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_NEWLINE, actual.kind, pp_token_kind_str);
+  src = "<stdio.h>";
+  ASSERT(match_header_name(&src, &buf));
+  ASSERT_ENUM_EQ(PP_HEADER_NAME, buf.kind, pp_token_kind_str);
+  ASSERT_ENUM_EQ(H_CHAR_SEQUENCE, buf.header_name.kind, header_name_kind_str);
+  ASSERT_STR_EQ("stdio.h", buf.header_name.chars);
 
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_PUNCTUATOR, actual.kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(SIGN, actual.punctuator, punctuator_str);
+  PASS();
+}
 
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_IDENTIFIER, actual.kind, pp_token_kind_str);
-  ASSERT_STR_EQ("if", actual.chars);
+TEST test_match_identifier(void) {
+  struct PPToken buf;
+  char *src;
 
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_NUMBER, actual.kind, pp_token_kind_str);
-  ASSERT_STR_EQ("0", actual.chars);
+  src = "foobar2000";
+  ASSERT(match_identifier(&src, &buf));
+  ASSERT_ENUM_EQ(PP_IDENTIFIER, buf.kind, pp_token_kind_str);
+  ASSERT_STR_EQ("foobar2000", buf.chars);
 
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_NEWLINE, actual.kind, pp_token_kind_str);
+  PASS();
+}
 
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_PUNCTUATOR, actual.kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(SIGN, actual.punctuator, punctuator_str);
+TEST test_match_pp_number(void) {
+  struct PPToken buf;
+  char *src;
 
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_IDENTIFIER, actual.kind, pp_token_kind_str);
-  ASSERT_STR_EQ("include", actual.chars);
+  src = ".01ae+E-p+P-.";
+  ASSERT(match_pp_number(&src, &buf));
+  ASSERT_ENUM_EQ(PP_NUMBER, buf.kind, pp_token_kind_str);
+  ASSERT_STR_EQ(".01ae+E-p+P-.", buf.chars);
 
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_HEADER_NAME, actual.kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(Q_CHAR_SEQUENCE, actual.header_name.kind,
-                 header_name_kind_str);
-  ASSERT_STR_EQ("hello.h", actual.header_name.chars);
+  PASS();
+}
 
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_NEWLINE, actual.kind, pp_token_kind_str);
+TEST test_match_character_constant(void) {
+  struct PPToken buf;
+  char *src;
 
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_PUNCTUATOR, actual.kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(SIGN, actual.punctuator, punctuator_str);
-
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_IDENTIFIER, actual.kind, pp_token_kind_str);
-  ASSERT_STR_EQ("endif", actual.chars);
-
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_NEWLINE, actual.kind, pp_token_kind_str);
-
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_NEWLINE, actual.kind, pp_token_kind_str);
-
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_IDENTIFIER, actual.kind, pp_token_kind_str);
-  ASSERT_STR_EQ("int", actual.chars);
-
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_IDENTIFIER, actual.kind, pp_token_kind_str);
-  ASSERT_STR_EQ("main", actual.chars);
-
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_PUNCTUATOR, actual.kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(LEFT_PAREN, actual.punctuator, punctuator_str);
-
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_IDENTIFIER, actual.kind, pp_token_kind_str);
-  ASSERT_STR_EQ("void", actual.chars);
-
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_PUNCTUATOR, actual.kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(RIGHT_PAREN, actual.punctuator, punctuator_str);
-
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_PUNCTUATOR, actual.kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(LEFT_BRACE, actual.punctuator, punctuator_str);
-
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_NEWLINE, actual.kind, pp_token_kind_str);
-
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_IDENTIFIER, actual.kind, pp_token_kind_str);
-  ASSERT_STR_EQ("printf", actual.chars);
-
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_PUNCTUATOR, actual.kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(LEFT_PAREN, actual.punctuator, punctuator_str);
-
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_STRING_LITERAL, actual.kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(ENCODING_PREFIX_NONE, actual.string_literal.encoding_prefix,
-                 encoding_prefix_str);
-  ASSERT_STR_EQ("Hello, world!", actual.string_literal.chars);
-
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_PUNCTUATOR, actual.kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(RIGHT_PAREN, actual.punctuator, punctuator_str);
-
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_PUNCTUATOR, actual.kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(SEMICOLON, actual.punctuator, punctuator_str);
-
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_NEWLINE, actual.kind, pp_token_kind_str);
-
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_IDENTIFIER, actual.kind, pp_token_kind_str);
-  ASSERT_STR_EQ("putchar", actual.chars);
-
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_PUNCTUATOR, actual.kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(LEFT_PAREN, actual.punctuator, punctuator_str);
-
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_CHARACTER_CONSTANT, actual.kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(CHARACTER_CONSTANT_PREFIX_NONE,
-                 actual.character_constant.prefix,
+  src = "'foobar2000'";
+  ASSERT(match_character_constant(&src, &buf));
+  ASSERT_ENUM_EQ(PP_CHARACTER_CONSTANT, buf.kind, pp_token_kind_str);
+  ASSERT_ENUM_EQ(CHARACTER_CONSTANT_PREFIX_NONE, buf.character_constant.prefix,
                  character_constant_prefix_str);
-  ASSERT_STR_EQ("\n", actual.character_constant.chars);
+  ASSERT_STR_EQ("foobar2000", buf.character_constant.chars);
 
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_PUNCTUATOR, actual.kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(RIGHT_PAREN, actual.punctuator, punctuator_str);
+  PASS();
+}
 
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_PUNCTUATOR, actual.kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(SEMICOLON, actual.punctuator, punctuator_str);
+TEST test_match_character_constant_wchar(void) {
+  struct PPToken buf;
+  char *src;
 
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_NEWLINE, actual.kind, pp_token_kind_str);
+  src = "L'foobar2000'";
+  ASSERT(match_character_constant(&src, &buf));
+  ASSERT_ENUM_EQ(PP_CHARACTER_CONSTANT, buf.kind, pp_token_kind_str);
+  ASSERT_ENUM_EQ(CHARACTER_CONSTANT_PREFIX_WCHAR, buf.character_constant.prefix,
+                 character_constant_prefix_str);
+  ASSERT_STR_EQ("foobar2000", buf.character_constant.chars);
 
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_PUNCTUATOR, actual.kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(RIGHT_BRACE, actual.punctuator, punctuator_str);
+  PASS();
+}
 
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_NEWLINE, actual.kind, pp_token_kind_str);
+TEST test_match_character_constant_char16(void) {
+  struct PPToken buf;
+  char *src;
 
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_NWSC, actual.kind, pp_token_kind_str);
-  ASSERT_EQ('`', actual.nwsc);
+  src = "u'foobar2000'";
+  ASSERT(match_character_constant(&src, &buf));
+  ASSERT_ENUM_EQ(PP_CHARACTER_CONSTANT, buf.kind, pp_token_kind_str);
+  ASSERT_ENUM_EQ(CHARACTER_CONSTANT_PREFIX_CHAR16,
+                 buf.character_constant.prefix, character_constant_prefix_str);
+  ASSERT_STR_EQ("foobar2000", buf.character_constant.chars);
 
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_NWSC, actual.kind, pp_token_kind_str);
-  ASSERT_EQ('@', actual.nwsc);
+  PASS();
+}
 
-  actual = results.pp_tokens[i++];
-  ASSERT_ENUM_EQ(PP_NEWLINE, actual.kind, pp_token_kind_str);
+TEST test_match_character_constant_char32(void) {
+  struct PPToken buf;
+  char *src;
 
-  ASSERT_EQ(i++, results.length);
+  src = "U'foobar2000'";
+  ASSERT(match_character_constant(&src, &buf));
+  ASSERT_ENUM_EQ(PP_CHARACTER_CONSTANT, buf.kind, pp_token_kind_str);
+  ASSERT_ENUM_EQ(CHARACTER_CONSTANT_PREFIX_CHAR32,
+                 buf.character_constant.prefix, character_constant_prefix_str);
+  ASSERT_STR_EQ("foobar2000", buf.character_constant.chars);
+
+  PASS();
+}
+
+TEST test_match_string_literal(void) {
+  struct PPToken buf;
+  char *src;
+
+  src = "\"foobar2000\"";
+  ASSERT(match_string_literal(&src, &buf));
+  ASSERT_ENUM_EQ(PP_STRING_LITERAL, buf.kind, pp_token_kind_str);
+  ASSERT_ENUM_EQ(ENCODING_PREFIX_NONE, buf.string_literal.encoding_prefix,
+                 encoding_prefix_str);
+  ASSERT_STR_EQ("foobar2000", buf.string_literal.chars);
+
+  PASS();
+}
+
+TEST test_match_string_literal_utf8(void) {
+  struct PPToken buf;
+  char *src;
+
+  src = "u8\"foobar2000\"";
+  ASSERT(match_string_literal(&src, &buf));
+  ASSERT_ENUM_EQ(PP_STRING_LITERAL, buf.kind, pp_token_kind_str);
+  ASSERT_ENUM_EQ(ENCODING_PREFIX_UTF8, buf.string_literal.encoding_prefix,
+                 encoding_prefix_str);
+  ASSERT_STR_EQ("foobar2000", buf.string_literal.chars);
+
+  PASS();
+}
+
+TEST test_match_string_literal_char16(void) {
+  struct PPToken buf;
+  char *src;
+
+  src = "u\"foobar2000\"";
+  ASSERT(match_string_literal(&src, &buf));
+  ASSERT_ENUM_EQ(PP_STRING_LITERAL, buf.kind, pp_token_kind_str);
+  ASSERT_ENUM_EQ(ENCODING_PREFIX_CHAR16, buf.string_literal.encoding_prefix,
+                 encoding_prefix_str);
+  ASSERT_STR_EQ("foobar2000", buf.string_literal.chars);
+
+  PASS();
+}
+
+TEST test_match_string_literal_char32(void) {
+  struct PPToken buf;
+  char *src;
+
+  src = "U\"foobar2000\"";
+  ASSERT(match_string_literal(&src, &buf));
+  ASSERT_ENUM_EQ(PP_STRING_LITERAL, buf.kind, pp_token_kind_str);
+  ASSERT_ENUM_EQ(ENCODING_PREFIX_CHAR32, buf.string_literal.encoding_prefix,
+                 encoding_prefix_str);
+  ASSERT_STR_EQ("foobar2000", buf.string_literal.chars);
+
+  PASS();
+}
+
+TEST test_match_string_literal_wchar(void) {
+  struct PPToken buf;
+  char *src;
+
+  src = "L\"foobar2000\"";
+  ASSERT(match_string_literal(&src, &buf));
+  ASSERT_ENUM_EQ(PP_STRING_LITERAL, buf.kind, pp_token_kind_str);
+  ASSERT_ENUM_EQ(ENCODING_PREFIX_WCHAR, buf.string_literal.encoding_prefix,
+                 encoding_prefix_str);
+  ASSERT_STR_EQ("foobar2000", buf.string_literal.chars);
+
+  PASS();
+}
+
+TEST test_match_punctuator(void) {
+  struct PPToken buf;
+  struct {
+    char *src;
+    enum Punctuator expected;
+  } cases[54] = {
+      {"[", LEFT_BRACKET},
+      {"]", RIGHT_BRACKET},
+      {"(", LEFT_PAREN},
+      {")", RIGHT_PAREN},
+      {"{", LEFT_BRACE},
+      {"}", RIGHT_BRACE},
+      {".", DOT},
+      {"->", ARROW},
+      {"++", INCREMENT},
+      {"--", DECREMENT},
+      {"&", AMPASAND},
+      {"*", ASTERISK},
+      {"+", PLUS},
+      {"-", MINUS},
+      {"~", NEGATE},
+      {"!", EXCLAMATION},
+      {"/", DIVIDE},
+      {"%", REMIND},
+      {"<<", LEFT_SHIFT},
+      {">>", RIGHT_SHIFT},
+      {"<", LESS_THAN},
+      {">", GREATER_THAN},
+      {"<=", LESS_EQUAL},
+      {">=", GREATER_EQUAL},
+      {"==", EQUAL},
+      {"!=", NOT_EQUAL},
+      {"^", EXCLUSIVE_OR},
+      {"|", INCLUSIVE_OR},
+      {"&&", LOGICAL_AND},
+      {"||", LOGICAL_OR},
+      {"?", QUESTION},
+      {":", COLON},
+      {";", SEMICOLON},
+      {"...", ELLIPSE},
+      {"=", ASSIGN},
+      {"*=", MULTIPLY_ASSIGN},
+      {"/=", DIVIDE_ASSIGN},
+      {"%=", REMIND_ASSIGN},
+      {"+=", ADD_ASSIGN},
+      {"-=", SUBTRACT_ASSIGN},
+      {"<<=", LEFT_SHIFT_ASSIGN},
+      {">>=", RIGHT_SHIFT_ASSIGN},
+      {"&=", AND_ASSIGN},
+      {"^=", EXCLUSIVE_OR_ASSIGN},
+      {"|=", INCLUSIVE_OR_ASSIGN},
+      {",", COMMA},
+      {"#", SIGN},
+      {"##", DOUBLE_SIGN},
+      {"<:", DIGRAPH_LEFT_BRACKET},
+      {":>", DIGRAPH_RIGHT_BRACKET},
+      {"<%", DIGRAPH_LEFT_BRACE},
+      {"%>", DIGRAPH_RIGHT_BRACE},
+      {"%:", DIGRAPH_SIGN},
+      {"%:%:", DIGRAPH_DOUBLE_SIGN},
+  };
+
+  for (size_t i = 0; i < sizeof(cases) / sizeof(cases[i]); ++i) {
+    ASSERT(match_punctuator(&cases[i].src, &buf));
+    ASSERT_ENUM_EQ(PP_PUNCTUATOR, buf.kind, pp_token_kind_str);
+    ASSERT_ENUM_EQ(cases[i].expected, buf.punctuator, punctuator_str);
+  }
 
   PASS();
 }
@@ -197,7 +265,20 @@ TEST test_cpp_concat_string_literals(void) {
 }
 
 SUITE(cpp) {
-  RUN_TEST(test_cpp_tokenize);
+  RUN_TEST(test_match_header_name_q);
+  RUN_TEST(test_match_header_name_h);
+  RUN_TEST(test_match_identifier);
+  RUN_TEST(test_match_pp_number);
+  RUN_TEST(test_match_character_constant);
+  RUN_TEST(test_match_character_constant_char16);
+  RUN_TEST(test_match_character_constant_char32);
+  RUN_TEST(test_match_character_constant_wchar);
+  RUN_TEST(test_match_string_literal);
+  RUN_TEST(test_match_string_literal_utf8);
+  RUN_TEST(test_match_string_literal_char16);
+  RUN_TEST(test_match_string_literal_char32);
+  RUN_TEST(test_match_string_literal_wchar);
+  RUN_TEST(test_match_punctuator);
   RUN_TEST(test_cpp_concat_string_literals);
 }
 
