@@ -321,13 +321,13 @@ bool match_punctuator(char **c, struct PPToken *buf) {
     (*c) += 4;
   }
 
-  else if ((*c)[0] == '.' && (*c)[0] == '.' && (*c)[0] == '.') {
+  else if ((*c)[0] == '.' && (*c)[1] == '.' && (*c)[2] == '.') {
     punctuator = ELLIPSE;
     (*c) += 3;
-  } else if ((*c)[0] == '<' && (*c)[0] == '<' && (*c)[0] == '=') {
+  } else if ((*c)[0] == '<' && (*c)[1] == '<' && (*c)[2] == '=') {
     punctuator = LEFT_SHIFT_ASSIGN;
     (*c) += 3;
-  } else if ((*c)[0] == '>' && (*c)[0] == '>' && (*c)[0] == '=') {
+  } else if ((*c)[0] == '>' && (*c)[1] == '>' && (*c)[2] == '=') {
     punctuator = RIGHT_SHIFT_ASSIGN;
     (*c) += 3;
   }
