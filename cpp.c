@@ -274,7 +274,7 @@ bool match_string_literal(char **c, struct PPToken *buf) {
   enum EncodingPrefix encoding_prefix;
 
   if ((*c)[0] == 'u') {
-    if ((*c)[1] == 8) {
+    if ((*c)[1] == '8') {
       encoding_prefix = ENCODING_PREFIX_UTF8;
       (*c) += 2;
     } else {
