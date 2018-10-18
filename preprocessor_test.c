@@ -1,4 +1,4 @@
-#include "greatest/greatest.h"
+#include "greatest.h"
 #include "preprocessor.h"
 #include "token.h"
 

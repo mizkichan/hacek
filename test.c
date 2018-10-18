@@ -1,5 +1,5 @@
 #pragma GCC diagnostic ignored "-Wdisabled-macro-expansion"
-#include "greatest/greatest.h"
+#include "greatest.h"
 
 SUITE_EXTERN(preprocessor);
 SUITE_EXTERN(utils);
