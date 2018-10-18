@@ -1,67 +1,61 @@
-#include "cpp.h"
 #include "error.h"
-#include "tokens.h"
+#include "preprocessor.h"
 #include "utils.h"
-#include <assert.h>
 #include <ctype.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
 
 struct PPTokenList preprocess(char *input) {
-  return cpp_tokenize(input);
+  return pp_tokenize(input);
 }
 
-struct PPTokenList cpp_tokenize(char *input) {
-  size_t token_count = 0;
-  struct PPToken *pp_tokens = NULL;
-  struct PPToken tokenbuf;
+struct PPTokenList pp_tokenize(char *input) {
+  struct PPTokenList result = {0, NULL};
+  struct PPToken buf, *last, *one_before_last;
 
   while (*input != '\0') {
     skip_whitespaces(&input);
 
-    struct PPToken *last = NULL, *one_before_last = NULL;
-    if (token_count >= 2) {
-      last = &pp_tokens[token_count - 1];
-      one_before_last = &pp_tokens[token_count - 2];
+    last = NULL;
+    one_before_last = NULL;
+    if (result.length >= 2) {
+      last = &result.pp_tokens[result.length - 1];
+      one_before_last = &result.pp_tokens[result.length - 2];
     }
     if (!(((last != NULL && one_before_last != NULL) &&
            (one_before_last->kind == PP_PUNCTUATOR &&
             one_before_last->punctuator == SIGN) &&
            (last->kind == PP_IDENTIFIER &&
-            strcmp(last->chars, "include") == 0) &&
-           match_header_name(&input, &tokenbuf)) ||
+            str_equals(last->chars, "include")) &&
+           match_header_name(&input, &buf)) ||
 
-          match_identifier(&input, &tokenbuf) ||
-          match_pp_number(&input, &tokenbuf) ||
-          match_character_constant(&input, &tokenbuf) ||
-          match_string_literal(&input, &tokenbuf) ||
-          match_punctuator(&input, &tokenbuf))) {
+          match_identifier(&input, &buf) || match_pp_number(&input, &buf) ||
+          match_character_constant(&input, &buf) ||
+          match_string_literal(&input, &buf) ||
+          match_punctuator(&input, &buf))) {
       if (*input == '\n') {
         // new-line character is retained
-        tokenbuf.kind = PP_NEWLINE;
+        buf.kind = PP_NEWLINE;
       } else {
         // non-white-space character
-        tokenbuf.kind = PP_NWSC;
-        tokenbuf.nwsc = *input;
+        buf.kind = PP_NWSC;
+        buf.nwsc = *input;
       }
       ++input;
     }
-    pp_tokens =
-        push_back(pp_tokens, token_count, &tokenbuf, sizeof(struct PPToken));
-    ++token_count;
+    result.pp_tokens = push_back(result.pp_tokens, result.length, &buf,
+                                 sizeof(struct PPToken));
+    ++result.length;
   }
 
-  return (struct PPTokenList){.length = token_count, .pp_tokens = pp_tokens};
+  return result;
 }
 
-void cpp_concat_string_literals(struct PPTokenList *token_list) {
+void pp_concat_string_literals(struct PPTokenList *pp_token_list) {
   struct PPToken *end, *current, *next;
-  end = token_list->pp_tokens + token_list->length;
+  end = pp_token_list->pp_tokens + pp_token_list->length;
 
-  for (size_t i = 0; i < token_list->length - 1; ++i) {
-    current = &token_list->pp_tokens[i];
-    next = &token_list->pp_tokens[i + 1];
+  for (size_t i = 0; i < pp_token_list->length - 1; ++i) {
+    current = &pp_token_list->pp_tokens[i];
+    next = &pp_token_list->pp_tokens[i + 1];
 
     if (current->kind == PP_STRING_LITERAL && next->kind == PP_STRING_LITERAL) {
       current->string_literal.chars =
@@ -69,29 +63,28 @@ void cpp_concat_string_literals(struct PPTokenList *token_list) {
     }
 
     erase(end, next, next + 1);
-    --token_list->length;
+    --pp_token_list->length;
   }
 }
 
-struct TokenList cpp_convert_into_token(struct PPTokenList *token_list) {
+struct TokenList pp_convert_into_token(struct PPTokenList *pp_token_list) {
+  struct TokenList result = {0, NULL};
   struct PPToken *pp_token;
-  struct Token tokenbuf;
-  struct Token *tokens = NULL;
-  size_t length = 0;
+  struct Token buf;
 
-  for (size_t i = 0; i < token_list->length; ++i) {
-    pp_token = &token_list->pp_tokens[i];
+  for (size_t i = 0; i < pp_token_list->length; ++i) {
+    pp_token = &pp_token_list->pp_tokens[i];
 
     switch (pp_token->kind) {
     case PP_IDENTIFIER:
       // identifier can be either keyword, identifier or enumeration constant.
 
-      if (str_to_keyword(pp_token->chars, &tokenbuf.keyword)) {
-        tokenbuf.kind = TOKEN_KEYWORD;
+      if (str_to_keyword(pp_token->chars, &buf.keyword)) {
+        buf.kind = TOKEN_KEYWORD;
       } else {
         // NOTE THAT THIS STUFF CAN BE ENUMERATION CONSTANT!
-        tokenbuf.kind = TOKEN_IDENTIFIER;
-        tokenbuf.chars = pp_token->chars;
+        buf.kind = TOKEN_IDENTIFIER;
+        buf.chars = pp_token->chars;
       }
       break;
 
@@ -118,32 +111,41 @@ struct TokenList cpp_convert_into_token(struct PPTokenList *token_list) {
             pp_token_kind_str((int)pp_token->kind));
     }
 
-    tokens = push_back(tokens, length++, &tokenbuf, sizeof(struct Token));
+    result.tokens =
+        push_back(result.tokens, result.length++, &buf, sizeof(struct Token));
   }
 
-  return (struct TokenList){.length = length, .tokens = tokens};
+  return result;
 }
 
 void skip_whitespaces(char **c) {
-  while (is_whitespace(**c) && **c != '\n') {
-    (*c) += 1;
+  bool was_there_whitespace;
 
-    if ((*c)[0] == '/') {
-      if ((*c)[1] == '/') {
-        // one-line comment
-        (*c) += 2;
-        while (**c != '\n') {
-          (*c) += 1;
-        }
-      } else if ((*c)[1] == '*') {
-        // multi-line comment
-        (*c) += 2;
-        while ((*c)[-2] != '*' && (*c)[-1] != '/') {
-          (*c) += 1;
-        }
-      }
+  do {
+    was_there_whitespace = false;
+
+    while (is_whitespace(**c) && **c != '\n') {
+      (*c) += 1;
+      was_there_whitespace = true;
     }
-  }
+
+    if (starts_with(*c, "//")) {
+      // one-line comment
+      (*c) += 2;
+      while (**c != '\n') {
+        (*c) += 1;
+      }
+      was_there_whitespace = true;
+    } else if (starts_with(*c, "/*")) {
+      // multi-line comment
+      (*c) += 2;
+      while (!starts_with(*c, "*/")) {
+        (*c) += 1;
+      }
+      (*c) += 2;
+      was_there_whitespace = true;
+    }
+  } while (was_there_whitespace);
 }
 
 bool match_header_name(char **c, struct PPToken *buf) {
@@ -251,18 +253,18 @@ bool match_character_constant(char **c, struct PPToken *buf) {
   if (**c != '\'') {
     return false;
   }
-  ++(*c);
+  (*c) += 1;
 
   char *chars = NULL;
   size_t length = 0;
   while (**c != '\'') {
     EXIT_MESSAGE_IF(
         **c == '\n',
-        "Newline character must not be appear in a character constant.\n");
+        "Newline character must not be appear in a character constant.");
     chars = push_back_char(chars, length++, read_char(c));
   }
   chars = push_back_char(chars, length, '\0');
-  ++(*c);
+  (*c) += 1;
 
   buf->kind = PP_CHARACTER_CONSTANT;
   buf->character_constant.prefix = prefix;
@@ -294,18 +296,18 @@ bool match_string_literal(char **c, struct PPToken *buf) {
   if (**c != '"') {
     return false;
   }
-  ++(*c);
+  (*c) += 1;
 
   char *chars = NULL;
   size_t length = 0;
   while (**c != '"') {
     EXIT_MESSAGE_IF(
         **c == '\n',
-        "Newline character must not be appear in a string literal.\n");
+        "Newline character must not be appear in a string literal.");
     chars = push_back_char(chars, length++, read_char(c));
   }
   chars = push_back_char(chars, length, '\0');
-  ++(*c);
+  (*c) += 1;
 
   buf->kind = PP_STRING_LITERAL;
   buf->string_literal.encoding_prefix = encoding_prefix;
@@ -314,175 +316,173 @@ bool match_string_literal(char **c, struct PPToken *buf) {
 }
 
 bool match_punctuator(char **c, struct PPToken *buf) {
-  enum Punctuator punctuator;
-
-  if ((*c)[0] == '%' && (*c)[1] == ':' && (*c)[2] == '%' && (*c)[3] == ':') {
-    punctuator = DIGRAPH_DOUBLE_SIGN;
+  if (starts_with(*c, "%:%:")) {
+    buf->punctuator = DIGRAPH_DOUBLE_SIGN;
     (*c) += 4;
   }
 
-  else if ((*c)[0] == '.' && (*c)[1] == '.' && (*c)[2] == '.') {
-    punctuator = ELLIPSE;
+  else if (starts_with(*c, "...")) {
+    buf->punctuator = ELLIPSE;
     (*c) += 3;
-  } else if ((*c)[0] == '<' && (*c)[1] == '<' && (*c)[2] == '=') {
-    punctuator = LEFT_SHIFT_ASSIGN;
+  } else if (starts_with(*c, "<<=")) {
+    buf->punctuator = LEFT_SHIFT_ASSIGN;
     (*c) += 3;
-  } else if ((*c)[0] == '>' && (*c)[1] == '>' && (*c)[2] == '=') {
-    punctuator = RIGHT_SHIFT_ASSIGN;
+  } else if (starts_with(*c, ">>=")) {
+    buf->punctuator = RIGHT_SHIFT_ASSIGN;
     (*c) += 3;
   }
 
-  else if ((*c)[0] == '!' && (*c)[1] == '=') {
-    punctuator = NOT_EQUAL;
+  else if (starts_with(*c, "->")) {
+    buf->punctuator = ARROW;
     (*c) += 2;
-  } else if ((*c)[0] == '#' && (*c)[1] == '#') {
-    punctuator = DOUBLE_SIGN;
+  } else if (starts_with(*c, "++")) {
+    buf->punctuator = INCREMENT;
     (*c) += 2;
-  } else if ((*c)[0] == '%' && (*c)[1] == ':') {
-    punctuator = DIGRAPH_SIGN;
+  } else if (starts_with(*c, "--")) {
+    buf->punctuator = DECREMENT;
     (*c) += 2;
-  } else if ((*c)[0] == '%' && (*c)[1] == '=') {
-    punctuator = REMIND_ASSIGN;
+  } else if (starts_with(*c, "<<")) {
+    buf->punctuator = LEFT_SHIFT;
     (*c) += 2;
-  } else if ((*c)[0] == '%' && (*c)[1] == '>') {
-    punctuator = DIGRAPH_RIGHT_BRACE;
+  } else if (starts_with(*c, ">>")) {
+    buf->punctuator = RIGHT_SHIFT;
     (*c) += 2;
-  } else if ((*c)[0] == '&' && (*c)[1] == '&') {
-    punctuator = LOGICAL_AND;
+  } else if (starts_with(*c, "<=")) {
+    buf->punctuator = LESS_EQUAL;
     (*c) += 2;
-  } else if ((*c)[0] == '&' && (*c)[1] == '=') {
-    punctuator = AND_ASSIGN;
+  } else if (starts_with(*c, ">=")) {
+    buf->punctuator = GREATER_EQUAL;
     (*c) += 2;
-  } else if ((*c)[0] == '*' && (*c)[1] == '=') {
-    punctuator = MULTIPLY_ASSIGN;
+  } else if (starts_with(*c, "==")) {
+    buf->punctuator = EQUAL;
     (*c) += 2;
-  } else if ((*c)[0] == '+' && (*c)[1] == '+') {
-    punctuator = INCREMENT;
+  } else if (starts_with(*c, "!=")) {
+    buf->punctuator = NOT_EQUAL;
     (*c) += 2;
-  } else if ((*c)[0] == '+' && (*c)[1] == '=') {
-    punctuator = ADD_ASSIGN;
+  } else if (starts_with(*c, "&&")) {
+    buf->punctuator = LOGICAL_AND;
     (*c) += 2;
-  } else if ((*c)[0] == '-' && (*c)[1] == '-') {
-    punctuator = DECREMENT;
+  } else if (starts_with(*c, "||")) {
+    buf->punctuator = LOGICAL_OR;
     (*c) += 2;
-  } else if ((*c)[0] == '-' && (*c)[1] == '=') {
-    punctuator = SUBTRACT_ASSIGN;
+  } else if (starts_with(*c, "*=")) {
+    buf->punctuator = MULTIPLY_ASSIGN;
     (*c) += 2;
-  } else if ((*c)[0] == '-' && (*c)[1] == '>') {
-    punctuator = ARROW;
+  } else if (starts_with(*c, "/=")) {
+    buf->punctuator = DIVIDE_ASSIGN;
     (*c) += 2;
-  } else if ((*c)[0] == '/' && (*c)[1] == '=') {
-    punctuator = DIVIDE_ASSIGN;
+  } else if (starts_with(*c, "%=")) {
+    buf->punctuator = REMIND_ASSIGN;
     (*c) += 2;
-  } else if ((*c)[0] == ':' && (*c)[1] == '>') {
-    punctuator = DIGRAPH_RIGHT_BRACKET;
+  } else if (starts_with(*c, "+=")) {
+    buf->punctuator = ADD_ASSIGN;
     (*c) += 2;
-  } else if ((*c)[0] == '<' && (*c)[1] == '%') {
-    punctuator = DIGRAPH_LEFT_BRACE;
+  } else if (starts_with(*c, "-=")) {
+    buf->punctuator = SUBTRACT_ASSIGN;
     (*c) += 2;
-  } else if ((*c)[0] == '<' && (*c)[1] == ':') {
-    punctuator = DIGRAPH_LEFT_BRACKET;
+  } else if (starts_with(*c, "&=")) {
+    buf->punctuator = AND_ASSIGN;
     (*c) += 2;
-  } else if ((*c)[0] == '<' && (*c)[1] == '<') {
-    punctuator = LEFT_SHIFT;
+  } else if (starts_with(*c, "^=")) {
+    buf->punctuator = EXCLUSIVE_OR_ASSIGN;
     (*c) += 2;
-  } else if ((*c)[0] == '<' && (*c)[1] == '=') {
-    punctuator = LESS_EQUAL;
+  } else if (starts_with(*c, "|=")) {
+    buf->punctuator = INCLUSIVE_OR_ASSIGN;
     (*c) += 2;
-  } else if ((*c)[0] == '=' && (*c)[1] == '=') {
-    punctuator = EQUAL;
+  } else if (starts_with(*c, "##")) {
+    buf->punctuator = DOUBLE_SIGN;
     (*c) += 2;
-  } else if ((*c)[0] == '>' && (*c)[1] == '=') {
-    punctuator = GREATER_EQUAL;
+  } else if (starts_with(*c, "<:")) {
+    buf->punctuator = DIGRAPH_LEFT_BRACKET;
     (*c) += 2;
-  } else if ((*c)[0] == '>' && (*c)[1] == '>') {
-    punctuator = RIGHT_SHIFT;
+  } else if (starts_with(*c, ":>")) {
+    buf->punctuator = DIGRAPH_RIGHT_BRACKET;
     (*c) += 2;
-  } else if ((*c)[0] == '^' && (*c)[1] == '=') {
-    punctuator = EXCLUSIVE_OR_ASSIGN;
+  } else if (starts_with(*c, "<%")) {
+    buf->punctuator = DIGRAPH_LEFT_BRACE;
     (*c) += 2;
-  } else if ((*c)[0] == '|' && (*c)[1] == '=') {
-    punctuator = INCLUSIVE_OR_ASSIGN;
+  } else if (starts_with(*c, "%>")) {
+    buf->punctuator = DIGRAPH_RIGHT_BRACE;
     (*c) += 2;
-  } else if ((*c)[0] == '|' && (*c)[1] == '|') {
-    punctuator = LOGICAL_OR;
+  } else if (starts_with(*c, "%:")) {
+    buf->punctuator = DIGRAPH_SIGN;
     (*c) += 2;
   }
 
-  else if ((*c)[0] == '!') {
-    punctuator = EXCLAMATION;
+  else if (starts_with(*c, "[")) {
+    buf->punctuator = LEFT_BRACKET;
     (*c) += 1;
-  } else if ((*c)[0] == '#') {
-    punctuator = SIGN;
+  } else if (starts_with(*c, "]")) {
+    buf->punctuator = RIGHT_BRACKET;
     (*c) += 1;
-  } else if ((*c)[0] == '%') {
-    punctuator = REMIND;
+  } else if (starts_with(*c, "(")) {
+    buf->punctuator = LEFT_PAREN;
     (*c) += 1;
-  } else if ((*c)[0] == '&') {
-    punctuator = AMPASAND;
+  } else if (starts_with(*c, ")")) {
+    buf->punctuator = RIGHT_PAREN;
     (*c) += 1;
-  } else if ((*c)[0] == '(') {
-    punctuator = LEFT_PAREN;
+  } else if (starts_with(*c, "{")) {
+    buf->punctuator = LEFT_BRACE;
     (*c) += 1;
-  } else if ((*c)[0] == ')') {
-    punctuator = RIGHT_PAREN;
+  } else if (starts_with(*c, "}")) {
+    buf->punctuator = RIGHT_BRACE;
     (*c) += 1;
-  } else if ((*c)[0] == '*') {
-    punctuator = ASTERISK;
+  } else if (starts_with(*c, ".")) {
+    buf->punctuator = DOT;
     (*c) += 1;
-  } else if ((*c)[0] == '+') {
-    punctuator = PLUS;
+  } else if (starts_with(*c, "&")) {
+    buf->punctuator = AMPASAND;
     (*c) += 1;
-  } else if ((*c)[0] == ',') {
-    punctuator = COMMA;
+  } else if (starts_with(*c, "*")) {
+    buf->punctuator = ASTERISK;
     (*c) += 1;
-  } else if ((*c)[0] == '-') {
-    punctuator = MINUS;
+  } else if (starts_with(*c, "+")) {
+    buf->punctuator = PLUS;
     (*c) += 1;
-  } else if ((*c)[0] == '.') {
-    punctuator = DOT;
+  } else if (starts_with(*c, "-")) {
+    buf->punctuator = MINUS;
     (*c) += 1;
-  } else if ((*c)[0] == '/') {
-    punctuator = DIVIDE;
+  } else if (starts_with(*c, "~")) {
+    buf->punctuator = NEGATE;
     (*c) += 1;
-  } else if ((*c)[0] == ':') {
-    punctuator = COLON;
+  } else if (starts_with(*c, "!")) {
+    buf->punctuator = EXCLAMATION;
     (*c) += 1;
-  } else if ((*c)[0] == ';') {
-    punctuator = SEMICOLON;
+  } else if (starts_with(*c, "/")) {
+    buf->punctuator = DIVIDE;
     (*c) += 1;
-  } else if ((*c)[0] == '<') {
-    punctuator = LESS_THAN;
+  } else if (starts_with(*c, "%")) {
+    buf->punctuator = REMIND;
     (*c) += 1;
-  } else if ((*c)[0] == '=') {
-    punctuator = ASSIGN;
+  } else if (starts_with(*c, "<")) {
+    buf->punctuator = LESS_THAN;
     (*c) += 1;
-  } else if ((*c)[0] == '>') {
-    punctuator = GREATER_THAN;
+  } else if (starts_with(*c, ">")) {
+    buf->punctuator = GREATER_THAN;
     (*c) += 1;
-  } else if ((*c)[0] == '?') {
-    punctuator = QUESTION;
+  } else if (starts_with(*c, "^")) {
+    buf->punctuator = EXCLUSIVE_OR;
     (*c) += 1;
-  } else if ((*c)[0] == '[') {
-    punctuator = LEFT_BRACKET;
+  } else if (starts_with(*c, "|")) {
+    buf->punctuator = INCLUSIVE_OR;
     (*c) += 1;
-  } else if ((*c)[0] == ']') {
-    punctuator = RIGHT_BRACKET;
+  } else if (starts_with(*c, "?")) {
+    buf->punctuator = QUESTION;
     (*c) += 1;
-  } else if ((*c)[0] == '^') {
-    punctuator = EXCLUSIVE_OR;
+  } else if (starts_with(*c, ":")) {
+    buf->punctuator = COLON;
     (*c) += 1;
-  } else if ((*c)[0] == '{') {
-    punctuator = LEFT_BRACE;
+  } else if (starts_with(*c, ";")) {
+    buf->punctuator = SEMICOLON;
     (*c) += 1;
-  } else if ((*c)[0] == '|') {
-    punctuator = INCLUSIVE_OR;
+  } else if (starts_with(*c, "=")) {
+    buf->punctuator = ASSIGN;
     (*c) += 1;
-  } else if ((*c)[0] == '}') {
-    punctuator = RIGHT_BRACE;
+  } else if (starts_with(*c, ",")) {
+    buf->punctuator = COMMA;
     (*c) += 1;
-  } else if ((*c)[0] == '~') {
-    punctuator = NEGATE;
+  } else if (starts_with(*c, "#")) {
+    buf->punctuator = SIGN;
     (*c) += 1;
   }
 
@@ -491,7 +491,6 @@ bool match_punctuator(char **c, struct PPToken *buf) {
   }
 
   buf->kind = PP_PUNCTUATOR;
-  buf->punctuator = punctuator;
   return true;
 }
 

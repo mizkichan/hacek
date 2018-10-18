@@ -1,24 +1,22 @@
-#include "utils.h"
 #include "error.h"
-#include <errno.h>
+#include "utils.h"
+#include <assert.h>
 #include <fcntl.h>
-#include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <assert.h>
-#include <string.h>
-#include <stdint.h>
 
 void *checked_malloc(size_t size) {
   void *ptr = malloc(size);
-  PANIC_IF(ptr == NULL);
+  PANIC_IF(!ptr);
   return ptr;
 }
 
 void *checked_realloc(void *ptr, size_t size) {
   assert(size > 0);
   ptr = realloc(ptr, size);
-  PANIC_IF(ptr == NULL);
+  PANIC_IF(!ptr);
   return ptr;
 }
 
@@ -28,14 +26,14 @@ char *read_from_file(char *pathname) {
 
   /* open the file */
   fd = open(pathname, O_RDONLY);
-  if (fd == -1) {
+  if (fd < 0) {
     return NULL;
   }
 
   /* get size of the file */
-  if (fstat(fd, &statbuf) == -1) {
+  if (fstat(fd, &statbuf) != 0) {
     int e = errno;
-    WARN_IF(close(fd) == -1, "%s", pathname);
+    WARN_IF(close(fd) != 0, "%s", pathname);
     errno = e;
     return NULL;
   }
@@ -47,12 +45,12 @@ char *read_from_file(char *pathname) {
   /* read source file */
   char *buf = checked_malloc(sizeof(char) * (size + 1));
   ssize_t how_many_read = read(fd, buf, size);
-  ERROR_IF(how_many_read == -1, "%s", pathname);
+  ERROR_IF(how_many_read < 0, "%s", pathname);
   ERROR_IF(how_many_read != (ssize_t)size,
            "size mismatch (read() == %ld, size == %ld)", how_many_read, size);
   buf[size] = '\0';
 
-  WARN_IF(close(fd) == -1, "%s", pathname);
+  WARN_IF(close(fd) != 0, "%s", pathname);
   return buf;
 }
 
@@ -80,14 +78,14 @@ char *clone_str_range(const char *begin, const char *const end) {
 }
 
 void erase(void *const end, void *const erase_begin, void *const erase_end) {
-  assert(erase_begin!= NULL);
-  assert(erase_end!= NULL);
+  assert(erase_begin != NULL);
+  assert(erase_end != NULL);
 
   uintptr_t erase_begin_addr = (uintptr_t)erase_begin;
   uintptr_t erase_end_addr = (uintptr_t)erase_end;
   uintptr_t end_addr = (uintptr_t)end;
 
-  assert(erase_begin_addr< erase_end_addr);
+  assert(erase_begin_addr < erase_end_addr);
   size_t diff = erase_end_addr - erase_begin_addr;
 
   while (erase_begin_addr < end_addr - diff) {
@@ -102,5 +100,11 @@ char *append_str(char *head, char *tail) {
   strcat(head, tail);
   return head;
 }
+
+bool starts_with(const char *haystack, const char *needle) {
+  return strstr(haystack, needle) == haystack;
+}
+
+bool str_equals(const char *s1, const char *s2) { return strcmp(s1, s2) == 0; }
 
 // vim: set ft=c ts=2 sw=2 et:

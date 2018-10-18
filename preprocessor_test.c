@@ -1,8 +1,8 @@
-#include "cpp.h"
 #include "greatest/greatest.h"
-#include "tokens.h"
+#include "preprocessor.h"
+#include "token.h"
 
-SUITE(cpp);
+SUITE(preprocessor);
 
 TEST test_match_header_name_q(void) {
   struct PPToken buf;
@@ -13,6 +13,7 @@ TEST test_match_header_name_q(void) {
   ASSERT_ENUM_EQ(PP_HEADER_NAME, buf.kind, pp_token_kind_str);
   ASSERT_ENUM_EQ(Q_CHAR_SEQUENCE, buf.header_name.kind, header_name_kind_str);
   ASSERT_STR_EQ("hello.h", buf.header_name.chars);
+  ASSERT_EQ(*src, '\0');
 
   PASS();
 }
@@ -26,6 +27,7 @@ TEST test_match_header_name_h(void) {
   ASSERT_ENUM_EQ(PP_HEADER_NAME, buf.kind, pp_token_kind_str);
   ASSERT_ENUM_EQ(H_CHAR_SEQUENCE, buf.header_name.kind, header_name_kind_str);
   ASSERT_STR_EQ("stdio.h", buf.header_name.chars);
+  ASSERT_EQ(*src, '\0');
 
   PASS();
 }
@@ -38,6 +40,7 @@ TEST test_match_identifier(void) {
   ASSERT(match_identifier(&src, &buf));
   ASSERT_ENUM_EQ(PP_IDENTIFIER, buf.kind, pp_token_kind_str);
   ASSERT_STR_EQ("foobar2000", buf.chars);
+  ASSERT_EQ(*src, '\0');
 
   PASS();
 }
@@ -50,6 +53,7 @@ TEST test_match_pp_number(void) {
   ASSERT(match_pp_number(&src, &buf));
   ASSERT_ENUM_EQ(PP_NUMBER, buf.kind, pp_token_kind_str);
   ASSERT_STR_EQ(".01ae+E-p+P-.", buf.chars);
+  ASSERT_EQ(*src, '\0');
 
   PASS();
 }
@@ -64,6 +68,7 @@ TEST test_match_character_constant(void) {
   ASSERT_ENUM_EQ(CHARACTER_CONSTANT_PREFIX_NONE, buf.character_constant.prefix,
                  character_constant_prefix_str);
   ASSERT_STR_EQ("foobar2000", buf.character_constant.chars);
+  ASSERT_EQ(*src, '\0');
 
   PASS();
 }
@@ -78,6 +83,7 @@ TEST test_match_character_constant_wchar(void) {
   ASSERT_ENUM_EQ(CHARACTER_CONSTANT_PREFIX_WCHAR, buf.character_constant.prefix,
                  character_constant_prefix_str);
   ASSERT_STR_EQ("foobar2000", buf.character_constant.chars);
+  ASSERT_EQ(*src, '\0');
 
   PASS();
 }
@@ -92,6 +98,7 @@ TEST test_match_character_constant_char16(void) {
   ASSERT_ENUM_EQ(CHARACTER_CONSTANT_PREFIX_CHAR16,
                  buf.character_constant.prefix, character_constant_prefix_str);
   ASSERT_STR_EQ("foobar2000", buf.character_constant.chars);
+  ASSERT_EQ(*src, '\0');
 
   PASS();
 }
@@ -106,6 +113,7 @@ TEST test_match_character_constant_char32(void) {
   ASSERT_ENUM_EQ(CHARACTER_CONSTANT_PREFIX_CHAR32,
                  buf.character_constant.prefix, character_constant_prefix_str);
   ASSERT_STR_EQ("foobar2000", buf.character_constant.chars);
+  ASSERT_EQ(*src, '\0');
 
   PASS();
 }
@@ -120,6 +128,7 @@ TEST test_match_string_literal(void) {
   ASSERT_ENUM_EQ(ENCODING_PREFIX_NONE, buf.string_literal.encoding_prefix,
                  encoding_prefix_str);
   ASSERT_STR_EQ("foobar2000", buf.string_literal.chars);
+  ASSERT_EQ(*src, '\0');
 
   PASS();
 }
@@ -134,6 +143,7 @@ TEST test_match_string_literal_utf8(void) {
   ASSERT_ENUM_EQ(ENCODING_PREFIX_UTF8, buf.string_literal.encoding_prefix,
                  encoding_prefix_str);
   ASSERT_STR_EQ("foobar2000", buf.string_literal.chars);
+  ASSERT_EQ(*src, '\0');
 
   PASS();
 }
@@ -148,6 +158,7 @@ TEST test_match_string_literal_char16(void) {
   ASSERT_ENUM_EQ(ENCODING_PREFIX_CHAR16, buf.string_literal.encoding_prefix,
                  encoding_prefix_str);
   ASSERT_STR_EQ("foobar2000", buf.string_literal.chars);
+  ASSERT_EQ(*src, '\0');
 
   PASS();
 }
@@ -162,6 +173,7 @@ TEST test_match_string_literal_char32(void) {
   ASSERT_ENUM_EQ(ENCODING_PREFIX_CHAR32, buf.string_literal.encoding_prefix,
                  encoding_prefix_str);
   ASSERT_STR_EQ("foobar2000", buf.string_literal.chars);
+  ASSERT_EQ(*src, '\0');
 
   PASS();
 }
@@ -176,6 +188,7 @@ TEST test_match_string_literal_wchar(void) {
   ASSERT_ENUM_EQ(ENCODING_PREFIX_WCHAR, buf.string_literal.encoding_prefix,
                  encoding_prefix_str);
   ASSERT_STR_EQ("foobar2000", buf.string_literal.chars);
+  ASSERT_EQ(*src, '\0');
 
   PASS();
 }
@@ -246,15 +259,16 @@ TEST test_match_punctuator(void) {
     ASSERT(match_punctuator(&cases[i].src, &buf));
     ASSERT_ENUM_EQ(PP_PUNCTUATOR, buf.kind, pp_token_kind_str);
     ASSERT_ENUM_EQ(cases[i].expected, buf.punctuator, punctuator_str);
+    ASSERT_EQ(*cases[i].src, '\0');
   }
 
   PASS();
 }
 
-TEST test_cpp_concat_string_literals(void) {
+TEST test_pp_concat_string_literals(void) {
   char *src = "\"foo\" \"bar\"";
-  struct PPTokenList token_list = cpp_tokenize(src);
-  cpp_concat_string_literals(&token_list);
+  struct PPTokenList token_list = pp_tokenize(src);
+  pp_concat_string_literals(&token_list);
 
   ASSERT_EQ(1, token_list.length);
   ASSERT_ENUM_EQ(PP_STRING_LITERAL, token_list.pp_tokens[0].kind,
@@ -264,7 +278,7 @@ TEST test_cpp_concat_string_literals(void) {
   PASS();
 }
 
-SUITE(cpp) {
+SUITE(preprocessor) {
   RUN_TEST(test_match_header_name_q);
   RUN_TEST(test_match_header_name_h);
   RUN_TEST(test_match_identifier);
@@ -279,7 +293,7 @@ SUITE(cpp) {
   RUN_TEST(test_match_string_literal_char32);
   RUN_TEST(test_match_string_literal_wchar);
   RUN_TEST(test_match_punctuator);
-  RUN_TEST(test_cpp_concat_string_literals);
+  RUN_TEST(test_pp_concat_string_literals);
 }
 
 // vim: set ft=c ts=2 sw=2 et:

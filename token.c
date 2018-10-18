@@ -1,95 +1,95 @@
-#include "tokens.h"
 #include "error.h"
-#include <string.h>
+#include "token.h"
+#include "utils.h"
 
 bool str_to_keyword(const char *str, enum Keyword *buf) {
-  if (strcmp(str, "_Alignas") == 0) {
+  if (str_equals(str, "_Alignas")) {
     *buf = ALIGNAS;
-  } else if (strcmp(str, "_Alignof") == 0) {
+  } else if (str_equals(str, "_Alignof")) {
     *buf = ALIGNOF;
-  } else if (strcmp(str, "_Atomic") == 0) {
+  } else if (str_equals(str, "_Atomic")) {
     *buf = ATOMIC;
-  } else if (strcmp(str, "auto") == 0) {
+  } else if (str_equals(str, "auto")) {
     *buf = AUTO;
-  } else if (strcmp(str, "_Bool") == 0) {
+  } else if (str_equals(str, "_Bool")) {
     *buf = BOOL;
-  } else if (strcmp(str, "break") == 0) {
+  } else if (str_equals(str, "break")) {
     *buf = BREAK;
-  } else if (strcmp(str, "case") == 0) {
+  } else if (str_equals(str, "case")) {
     *buf = CASE;
-  } else if (strcmp(str, "char") == 0) {
+  } else if (str_equals(str, "char")) {
     *buf = CHAR;
-  } else if (strcmp(str, "_Complex") == 0) {
+  } else if (str_equals(str, "_Complex")) {
     *buf = COMPLEX;
-  } else if (strcmp(str, "const") == 0) {
+  } else if (str_equals(str, "const")) {
     *buf = CONST;
-  } else if (strcmp(str, "continue") == 0) {
+  } else if (str_equals(str, "continue")) {
     *buf = CONTINUE;
-  } else if (strcmp(str, "default") == 0) {
+  } else if (str_equals(str, "default")) {
     *buf = DEFAULT;
-  } else if (strcmp(str, "do") == 0) {
+  } else if (str_equals(str, "do")) {
     *buf = DO;
-  } else if (strcmp(str, "double") == 0) {
+  } else if (str_equals(str, "double")) {
     *buf = DOUBLE;
-  } else if (strcmp(str, "else") == 0) {
+  } else if (str_equals(str, "else")) {
     *buf = ELSE;
-  } else if (strcmp(str, "enum") == 0) {
+  } else if (str_equals(str, "enum")) {
     *buf = ENUM;
-  } else if (strcmp(str, "extern") == 0) {
+  } else if (str_equals(str, "extern")) {
     *buf = EXTERN;
-  } else if (strcmp(str, "float") == 0) {
+  } else if (str_equals(str, "float")) {
     *buf = FLOAT;
-  } else if (strcmp(str, "for") == 0) {
+  } else if (str_equals(str, "for")) {
     *buf = FOR;
-  } else if (strcmp(str, "_Generic") == 0) {
+  } else if (str_equals(str, "_Generic")) {
     *buf = GENERIC;
-  } else if (strcmp(str, "goto") == 0) {
+  } else if (str_equals(str, "goto")) {
     *buf = GOTO;
-  } else if (strcmp(str, "if") == 0) {
+  } else if (str_equals(str, "if")) {
     *buf = IF;
-  } else if (strcmp(str, "_Imaginary") == 0) {
+  } else if (str_equals(str, "_Imaginary")) {
     *buf = IMAGINARY;
-  } else if (strcmp(str, "inline") == 0) {
+  } else if (str_equals(str, "inline")) {
     *buf = INLINE;
-  } else if (strcmp(str, "int") == 0) {
+  } else if (str_equals(str, "int")) {
     *buf = INT;
-  } else if (strcmp(str, "long") == 0) {
+  } else if (str_equals(str, "long")) {
     *buf = LONG;
-  } else if (strcmp(str, "_Noreturn") == 0) {
+  } else if (str_equals(str, "_Noreturn")) {
     *buf = NORETURN;
-  } else if (strcmp(str, "register") == 0) {
+  } else if (str_equals(str, "register")) {
     *buf = REGISTER;
-  } else if (strcmp(str, "restrict") == 0) {
+  } else if (str_equals(str, "restrict")) {
     *buf = RESTRICT;
-  } else if (strcmp(str, "return") == 0) {
+  } else if (str_equals(str, "return")) {
     *buf = RETURN;
-  } else if (strcmp(str, "short") == 0) {
+  } else if (str_equals(str, "short")) {
     *buf = SHORT;
-  } else if (strcmp(str, "signed") == 0) {
+  } else if (str_equals(str, "signed")) {
     *buf = SIGNED;
-  } else if (strcmp(str, "sizeof") == 0) {
+  } else if (str_equals(str, "sizeof")) {
     *buf = SIZEOF;
-  } else if (strcmp(str, "static") == 0) {
+  } else if (str_equals(str, "static")) {
     *buf = STATIC;
-  } else if (strcmp(str, "_Static_assert") == 0) {
+  } else if (str_equals(str, "_Static_assert")) {
     *buf = STATIC_ASSERT;
-  } else if (strcmp(str, "struct") == 0) {
+  } else if (str_equals(str, "struct")) {
     *buf = STRUCT;
-  } else if (strcmp(str, "switch") == 0) {
+  } else if (str_equals(str, "switch")) {
     *buf = SWITCH;
-  } else if (strcmp(str, "_Thread_local") == 0) {
+  } else if (str_equals(str, "_Thread_local")) {
     *buf = THREAD_LOCAL;
-  } else if (strcmp(str, "typedef") == 0) {
+  } else if (str_equals(str, "typedef")) {
     *buf = TYPEDEF;
-  } else if (strcmp(str, "union") == 0) {
+  } else if (str_equals(str, "union")) {
     *buf = UNION;
-  } else if (strcmp(str, "unsigned") == 0) {
+  } else if (str_equals(str, "unsigned")) {
     *buf = UNSIGNED;
-  } else if (strcmp(str, "void") == 0) {
+  } else if (str_equals(str, "void")) {
     *buf = VOID;
-  } else if (strcmp(str, "volatile") == 0) {
+  } else if (str_equals(str, "volatile")) {
     *buf = VOLATILE;
-  } else if (strcmp(str, "while") == 0) {
+  } else if (str_equals(str, "while")) {
     *buf = WHILE;
   } else {
     return false;

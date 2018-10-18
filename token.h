@@ -1,9 +1,8 @@
-#ifndef TOKENS_H
-#define TOKENS_H
+#ifndef TOKEN_H
+#define TOKEN_H
 
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdint.h>
 
 struct Position {
   char *name;
@@ -188,6 +187,16 @@ struct PPToken {
     char nwsc;
     char *chars;
   };
+};
+
+struct PPTokenList {
+  size_t length;
+  struct PPToken *pp_tokens;
+};
+
+struct TokenList {
+  size_t length;
+  struct Token *tokens;
 };
 
 bool str_to_keyword(const char *, enum Keyword *);

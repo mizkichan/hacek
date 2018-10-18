@@ -11,6 +11,7 @@ void exit_message(const char *format, ...) {
   vfprintf(stderr, format, ap);
   va_end(ap);
 
+  fputc('\n', stderr);
   exit(EXIT_FAILURE);
 }
 
