@@ -71,7 +71,9 @@ bool parse_args(int argc, char **argv, struct Args *args) {
 
 int main(int argc, char **argv) {
   struct Args args;
-  char *buf;
+  char *source;
+  struct PPTokenList pp_token_list;
+  char **lines;
 
   if (!parse_args(argc, argv, &args)) {
     return EXIT_FAILURE;
@@ -84,27 +86,47 @@ int main(int argc, char **argv) {
 
   EXIT_MESSAGE_IF(!args.input, "no input file");
 
-  buf = read_from_file(args.input);
-  ERROR_IF(!buf, "%s", args.input);
+  // Phase 1.
+  source = read_from_file(args.input);
+  ERROR_IF(!source, "%s", args.input);
 
-  // preprocess
-  preprocess(buf);
+  // Phase 2. Line reconstruction.
+  lines = line_reconstruction(source);
+
+  // Phase 3. Tokenization of the source text into preprocessing tokens.
+  pp_token_list = pp_tokenize(source);
+
+  // Phase 4. Execution of preprocessing directives.
+  execute_pp_directives(pp_token_list);
+
   if (args.eflag) {
+    // output preprocessed code
     return EXIT_SUCCESS;
   }
 
-  // compile
+  // Phase 5. Escape sequences conversion.
+  convert_escape_sequences(pp_token_list);
+
+  // Phase 6. Concatenation adjacent string literals.
+  concatenate_adjacent_string_literals(pp_token_list);
+
+  // Phase 7. Conversion of preprocessing tokens into tokens, parsing, translation and assembling.
+  token_list = convert_pp_tokens_into_tokens(pp_token_list);
+  ast = parse(token_list);
+  assembly = translate(ast);
+
   if (args.sflag) {
+    // output assembly code
     return EXIT_SUCCESS;
   }
 
-  // assemble
   if (args.cflag) {
+    // output object file
     return EXIT_SUCCESS;
   }
 
-  // link
-
+  // Phase 8. Linking
+  // output executable file
   return EXIT_SUCCESS;
 }
 
