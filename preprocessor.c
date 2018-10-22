@@ -2,69 +2,73 @@
 #include "preprocessor.h"
 #include "utils.h"
 #include <ctype.h>
+#include <string.h>
 
-struct PPTokenList preprocess(char *input) {
-  return pp_tokenize(input);
+void reconstruct_lines(char *c) {
+  char *end = c + strlen(c) + 1;
+
+  while (*c) {
+    if (starts_with(c, "\\\n")) {
+      erase(end, c, c + 2);
+    }
+    ++c;
+  }
 }
 
-struct PPTokenList pp_tokenize(char *input) {
-  struct PPTokenList result = {0, NULL};
-  struct PPToken buf, *last, *one_before_last;
+struct PPTokenList tokenize(char *input) {
+  struct PPTokenList result;
+  size_t pp_tokens_count = 0;
+  struct PPToken *pp_tokens = NULL;
+  struct PPToken buf;
+  struct PPToken *last = NULL, *one_before_last = NULL;
 
-  while (*input != '\0') {
-    skip_whitespaces(&input);
+  if (match_white_space_characters(&input, &buf)) {
+    pp_tokens =
+        push_back(pp_tokens, pp_tokens_count++, &buf, sizeof(struct PPToken));
+  }
 
-    last = NULL;
-    one_before_last = NULL;
-    if (result.length >= 2) {
-      last = &result.pp_tokens[result.length - 1];
-      one_before_last = &result.pp_tokens[result.length - 2];
-    }
-    if (!(((last != NULL && one_before_last != NULL) &&
-           (one_before_last->kind == PP_PUNCTUATOR &&
-            one_before_last->punctuator == SIGN) &&
-           (last->kind == PP_IDENTIFIER &&
-            str_equals(last->chars, "include")) &&
-           match_header_name(&input, &buf)) ||
-
-          match_identifier(&input, &buf) || match_pp_number(&input, &buf) ||
-          match_character_constant(&input, &buf) ||
-          match_string_literal(&input, &buf) ||
-          match_punctuator(&input, &buf))) {
-      if (*input == '\n') {
-        // new-line character is retained
-        buf.kind = PP_NEWLINE;
-      } else {
-        // non-white-space character
-        buf.kind = PP_NWSC;
-        buf.nwsc = *input;
-      }
+  while (*input) {
+    if (*input == '\n') {
+      buf.kind = PP_NEWLINE;
+      pp_tokens =
+          push_back(pp_tokens, pp_tokens_count++, &buf, sizeof(struct PPToken));
       ++input;
     }
-    result.pp_tokens = push_back(result.pp_tokens, result.length, &buf,
-                                 sizeof(struct PPToken));
-    ++result.length;
-  }
 
-  return result;
-}
+    // header-name
+    (is_include_directive(one_before_last, last) &&
+     match_header_name(&input, &buf)) ||
+        // identifier
+        match_identifier(&input, &buf) ||
+        // pp-number
+        match_pp_number(&input, &buf) ||
+        // character-constant
+        match_character_constant(&input, &buf) ||
+        // string-literal
+        match_string_literal(&input, &buf) ||
+        // punctuator
+        match_punctuator(&input, &buf) ||
+        // "each non-white-space character that cannot be one of the above"
+        match_nwsc(&input, &buf);
 
-void pp_concat_string_literals(struct PPTokenList *pp_token_list) {
-  struct PPToken *end, *current, *next;
-  end = pp_token_list->pp_tokens + pp_token_list->length;
+    pp_tokens =
+        push_back(pp_tokens, pp_tokens_count++, &buf, sizeof(struct PPToken));
+    one_before_last = last;
+    last = &pp_tokens[pp_tokens_count - 1];
 
-  for (size_t i = 0; i < pp_token_list->length - 1; ++i) {
-    current = &pp_token_list->pp_tokens[i];
-    next = &pp_token_list->pp_tokens[i + 1];
-
-    if (current->kind == PP_STRING_LITERAL && next->kind == PP_STRING_LITERAL) {
-      current->string_literal.chars =
-          append_str(current->string_literal.chars, next->string_literal.chars);
+    if (match_white_space_characters(&input, &buf)) {
+      pp_tokens =
+          push_back(pp_tokens, pp_tokens_count++, &buf, sizeof(struct PPToken));
     }
-
-    erase(end, next, next + 1);
-    --pp_token_list->length;
   }
+
+  buf.kind = PP_NEWLINE;
+  pp_tokens =
+      push_back(pp_tokens, pp_tokens_count++, &buf, sizeof(struct PPToken));
+
+  result.length = pp_tokens_count;
+  result.pp_tokens = pp_tokens;
+  return result;
 }
 
 struct TokenList pp_convert_into_token(struct PPTokenList *pp_token_list) {
@@ -109,6 +113,9 @@ struct TokenList pp_convert_into_token(struct PPTokenList *pp_token_list) {
     case PP_NEWLINE:
       ERROR("Preprocessing token `%s` must not be appeared at this phase.",
             pp_token_kind_str((int)pp_token->kind));
+    case PP_WHITE_SPACE_CHARACTERS:
+        // do nothing.
+        ;
     }
 
     result.tokens =
@@ -118,10 +125,12 @@ struct TokenList pp_convert_into_token(struct PPTokenList *pp_token_list) {
   return result;
 }
 
-void skip_whitespaces(char **c) {
-  bool was_there_whitespace;
+bool match_white_space_characters(char **c, struct PPToken *buf) {
+  bool result = false;
+  bool was_there_whitespace = false;
 
   do {
+    result = was_there_whitespace;
     was_there_whitespace = false;
 
     while (is_whitespace(**c) && **c != '\n') {
@@ -146,6 +155,11 @@ void skip_whitespaces(char **c) {
       was_there_whitespace = true;
     }
   } while (was_there_whitespace);
+
+  if (result) {
+    buf->kind = PP_WHITE_SPACE_CHARACTERS;
+  }
+  return result;
 }
 
 bool match_header_name(char **c, struct PPToken *buf) {
@@ -236,6 +250,7 @@ bool match_pp_number(char **c, struct PPToken *buf) {
 
 bool match_character_constant(char **c, struct PPToken *buf) {
   enum CharacterConstantPrefix prefix;
+  char *chars;
 
   if ((*c)[0] == 'L') {
     prefix = CHARACTER_CONSTANT_PREFIX_WCHAR;
@@ -255,15 +270,14 @@ bool match_character_constant(char **c, struct PPToken *buf) {
   }
   (*c) += 1;
 
-  char *chars = NULL;
-  size_t length = 0;
+  chars = checked_malloc(sizeof(char));
+  *chars = '\0';
   while (**c != '\'') {
     EXIT_MESSAGE_IF(
         **c == '\n',
         "Newline character must not be appear in a character constant.");
-    chars = push_back_char(chars, length++, read_char(c));
+    chars = str_push_back(chars, read_char(c));
   }
-  chars = push_back_char(chars, length, '\0');
   (*c) += 1;
 
   buf->kind = PP_CHARACTER_CONSTANT;
@@ -274,6 +288,7 @@ bool match_character_constant(char **c, struct PPToken *buf) {
 
 bool match_string_literal(char **c, struct PPToken *buf) {
   enum EncodingPrefix encoding_prefix;
+  char *chars;
 
   if ((*c)[0] == 'u') {
     if ((*c)[1] == '8') {
@@ -298,15 +313,14 @@ bool match_string_literal(char **c, struct PPToken *buf) {
   }
   (*c) += 1;
 
-  char *chars = NULL;
-  size_t length = 0;
+  chars = checked_malloc(sizeof(char));
+  *chars = '\0';
   while (**c != '"') {
     EXIT_MESSAGE_IF(
         **c == '\n',
         "Newline character must not be appear in a string literal.");
-    chars = push_back_char(chars, length++, read_char(c));
+    chars = str_push_back(chars, read_char(c));
   }
-  chars = push_back_char(chars, length, '\0');
   (*c) += 1;
 
   buf->kind = PP_STRING_LITERAL;
@@ -494,6 +508,12 @@ bool match_punctuator(char **c, struct PPToken *buf) {
   return true;
 }
 
+bool match_nwsc(char **c, struct PPToken *buf) {
+  buf->kind = PP_NWSC;
+  buf->nwsc = **c;
+  return true;
+}
+
 char read_char(char **c) {
   // FIXME only simple-escape-sequence is implemented
   char tmp;
@@ -534,10 +554,16 @@ char read_char(char **c) {
   }
 }
 
+bool is_include_directive(struct PPToken *one_before_last,
+                          struct PPToken *last) {
+  return one_before_last != NULL && last != NULL &&
+         one_before_last->kind == PP_PUNCTUATOR &&
+         one_before_last->punctuator == SIGN && last->kind == PP_IDENTIFIER &&
+         str_equals(last->chars, "include");
+}
+
 bool is_nondigit(char c) { return isalpha(c) || c == '_'; }
 bool is_digit(char c) { return isdigit(c); }
 bool is_whitespace(char c) {
   return c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f';
 }
-
-// vim: set ft=c ts=2 sw=2 et:

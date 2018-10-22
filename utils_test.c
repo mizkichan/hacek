@@ -28,6 +28,16 @@ TEST test_erase(void) {
   PASS();
 }
 
-SUITE(utils) { RUN_TEST(test_erase); }
+TEST test_clone_str_range(void) {
+  char *src= "foobar2000";
 
-// vim: set ft=c ts=2 sw=2 et:
+  ASSERT_STR_EQ("foo", clone_str_range(&src[0], &src[3]));
+  ASSERT_STR_EQ("bar2", clone_str_range(&src[3], &src[7]));
+  ASSERT_STR_EQ("000", clone_str_range(&src[7], &src[10]));
+  PASS();
+}
+
+SUITE(utils) {
+  RUN_TEST(test_erase);
+  RUN_TEST(test_clone_str_range);
+}

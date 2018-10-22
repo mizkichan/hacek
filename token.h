@@ -177,6 +177,7 @@ struct PPToken {
     PP_STRING_LITERAL,
     PP_PUNCTUATOR,
     PP_NWSC,
+    PP_WHITE_SPACE_CHARACTERS,
     PP_NEWLINE
   } kind;
   union {

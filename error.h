@@ -34,7 +34,5 @@ void debug(char *, int, int, const char *, ...)
   if ((cond))                                                                  \
   PANIC()
 
-#define UNIMPLEMENTED() ERROR("Unimplemented")
-
 #endif
 // vim: set ft=c ts=2 sw=2 et:

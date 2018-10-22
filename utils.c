@@ -65,6 +65,14 @@ void *push_back_char(void *vec, size_t vec_length, char byte) {
   return push_back(vec, vec_length, &byte, sizeof(char));
 }
 
+char *str_push_back(char *str, char c) {
+  size_t length = strlen(str);
+  str = checked_realloc(str, sizeof(char) * (length + 2));
+  str[length] = c;
+  str[length + 1] = '\0';
+  return str;
+}
+
 char *clone_str_range(const char *begin, const char *const end) {
   char *buf = checked_malloc((uintptr_t)(end - begin) + 1);
   char *ptr = buf;
@@ -81,15 +89,18 @@ void erase(void *const end, void *const erase_begin, void *const erase_end) {
   assert(erase_begin != NULL);
   assert(erase_end != NULL);
 
-  uintptr_t erase_begin_addr = (uintptr_t)erase_begin;
-  uintptr_t erase_end_addr = (uintptr_t)erase_end;
-  uintptr_t end_addr = (uintptr_t)end;
+  char *erase_begin_addr = erase_begin;
+  char *erase_end_addr = erase_end;
+  char *end_addr = end;
 
   assert(erase_begin_addr < erase_end_addr);
-  size_t diff = erase_end_addr - erase_begin_addr;
+  ptrdiff_t diff = erase_end_addr - erase_begin_addr;
 
   while (erase_begin_addr < end_addr - diff) {
-    *(char *)erase_begin_addr = *((char *)erase_begin_addr + diff);
+    char *hoge = erase_begin_addr;
+    char *fuga = erase_begin_addr + diff;
+    char piyo = *fuga;
+    *hoge = piyo;
     ++erase_begin_addr;
   }
 }

@@ -16,10 +16,10 @@ struct Args {
   bool help;
 };
 
-void usage(void);
-bool parse_args(int, char **, struct Args *) __attribute__((nonnull));
+static void usage(void);
+static bool parse_args(int, char **, struct Args *) __attribute__((nonnull));
 
-void usage(void) {
+static void usage(void) {
   puts("Usage: hacek [options] file");
   puts("Options:");
   puts("  -h         Display this information.");
@@ -43,7 +43,6 @@ bool parse_args(int argc, char **argv, struct Args *args) {
     case 'h':
       args->help = true;
       break;
-
     case 'E':
       args->eflag = true;
       break;
@@ -73,7 +72,6 @@ int main(int argc, char **argv) {
   struct Args args;
   char *source;
   struct PPTokenList pp_token_list;
-  char **lines;
 
   if (!parse_args(argc, argv, &args)) {
     return EXIT_FAILURE;
@@ -91,13 +89,13 @@ int main(int argc, char **argv) {
   ERROR_IF(!source, "%s", args.input);
 
   // Phase 2. Line reconstruction.
-  lines = line_reconstruction(source);
+  reconstruct_lines(source);
 
   // Phase 3. Tokenization of the source text into preprocessing tokens.
-  pp_token_list = pp_tokenize(source);
+  pp_token_list = tokenize(source);
 
   // Phase 4. Execution of preprocessing directives.
-  execute_pp_directives(pp_token_list);
+  execute_pp_directives(&pp_token_list);
 
   if (args.eflag) {
     // output preprocessed code
@@ -110,7 +108,8 @@ int main(int argc, char **argv) {
   // Phase 6. Concatenation adjacent string literals.
   concatenate_adjacent_string_literals(pp_token_list);
 
-  // Phase 7. Conversion of preprocessing tokens into tokens, parsing, translation and assembling.
+  // Phase 7. Conversion of preprocessing tokens into tokens, parsing,
+  // translation and assembling.
   token_list = convert_pp_tokens_into_tokens(pp_token_list);
   ast = parse(token_list);
   assembly = translate(ast);
