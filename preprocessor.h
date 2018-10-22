@@ -8,6 +8,8 @@ void reconstruct_lines(char *) __attribute__((nonnull));
 struct PPTokenList tokenize(char *) __attribute__((nonnull));
 void execute_pp_directives(struct PPTokenList *) __attribute__((nonnull));
 
+void convert_escape_sequences(struct PPTokenList *) __attribute__((nonnull));
+
 struct TokenList pp_convert_into_token(struct PPTokenList *)
     __attribute__((nonnull));
 

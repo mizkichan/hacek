@@ -71,6 +71,15 @@ struct PPTokenList tokenize(char *input) {
   return result;
 }
 
+void convert_escape_sequences(struct PPTokenList *pp_token_list) {
+  for (size_t i = 0; i < pp_token_list->length; ++i) {
+    struct PPToken *pp_token = &pp_token_list->pp_tokens[i];
+    if (pp_token->kind == PP_STRING_LITERAL) {
+    } else if (pp_token->kind == PP_CHARACTER_CONSTANT) {
+    }
+  }
+}
+
 struct TokenList pp_convert_into_token(struct PPTokenList *pp_token_list) {
   struct TokenList result = {0, NULL};
   struct PPToken *pp_token;
@@ -567,3 +576,5 @@ bool is_digit(char c) { return isdigit(c); }
 bool is_whitespace(char c) {
   return c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f';
 }
+
+// vim: set ft=c ts=2 sw=2 et:
