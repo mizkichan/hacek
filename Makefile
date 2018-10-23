@@ -1,4 +1,4 @@
-CFLAGS += -std=c17 -Weverything -Wno-unused-command-line-argument -Wno-padded
+CFLAGS += -std=c17 -Weverything -Wno-disabled-macro-expansion -Wno-padded -Wno-unused-command-line-argument
 CPPFLAGS += -D_POSIX_C_SOURCE=200809L
 LDFLAGS +=
 
