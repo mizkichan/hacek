@@ -1,5 +1,5 @@
-#include "error.h"
 #include "token.h"
+#include "error.h"
 #include "utils.h"
 
 bool str_to_keyword(const char *str, enum Keyword *buf) {

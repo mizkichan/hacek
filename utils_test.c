@@ -29,7 +29,7 @@ TEST test_erase(void) {
 }
 
 TEST test_clone_str_range(void) {
-  char *src= "foobar2000";
+  char *src = "foobar2000";
 
   ASSERT_STR_EQ("foo", clone_str_range(&src[0], &src[3]));
   ASSERT_STR_EQ("bar2", clone_str_range(&src[3], &src[7]));
