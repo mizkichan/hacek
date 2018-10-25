@@ -20,6 +20,12 @@ static void usage(void);
 static bool parse_args(int, char **, struct Args *) __attribute__((nonnull));
 
 static void usage(void) {
+  puts(" _            \\\\//    _");
+  puts("| |__   __ _  _\\/ ___| | __");
+  puts("| '_ \\ / _` |/ __/ _ \\ |/ /");
+  puts("| | | | (_| | (_|  __/   <");
+  puts("|_| |_|\\__,_|\\___\\___|_|\\_\\");
+  puts("");
   puts("Usage: hacek [options] file");
   puts("Options:");
   puts("  -h         Display this information.");
