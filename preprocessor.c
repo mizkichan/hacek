@@ -504,6 +504,52 @@ bool match_nwsc(char **c, struct PPToken *buf) {
   return true;
 }
 
+void unescape(char *c) {
+  while (c[0]) {
+    if (c[0] != '\\') {
+      ++c;
+      continue;
+    }
+
+    switch (c[1]) {
+    case '\'':
+    case '\"':
+    case '\?':
+    case '\\':
+      c[0] = c[1];
+      break;
+
+    case 'a':
+      c[0] = '\a';
+      break;
+    case 'b':
+      c[0] = '\b';
+      break;
+    case 'f':
+      c[0] = '\f';
+      break;
+    case 'n':
+      c[0] = '\n';
+      break;
+    case 'r':
+      c[0] = '\r';
+      break;
+    case 't':
+      c[0] = '\t';
+      break;
+    case 'v':
+      c[0] = '\v';
+      break;
+
+    default:
+      EXIT_MESSAGE("Invalid escape sequence: \\%c (\\x%x)", c[1], c[1]);
+    }
+
+    erase_str(c, 1, 2);
+    ++c;
+  }
+}
+
 void convert_escape_sequences(struct PPToken **pp_tokens) {
   // FIXME only simple-escape-sequence is implemented
 
@@ -517,48 +563,7 @@ void convert_escape_sequences(struct PPToken **pp_tokens) {
       break;
     }
 
-    while (*c) {
-      if (*c != '\\') {
-        continue;
-      }
-
-      switch (*(c + 1)) {
-      case '\'':
-      case '"':
-      case '?':
-      case '\\':
-        *c = '\x7f';
-        break;
-
-      case 'a':
-        *c = '\a';
-        break;
-      case 'b':
-        *c = '\b';
-        break;
-      case 'f':
-        *c = '\f';
-        break;
-      case 'n':
-        *c = '\n';
-        break;
-      case 'r':
-        *c = '\r';
-        break;
-      case 't':
-        *c = '\t';
-        break;
-      case 'v':
-        *c = '\v';
-        break;
-      default:
-        EXIT_MESSAGE("Invalid escape sequence: \\%c (\\x%x)", *(c + 1),
-                     *(c + 1));
-      }
-
-      erase_str(c, 1, 2);
-      ++c;
-    }
+    unescape(c);
   }
 }
 

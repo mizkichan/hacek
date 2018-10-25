@@ -82,7 +82,7 @@ void erase_str(char *const str, size_t first, size_t last) {
   const size_t length = strlen(str);
   const size_t diff = last - first;
 
-  for (size_t i = first; i + diff <= last + length; ++i) {
+  for (size_t i = first; i + diff < last + length; ++i) {
     str[i] = str[i + diff];
   }
 }

@@ -8,6 +8,7 @@ void reconstruct_lines(char *) __attribute__((nonnull));
 struct PPToken **tokenize(char *) __attribute__((returns_nonnull, nonnull));
 void execute_pp_directives(struct PPToken **) __attribute__((nonnull));
 
+void unescape(char *) __attribute__((nonnull));
 void convert_escape_sequences(struct PPToken **) __attribute__((nonnull));
 void concatenate_adjacent_string_literals(struct PPToken **)
     __attribute__((nonnull));
@@ -24,7 +25,6 @@ bool match_character_constant(char **, struct PPToken *)
 bool match_string_literal(char **, struct PPToken *) __attribute__((nonnull));
 bool match_punctuator(char **, struct PPToken *) __attribute__((nonnull));
 bool match_nwsc(char **, struct PPToken *) __attribute__((nonnull));
-char match_escape_sequence(char **) __attribute__((nonnull));
 
 bool is_include_directive(struct PPToken *, struct PPToken *);
 
