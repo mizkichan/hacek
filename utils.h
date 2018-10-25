@@ -12,7 +12,7 @@ void *checked_malloc(size_t) __attribute__((returns_nonnull, alloc_size(1)));
 void *checked_realloc(void *, size_t)
     __attribute__((returns_nonnull, alloc_size(2)));
 
-char *str_push_back(char *, char) __attribute__((returns_nonnull, nonnull));
+char *append_char(char *, char) __attribute__((returns_nonnull, nonnull));
 char *append_str(char *, char *) __attribute__((returns_nonnull, nonnull));
 bool starts_with(const char *, const char *) __attribute__((nonnull));
 bool str_equals(const char *, const char *) __attribute__((nonnull));

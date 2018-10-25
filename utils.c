@@ -54,7 +54,7 @@ char *read_from_file(char *pathname) {
   return buf;
 }
 
-char *str_push_back(char *str, char c) {
+char *append_char(char *str, char c) {
   size_t length = strlen(str);
   str = checked_realloc(str, sizeof(char) * (length + 2));
   str[length] = c;

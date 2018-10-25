@@ -281,7 +281,7 @@ bool match_character_constant(char **c, struct PPToken *buf) {
     EXIT_MESSAGE_IF(
         **c == '\n',
         "Newline character must not be appear in a character constant.");
-    chars = str_push_back(chars, read_char(c));
+    chars = append_char(chars, read_char(c));
   }
   (*c) += 1;
 
@@ -324,7 +324,7 @@ bool match_string_literal(char **c, struct PPToken *buf) {
     EXIT_MESSAGE_IF(
         **c == '\n',
         "Newline character must not be appear in a string literal.");
-    chars = str_push_back(chars, read_char(c));
+    chars = append_char(chars, read_char(c));
   }
   (*c) += 1;
 
