@@ -67,7 +67,7 @@ struct PPToken **tokenize(char *input) {
   return pp_tokens;
 }
 
-struct Token **pp_convert_into_token(struct PPToken **pp_tokens) {
+struct Token **convert_pp_tokens_into_tokens(struct PPToken **pp_tokens) {
   size_t token_count = 0;
   struct Token **tokens = NULL;
   struct Token *buf = checked_malloc(sizeof(struct Token));
@@ -264,7 +264,8 @@ bool match_character_constant(char **c, struct PPToken *buf) {
     EXIT_MESSAGE_IF(
         **c == '\n',
         "Newline character must not be appear in a character constant.");
-    chars = append_char(chars, read_char(c));
+    chars = append_char(chars, **c);
+    ++(*c);
   }
   (*c) += 1;
 
@@ -307,7 +308,8 @@ bool match_string_literal(char **c, struct PPToken *buf) {
     EXIT_MESSAGE_IF(
         **c == '\n',
         "Newline character must not be appear in a string literal.");
-    chars = append_char(chars, read_char(c));
+    chars = append_char(chars, **c);
+    ++(*c);
   }
   (*c) += 1;
 
@@ -502,43 +504,61 @@ bool match_nwsc(char **c, struct PPToken *buf) {
   return true;
 }
 
-char read_char(char **c) {
+void convert_escape_sequences(struct PPToken **pp_tokens) {
   // FIXME only simple-escape-sequence is implemented
-  char tmp;
 
-  tmp = **c;
-  (*c) += 1;
+  for (struct PPToken *pp_token = *pp_tokens; pp_token; ++pp_token) {
+    char *c;
+    if (pp_token->kind == PP_CHARACTER_CONSTANT) {
+      c = pp_token->character_constant.chars;
+    } else if (pp_token->kind == PP_STRING_LITERAL) {
+      c = pp_token->string_literal.chars;
+    } else {
+      break;
+    }
 
-  if (tmp != '\\') {
-    return tmp;
-  }
+    while (*c) {
+      if (*c != '\\') {
+        continue;
+      }
 
-  tmp = **c;
-  (*c) += 1;
-  switch (tmp) {
-  case '\'':
-  case '"':
-  case '?':
-  case '\\':
-    return **c;
+      switch (*(c + 1)) {
+      case '\'':
+      case '"':
+      case '?':
+      case '\\':
+        *c = '\x7f';
+        break;
 
-  case 'a':
-    return '\a';
-  case 'b':
-    return '\b';
-  case 'f':
-    return '\f';
-  case 'n':
-    return '\n';
-  case 'r':
-    return '\r';
-  case 't':
-    return '\t';
-  case 'v':
-    return '\v';
+      case 'a':
+        *c = '\a';
+        break;
+      case 'b':
+        *c = '\b';
+        break;
+      case 'f':
+        *c = '\f';
+        break;
+      case 'n':
+        *c = '\n';
+        break;
+      case 'r':
+        *c = '\r';
+        break;
+      case 't':
+        *c = '\t';
+        break;
+      case 'v':
+        *c = '\v';
+        break;
+      default:
+        EXIT_MESSAGE("Invalid escape sequence: \\%c (\\x%x)", *(c + 1),
+                     *(c + 1));
+      }
 
-  default:
-    EXIT_MESSAGE("Invalid escape sequence: \\%c (\\x%x)", **c, **c);
+      erase_str(c, 1, 2);
+      ++c;
+    }
   }
 }
 

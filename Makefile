@@ -3,7 +3,7 @@ CPPFLAGS += -D_POSIX_C_SOURCE=200809L
 LDFLAGS +=
 
 PROGRAMS = hacek
-PROGRAM_SRCS = utils.c error.c preprocessor.c token.c
+PROGRAM_SRCS = utils.c error.c preprocessor.c token.c parser.c
 PROGRAM_OBJS = $(PROGRAM_SRCS:.c=.o)
 
 TESTS = test

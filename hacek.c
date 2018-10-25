@@ -1,4 +1,5 @@
 #include "error.h"
+#include "parser.h"
 #include "preprocessor.h"
 #include "token.h"
 #include "utils.h"
@@ -79,6 +80,7 @@ int main(int argc, char **argv) {
   char *source;
   struct PPToken **pp_tokens;
   struct Token **tokens;
+  struct AST *ast;
 
   if (!parse_args(argc, argv, &args)) {
     return EXIT_FAILURE;
@@ -119,7 +121,9 @@ int main(int argc, char **argv) {
   // translation and assembling.
   tokens = convert_pp_tokens_into_tokens(pp_tokens);
   ast = parse(tokens);
+  /*
   assembly = translate(ast);
+  */
 
   if (args.sflag) {
     // output assembly code

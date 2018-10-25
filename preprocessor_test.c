@@ -297,6 +297,21 @@ TEST test_match_punctuator(void) {
   PASS();
 }
 
+TEST test_convert_escape_sequences(void) {
+  struct PPToken *pp_tokens[1];
+  struct PPToken pp_token;
+
+  pp_token.kind = PP_STRING_LITERAL;
+  pp_token.string_literal.chars = "foo\\nbar";
+  pp_tokens[0] = &pp_token;
+
+  convert_escape_sequences(pp_tokens);
+
+  ASSERT_STR_EQ("foo\nbar", pp_tokens[0]->string_literal.chars);
+
+  PASS();
+}
+
 SUITE(preprocessor) {
   RUN_TEST(test_reconstruct_lines);
   RUN_TEST(test_tokenize);
@@ -314,6 +329,7 @@ SUITE(preprocessor) {
   RUN_TEST(test_match_string_literal_char32);
   RUN_TEST(test_match_string_literal_wchar);
   RUN_TEST(test_match_punctuator);
+  RUN_TEST(test_convert_escape_sequences);
 }
 
 // vim: set ft=c ts=2 sw=2 et:

@@ -5,15 +5,15 @@
 #include <stdbool.h>
 
 void reconstruct_lines(char *) __attribute__((nonnull));
-struct PPToken **tokenize(char *) __attribute__((nonnull));
+struct PPToken **tokenize(char *) __attribute__((returns_nonnull, nonnull));
 void execute_pp_directives(struct PPToken **) __attribute__((nonnull));
 
 void convert_escape_sequences(struct PPToken **) __attribute__((nonnull));
-
-struct Token **pp_convert_into_token(struct PPToken **)
+void concatenate_adjacent_string_literals(struct PPToken **)
     __attribute__((nonnull));
+struct Token **convert_pp_tokens_into_tokens(struct PPToken **)
+    __attribute__((returns_nonnull, nonnull));
 
-char read_char(char **) __attribute__((nonnull));
 bool match_white_space_characters(char **, struct PPToken *)
     __attribute__((nonnull));
 bool match_header_name(char **, struct PPToken *) __attribute__((nonnull));
