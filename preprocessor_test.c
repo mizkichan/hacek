@@ -12,6 +12,43 @@ TEST test_reconstruct_lines(void) {
   PASS();
 }
 
+TEST test_tokenize(void) {
+  char *src = "  foo\t'a'+123\n";
+  struct PPToken **result = tokenize(src);
+
+  ASSERT(result != NULL);
+
+  ASSERT(result[0] != NULL);
+  ASSERT_ENUM_EQ(PP_WHITE_SPACE_CHARACTERS, result[0]->kind, pp_token_kind_str);
+
+  ASSERT(result[1] != NULL);
+  ASSERT_ENUM_EQ(PP_IDENTIFIER, result[1]->kind, pp_token_kind_str);
+  ASSERT_STR_EQ("foo", result[1]->chars);
+
+  ASSERT(result[2] != NULL);
+  ASSERT_ENUM_EQ(PP_WHITE_SPACE_CHARACTERS, result[2]->kind, pp_token_kind_str);
+
+  ASSERT(result[3] != NULL);
+  ASSERT_ENUM_EQ(PP_CHARACTER_CONSTANT, result[3]->kind, pp_token_kind_str);
+  ASSERT_STR_EQ("a", result[3]->character_constant.chars);
+  ASSERT_ENUM_EQ(CHARACTER_CONSTANT_PREFIX_NONE,
+                 result[3]->character_constant.prefix,
+                 character_constant_prefix_str);
+
+  ASSERT(result[4] != NULL);
+  ASSERT_ENUM_EQ(PP_PUNCTUATOR, result[4]->kind, pp_token_kind_str);
+  ASSERT_ENUM_EQ(PLUS, result[4]->punctuator, punctuator_str);
+
+  ASSERT(result[5] != NULL);
+  ASSERT_ENUM_EQ(PP_NUMBER, result[5]->kind, pp_token_kind_str);
+  ASSERT_STR_EQ("123", result[5]->chars);
+
+  ASSERT(result[6] != NULL);
+  ASSERT_ENUM_EQ(PP_NEWLINE, result[6]->kind, pp_token_kind_str);
+
+  PASS();
+}
+
 TEST test_match_header_name_q(void) {
   struct PPToken buf;
   char *src = "\"hello.h\"";
@@ -262,6 +299,7 @@ TEST test_match_punctuator(void) {
 
 SUITE(preprocessor) {
   RUN_TEST(test_reconstruct_lines);
+  RUN_TEST(test_tokenize);
   RUN_TEST(test_match_header_name_q);
   RUN_TEST(test_match_header_name_h);
   RUN_TEST(test_match_identifier);

@@ -32,7 +32,7 @@ void debug(char *, int, int, const char *, ...)
   ERROR(__VA_ARGS__)
 #define PANIC_IF(cond)                                                         \
   if ((cond))                                                                  \
-  PANIC()
+  ERROR(#cond)
 
 #endif
 // vim: set ft=c ts=2 sw=2 et:

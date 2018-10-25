@@ -1,5 +1,5 @@
-#include "utils.h"
 #include "error.h"
+#include "utils.h"
 #include <assert.h>
 #include <fcntl.h>
 #include <stdint.h>
@@ -52,17 +52,6 @@ char *read_from_file(char *pathname) {
 
   WARN_IF(close(fd) != 0, "%s", pathname);
   return buf;
-}
-
-void *push_back(void *vec, size_t vec_length, void *item, size_t item_size) {
-  vec = checked_realloc(vec, item_size * (vec_length + 1));
-  uintptr_t vec_addr = (uintptr_t)vec;
-  memcpy((void *)(vec_addr + item_size * vec_length), item, item_size);
-  return vec;
-}
-
-void *push_back_char(void *vec, size_t vec_length, char byte) {
-  return push_back(vec, vec_length, &byte, sizeof(char));
 }
 
 char *str_push_back(char *str, char c) {

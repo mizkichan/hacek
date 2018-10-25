@@ -5,12 +5,12 @@
 #include <stdbool.h>
 
 void reconstruct_lines(char *) __attribute__((nonnull));
-struct PPTokenList tokenize(char *) __attribute__((nonnull));
-void execute_pp_directives(struct PPTokenList *) __attribute__((nonnull));
+struct PPToken **tokenize(char *) __attribute__((nonnull));
+void execute_pp_directives(struct PPToken **) __attribute__((nonnull));
 
-void convert_escape_sequences(struct PPTokenList *) __attribute__((nonnull));
+void convert_escape_sequences(struct PPToken **) __attribute__((nonnull));
 
-struct TokenList pp_convert_into_token(struct PPTokenList *)
+struct Token **pp_convert_into_token(struct PPToken **)
     __attribute__((nonnull));
 
 char read_char(char **) __attribute__((nonnull));

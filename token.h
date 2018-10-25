@@ -190,16 +190,6 @@ struct PPToken {
   };
 };
 
-struct PPTokenList {
-  size_t length;
-  struct PPToken *pp_tokens;
-};
-
-struct TokenList {
-  size_t length;
-  struct Token *tokens;
-};
-
 bool str_to_keyword(const char *, enum Keyword *);
 
 const char *keyword_str(int);

@@ -1,5 +1,5 @@
-#include "preprocessor.h"
 #include "error.h"
+#include "preprocessor.h"
 #include "utils.h"
 #include <ctype.h>
 #include <string.h>
@@ -15,89 +15,85 @@ void reconstruct_lines(char *c) {
   }
 }
 
-struct PPTokenList tokenize(char *input) {
-  struct PPTokenList result;
+struct PPToken **tokenize(char *input) {
   size_t pp_tokens_count = 0;
-  struct PPToken *pp_tokens = NULL;
-  struct PPToken buf;
+  struct PPToken **pp_tokens = NULL;
+  struct PPToken *buf = checked_malloc(sizeof(struct PPToken));
   struct PPToken *last = NULL, *one_before_last = NULL;
 
-  if (match_white_space_characters(&input, &buf)) {
-    pp_tokens =
-        push_back(pp_tokens, pp_tokens_count++, &buf, sizeof(struct PPToken));
+  if (match_white_space_characters(&input, buf)) {
+    PUSH_BACK(struct PPToken *, pp_tokens, pp_tokens_count, buf);
+    buf = checked_malloc(sizeof(struct PPToken));
   }
 
   while (*input) {
     if (*input == '\n') {
-      buf.kind = PP_NEWLINE;
-      pp_tokens =
-          push_back(pp_tokens, pp_tokens_count++, &buf, sizeof(struct PPToken));
+      buf->kind = PP_NEWLINE;
+      PUSH_BACK(struct PPToken *, pp_tokens, pp_tokens_count, buf);
+      buf = checked_malloc(sizeof(struct PPToken));
       ++input;
     }
 
     // header-name
-    (is_include_directive(one_before_last, last) &&
-     match_header_name(&input, &buf)) ||
-        // identifier
-        match_identifier(&input, &buf) ||
-        // pp-number
-        match_pp_number(&input, &buf) ||
-        // character-constant
-        match_character_constant(&input, &buf) ||
-        // string-literal
-        match_string_literal(&input, &buf) ||
-        // punctuator
-        match_punctuator(&input, &buf) ||
-        // "each non-white-space character that cannot be one of the above"
-        match_nwsc(&input, &buf);
+    PANIC_IF(
+        !((is_include_directive(one_before_last, last) &&
+           match_header_name(&input, buf)) ||
+          // identifier
+          match_identifier(&input, buf) ||
+          // pp-number
+          match_pp_number(&input, buf) ||
+          // character-constant
+          match_character_constant(&input, buf) ||
+          // string-literal
+          match_string_literal(&input, buf) ||
+          // punctuator
+          match_punctuator(&input, buf) ||
+          // "each non-white-space character that cannot be one of the above"
+          match_nwsc(&input, buf)));
 
-    pp_tokens =
-        push_back(pp_tokens, pp_tokens_count++, &buf, sizeof(struct PPToken));
+    PUSH_BACK(struct PPToken *, pp_tokens, pp_tokens_count, buf);
+    buf = checked_malloc(sizeof(struct PPToken));
     one_before_last = last;
-    last = &pp_tokens[pp_tokens_count - 1];
+    last = pp_tokens[pp_tokens_count - 1];
 
-    if (match_white_space_characters(&input, &buf)) {
-      pp_tokens =
-          push_back(pp_tokens, pp_tokens_count++, &buf, sizeof(struct PPToken));
+    if (match_white_space_characters(&input, buf)) {
+      PUSH_BACK(struct PPToken *, pp_tokens, pp_tokens_count, buf);
+      buf = checked_malloc(sizeof(struct PPToken));
     }
   }
 
-  buf.kind = PP_NEWLINE;
-  pp_tokens =
-      push_back(pp_tokens, pp_tokens_count++, &buf, sizeof(struct PPToken));
+  buf->kind = PP_NEWLINE;
+  PUSH_BACK(struct PPToken *, pp_tokens, pp_tokens_count, buf);
+  buf = checked_malloc(sizeof(struct PPToken));
 
-  result.length = pp_tokens_count;
-  result.pp_tokens = pp_tokens;
-  return result;
+  return pp_tokens;
 }
 
-void convert_escape_sequences(struct PPTokenList *pp_token_list) {
-  for (size_t i = 0; i < pp_token_list->length; ++i) {
-    struct PPToken *pp_token = &pp_token_list->pp_tokens[i];
+void convert_escape_sequences(struct PPToken **pp_tokens) {
+  for (struct PPToken *pp_token = *pp_tokens; pp_token; ++pp_token) {
+    // TODO WIP
     if (pp_token->kind == PP_STRING_LITERAL) {
     } else if (pp_token->kind == PP_CHARACTER_CONSTANT) {
     }
   }
 }
 
-struct TokenList pp_convert_into_token(struct PPTokenList *pp_token_list) {
-  struct TokenList result = {0, NULL};
-  struct PPToken *pp_token;
-  struct Token buf;
+struct Token **pp_convert_into_token(struct PPToken **pp_tokens) {
+  size_t token_count = 0;
+  struct Token **tokens = NULL;
+  struct Token *buf = checked_malloc(sizeof(struct Token));
 
-  for (size_t i = 0; i < pp_token_list->length; ++i) {
-    pp_token = &pp_token_list->pp_tokens[i];
-
+  for (struct PPToken *pp_token = *pp_tokens; pp_token; ++pp_token) {
     switch (pp_token->kind) {
     case PP_IDENTIFIER:
       // identifier can be either keyword, identifier or enumeration constant.
 
-      if (str_to_keyword(pp_token->chars, &buf.keyword)) {
-        buf.kind = TOKEN_KEYWORD;
+      if (str_to_keyword(pp_token->chars, &buf->keyword)) {
+        buf->kind = TOKEN_KEYWORD;
       } else {
         // NOTE THAT THIS STUFF CAN BE ENUMERATION CONSTANT!
-        buf.kind = TOKEN_IDENTIFIER;
-        buf.chars = pp_token->chars;
+        buf->kind = TOKEN_IDENTIFIER;
+        buf->chars = pp_token->chars;
       }
       break;
 
@@ -127,11 +123,11 @@ struct TokenList pp_convert_into_token(struct PPTokenList *pp_token_list) {
         ;
     }
 
-    result.tokens =
-        push_back(result.tokens, result.length++, &buf, sizeof(struct Token));
+    PUSH_BACK(struct Token *, tokens, token_count, buf);
+    buf = checked_malloc(sizeof(struct PPToken));
   }
 
-  return result;
+  return tokens;
 }
 
 bool match_white_space_characters(char **c, struct PPToken *buf) {

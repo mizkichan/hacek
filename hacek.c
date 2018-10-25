@@ -71,7 +71,8 @@ bool parse_args(int argc, char **argv, struct Args *args) {
 int main(int argc, char **argv) {
   struct Args args;
   char *source;
-  struct PPTokenList pp_token_list;
+  struct PPToken **pp_tokens;
+  struct Token **tokens;
 
   if (!parse_args(argc, argv, &args)) {
     return EXIT_FAILURE;
@@ -92,10 +93,10 @@ int main(int argc, char **argv) {
   reconstruct_lines(source);
 
   // Phase 3. Tokenization of the source text into preprocessing tokens.
-  pp_token_list = tokenize(source);
+  pp_tokens = tokenize(source);
 
   // Phase 4. Execution of preprocessing directives.
-  execute_pp_directives(&pp_token_list);
+  execute_pp_directives(pp_tokens);
 
   if (args.eflag) {
     // output preprocessed code
@@ -103,15 +104,15 @@ int main(int argc, char **argv) {
   }
 
   // Phase 5. Escape sequences conversion.
-  convert_escape_sequences(pp_token_list);
+  convert_escape_sequences(pp_tokens);
 
   // Phase 6. Concatenation adjacent string literals.
-  concatenate_adjacent_string_literals(pp_token_list);
+  concatenate_adjacent_string_literals(pp_tokens);
 
   // Phase 7. Conversion of preprocessing tokens into tokens, parsing,
   // translation and assembling.
-  token_list = convert_pp_tokens_into_tokens(pp_token_list);
-  ast = parse(token_list);
+  tokens = convert_pp_tokens_into_tokens(pp_tokens);
+  ast = parse(tokens);
   assembly = translate(ast);
 
   if (args.sflag) {

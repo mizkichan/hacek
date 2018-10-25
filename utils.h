@@ -12,16 +12,19 @@ void *checked_malloc(size_t) __attribute__((returns_nonnull, alloc_size(1)));
 void *checked_realloc(void *, size_t)
     __attribute__((returns_nonnull, alloc_size(2)));
 
-void *push_back(void *, size_t, void *, size_t)
-    __attribute__((returns_nonnull, nonnull));
-void *push_back_char(void *, size_t, char)
-    __attribute__((returns_nonnull, nonnull));
 char *str_push_back(char *, char) __attribute__((returns_nonnull, nonnull));
 char *append_str(char *, char *) __attribute__((returns_nonnull, nonnull));
 bool starts_with(const char *, const char *) __attribute__((nonnull));
 bool str_equals(const char *, const char *) __attribute__((nonnull));
 
 void erase(void *, void *, void *) __attribute__((nonnull));
+
+#define PUSH_BACK(type, ptr, n, value)                                         \
+  do {                                                                         \
+    (ptr) = (type *)checked_realloc((ptr), sizeof(type) * (++(n) + 1));        \
+    (ptr)[n - 1] = (value);                                                    \
+    (ptr)[n] = NULL;                                                           \
+  } while (0)
 
 #endif
 // vim: set ft=c ts=2 sw=2 et:
