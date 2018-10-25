@@ -5,11 +5,9 @@
 #include <string.h>
 
 void reconstruct_lines(char *c) {
-  char *end = c + strlen(c) + 1;
-
   while (*c) {
     if (starts_with(c, "\\\n")) {
-      erase(end, c, c + 2);
+      erase_str(c, 0, 2);
     }
     ++c;
   }
@@ -67,15 +65,6 @@ struct PPToken **tokenize(char *input) {
   buf = checked_malloc(sizeof(struct PPToken));
 
   return pp_tokens;
-}
-
-void convert_escape_sequences(struct PPToken **pp_tokens) {
-  for (struct PPToken *pp_token = *pp_tokens; pp_token; ++pp_token) {
-    // TODO WIP
-    if (pp_token->kind == PP_STRING_LITERAL) {
-    } else if (pp_token->kind == PP_CHARACTER_CONSTANT) {
-    }
-  }
 }
 
 struct Token **pp_convert_into_token(struct PPToken **pp_tokens) {
@@ -195,11 +184,9 @@ bool match_header_name(char **c, struct PPToken *buf) {
   }
   (*c) += 1;
 
-  char *chars = clone_str_range(begin, end);
-
   buf->kind = PP_HEADER_NAME;
   buf->header_name.kind = kind;
-  buf->header_name.chars = chars;
+  buf->header_name.chars = clone_str_range(begin, end);
   return true;
 }
 
@@ -215,10 +202,8 @@ bool match_identifier(char **c, struct PPToken *buf) {
     // TODO handle universal-character-name
   } while (is_nondigit(**c) || is_digit(**c));
 
-  char *chars = clone_str_range(begin, *c);
-
   buf->kind = PP_IDENTIFIER;
-  buf->chars = chars;
+  buf->chars = clone_str_range(begin, *c);
   return true;
 }
 
@@ -246,10 +231,8 @@ bool match_pp_number(char **c, struct PPToken *buf) {
     }
   }
 
-  char *chars = clone_str_range(begin, *c);
-
   buf->kind = PP_NUMBER;
-  buf->chars = chars;
+  buf->chars = clone_str_range(begin, *c);
   return true;
 }
 
@@ -561,8 +544,7 @@ char read_char(char **c) {
 
 bool is_include_directive(struct PPToken *one_before_last,
                           struct PPToken *last) {
-  return one_before_last != NULL && last != NULL &&
-         one_before_last->kind == PP_PUNCTUATOR &&
+  return one_before_last && last && one_before_last->kind == PP_PUNCTUATOR &&
          one_before_last->punctuator == SIGN && last->kind == PP_IDENTIFIER &&
          str_equals(last->chars, "include");
 }

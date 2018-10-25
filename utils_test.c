@@ -3,26 +3,29 @@
 
 SUITE(utils);
 
-TEST test_erase(void) {
+TEST test_erase_str(void) {
   {
-    int actual[] = {1, 2, 3, 4, 5};
-    int expected[] = {1, 4, 5};
-    erase(&actual[5], &actual[1], &actual[3]);
-    ASSERT_MEM_EQ(expected, actual, 3);
+    char src[] = "abcde";
+    erase_str(src, 1, 3);
+    ASSERT_STR_EQ("ade", src);
   }
 
   {
-    int actual[] = {1, 2, 3, 4, 5};
-    int expected[] = {3, 4, 5};
-    erase(&actual[5], &actual[0], &actual[2]);
-    ASSERT_MEM_EQ(expected, actual, 3);
+    char src[] = "abcde";
+    erase_str(src, 0, 2);
+    ASSERT_STR_EQ("cde", src);
   }
 
   {
-    int actual[] = {1, 2, 3, 4, 5};
-    int expected[] = {1, 2, 3};
-    erase(&actual[5], &actual[3], &actual[5]);
-    ASSERT_MEM_EQ(expected, actual, 3);
+    char src[] = "abcde";
+    erase_str(src, 3, 5);
+    ASSERT_STR_EQ("abc", src);
+  }
+
+  {
+    char src[] = "abcde";
+    erase_str(src, 3, 3);
+    ASSERT_STR_EQ("abcde", src);
   }
 
   PASS();
@@ -38,6 +41,8 @@ TEST test_clone_str_range(void) {
 }
 
 SUITE(utils) {
-  RUN_TEST(test_erase);
+  RUN_TEST(test_erase_str);
   RUN_TEST(test_clone_str_range);
 }
+
+// vim: set ft=c ts=2 sw=2 et:

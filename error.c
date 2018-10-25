@@ -1,5 +1,3 @@
-#pragma GCC diagnostic ignored "-Wdisabled-macro-expansion"
-
 #include "error.h"
 #include <stdio.h>
 #include <string.h>
@@ -20,14 +18,14 @@ void debug(char *file, int line, int errnum, const char *format, ...) {
 
   fprintf(stderr, "%s:%d", file, line);
 
-  if (format != NULL) {
+  if (format) {
     fputs(": ", stderr);
     va_start(ap, format);
     vfprintf(stderr, format, ap);
     va_end(ap);
   }
 
-  if (errnum != 0) {
+  if (errnum) {
     fprintf(stderr, ": %s", strerror(errnum));
   }
 

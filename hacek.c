@@ -38,7 +38,7 @@ bool parse_args(int argc, char **argv, struct Args *args) {
   args->cflag = false;
   args->help = false;
 
-  while ((opt = getopt(argc, argv, "hESco:")) != -1) {
+  while ((opt = getopt(argc, argv, "hESco:")) > 0) {
     switch (opt) {
     case 'h':
       args->help = true;

@@ -1,6 +1,5 @@
 #include "error.h"
 #include "utils.h"
-#include <assert.h>
 #include <fcntl.h>
 #include <stdint.h>
 #include <string.h>
@@ -14,7 +13,7 @@ void *checked_malloc(size_t size) {
 }
 
 void *checked_realloc(void *ptr, size_t size) {
-  assert(size > 0);
+  PANIC_IF(size <= 0);
   ptr = realloc(ptr, size);
   PANIC_IF(!ptr);
   return ptr;
@@ -31,9 +30,9 @@ char *read_from_file(char *pathname) {
   }
 
   /* get size of the file */
-  if (fstat(fd, &statbuf) != 0) {
+  if (fstat(fd, &statbuf) < 0) {
     int e = errno;
-    WARN_IF(close(fd) != 0, "%s", pathname);
+    WARN_IF(close(fd) < 0, "%s", pathname);
     errno = e;
     return NULL;
   }
@@ -50,7 +49,7 @@ char *read_from_file(char *pathname) {
            "size mismatch (read() == %ld, size == %ld)", how_many_read, size);
   buf[size] = '\0';
 
-  WARN_IF(close(fd) != 0, "%s", pathname);
+  WARN_IF(close(fd) < 0, "%s", pathname);
   return buf;
 }
 
@@ -63,35 +62,7 @@ char *append_char(char *str, char c) {
 }
 
 char *clone_str_range(const char *begin, const char *const end) {
-  char *buf = checked_malloc((uintptr_t)(end - begin) + 1);
-  char *ptr = buf;
-  while (begin != end) {
-    *ptr = *begin;
-    ++ptr;
-    ++begin;
-  }
-  *ptr = '\0';
-  return buf;
-}
-
-void erase(void *const end, void *const erase_begin, void *const erase_end) {
-  assert(erase_begin != NULL);
-  assert(erase_end != NULL);
-
-  char *erase_begin_addr = erase_begin;
-  char *erase_end_addr = erase_end;
-  char *end_addr = end;
-
-  assert(erase_begin_addr < erase_end_addr);
-  ptrdiff_t diff = erase_end_addr - erase_begin_addr;
-
-  while (erase_begin_addr < end_addr - diff) {
-    char *hoge = erase_begin_addr;
-    char *fuga = erase_begin_addr + diff;
-    char piyo = *fuga;
-    *hoge = piyo;
-    ++erase_begin_addr;
-  }
+  return strndup(begin, (size_t)(end - begin));
 }
 
 char *append_str(char *head, char *tail) {
@@ -106,5 +77,14 @@ bool starts_with(const char *haystack, const char *needle) {
 }
 
 bool str_equals(const char *s1, const char *s2) { return strcmp(s1, s2) == 0; }
+
+void erase_str(char *const str, size_t first, size_t last) {
+  const size_t length = strlen(str);
+  const size_t diff = last - first;
+
+  for (size_t i = first; i + diff <= last + length; ++i) {
+    str[i] = str[i + diff];
+  }
+}
 
 // vim: set ft=c ts=2 sw=2 et:

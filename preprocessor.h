@@ -24,6 +24,7 @@ bool match_character_constant(char **, struct PPToken *)
 bool match_string_literal(char **, struct PPToken *) __attribute__((nonnull));
 bool match_punctuator(char **, struct PPToken *) __attribute__((nonnull));
 bool match_nwsc(char **, struct PPToken *) __attribute__((nonnull));
+char match_escape_sequence(char **) __attribute__((nonnull));
 
 bool is_include_directive(struct PPToken *, struct PPToken *);
 
