@@ -71,6 +71,10 @@ struct PPToken **tokenize(char *input) {
   return pp_tokens;
 }
 
+void execute_pp_directives(struct PPToken **pp_tokens) {
+  ERROR("Not implemented yet");
+}
+
 struct Token **convert_pp_tokens_into_tokens(struct PPToken **pp_tokens) {
   size_t token_count = 0;
   struct Token **tokens = NULL;
@@ -571,6 +575,10 @@ void convert_escape_sequences(struct PPToken **pp_tokens) {
 
     unescape(c);
   }
+}
+
+void concatenate_adjacent_string_literals(struct PPToken **pp_tokens) {
+  ERROR("Not implemented yet");
 }
 
 bool is_include_directive(struct PPToken *one_before_last,
