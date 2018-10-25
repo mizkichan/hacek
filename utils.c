@@ -78,13 +78,15 @@ bool starts_with(const char *haystack, const char *needle) {
 
 bool str_equals(const char *s1, const char *s2) { return strcmp(s1, s2) == 0; }
 
-void erase_str(char *const str, size_t first, size_t last) {
-  const size_t length = strlen(str);
-  const size_t diff = last - first;
+void remove_str(char *str, char c) {
+  size_t diff = 0, i = 0;
 
-  for (size_t i = first; i + diff < last + length; ++i) {
+  do {
+    while (str[i + diff] == c) {
+      ++diff;
+    }
     str[i] = str[i + diff];
-  }
+  } while (str[i++ + diff]);
 }
 
 // vim: set ft=c ts=2 sw=2 et:

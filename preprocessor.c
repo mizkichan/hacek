@@ -4,13 +4,17 @@
 #include <ctype.h>
 #include <string.h>
 
-void reconstruct_lines(char *c) {
+void reconstruct_lines(char *src) {
+  char *c = src;
   while (*c) {
     if (starts_with(c, "\\\n")) {
-      erase_str(c, 0, 2);
+      c[0] = c[1] = DEL;
+      c += 2;
+    } else {
+      c += 1;
     }
-    ++c;
   }
+  remove_str(src, DEL);
 }
 
 struct PPToken **tokenize(char *input) {
@@ -504,50 +508,52 @@ bool match_nwsc(char **c, struct PPToken *buf) {
   return true;
 }
 
-void unescape(char *c) {
-  while (c[0]) {
-    if (c[0] != '\\') {
+void unescape(char *str) {
+  char *c = str;
+  while (*c) {
+    if (*c != '\\') {
       ++c;
       continue;
     }
 
+    c[0] = DEL;
     switch (c[1]) {
     case '\'':
     case '\"':
     case '\?':
     case '\\':
-      c[0] = c[1];
       break;
 
     case 'a':
-      c[0] = '\a';
+      c[1] = '\a';
       break;
     case 'b':
-      c[0] = '\b';
+      c[1] = '\b';
       break;
     case 'f':
-      c[0] = '\f';
+      c[1] = '\f';
       break;
     case 'n':
-      c[0] = '\n';
+      c[1] = '\n';
       break;
     case 'r':
-      c[0] = '\r';
+      c[1] = '\r';
       break;
     case 't':
-      c[0] = '\t';
+      c[1] = '\t';
       break;
     case 'v':
-      c[0] = '\v';
+      c[1] = '\v';
       break;
 
     default:
       EXIT_MESSAGE("Invalid escape sequence: \\%c (\\x%x)", c[1], c[1]);
     }
 
-    erase_str(c, 1, 2);
-    ++c;
+    c += 2;
   }
+
+  remove_str(str, DEL);
 }
 
 void convert_escape_sequences(struct PPToken **pp_tokens) {

@@ -15,6 +15,7 @@ void *checked_realloc(void *, size_t)
 char *append_char(char *, char) __attribute__((returns_nonnull, nonnull));
 char *append_str(char *, char *) __attribute__((returns_nonnull, nonnull));
 void erase_str(char *, size_t, size_t) __attribute__((nonnull));
+void remove_str(char *, char) __attribute__((nonnull));
 bool starts_with(const char *, const char *) __attribute__((nonnull));
 bool str_equals(const char *, const char *) __attribute__((nonnull));
 
@@ -24,6 +25,8 @@ bool str_equals(const char *, const char *) __attribute__((nonnull));
     (ptr)[n - 1] = (value);                                                    \
     (ptr)[n] = NULL;                                                           \
   } while (0)
+
+#define DEL 0x7f
 
 #endif
 // vim: set ft=c ts=2 sw=2 et:
