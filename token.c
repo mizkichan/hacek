@@ -1,5 +1,6 @@
-#include "token.h"
+#include "alloc.h"
 #include "error.h"
+#include "token.h"
 #include "utils.h"
 
 bool str_to_keyword(const char *str, enum Keyword *buf) {
@@ -397,6 +398,35 @@ const char *character_constant_prefix_str(int x) {
     return "CHARACTER_CONSTANT_PREFIX_NONE";
   }
   ERROR("unknown enum variant: %d", x);
+}
+
+void free_pp_token(struct PPToken *pp_token) {
+  switch (pp_token->kind) {
+  case PP_HEADER_NAME:
+    FREE(pp_token->header_name.chars);
+    break;
+
+  case PP_IDENTIFIER:
+  case PP_NUMBER:
+    FREE(pp_token->chars);
+    break;
+
+  case PP_CHARACTER_CONSTANT:
+    FREE(pp_token->character_constant.chars);
+    break;
+
+  case PP_STRING_LITERAL:
+    FREE(pp_token->string_literal.chars);
+    break;
+
+  case PP_PUNCTUATOR:
+  case PP_NWSC:
+  case PP_WHITE_SPACE_CHARACTERS:
+  case PP_NEWLINE:
+      // do nothing
+      ;
+  }
+  FREE(pp_token);
 }
 
 // vim: set ft=c ts=2 sw=2 et:

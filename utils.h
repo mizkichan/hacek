@@ -1,16 +1,12 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include "alloc.h"
 #include <stdbool.h>
-#include <stddef.h>
 
 char *clone_str_range(const char *, const char *)
     __attribute__((returns_nonnull, nonnull));
 char *read_from_file(char *) __attribute__((nonnull));
-
-void *checked_malloc(size_t) __attribute__((returns_nonnull, alloc_size(1)));
-void *checked_realloc(void *, size_t)
-    __attribute__((returns_nonnull, alloc_size(2)));
 
 char *append_str(char *, char) __attribute__((returns_nonnull, nonnull));
 char *remove_str(char *, char) __attribute__((nonnull));
@@ -19,7 +15,7 @@ bool str_equals(const char *, const char *) __attribute__((nonnull));
 
 #define PUSH_BACK(type, ptr, n, value)                                         \
   do {                                                                         \
-    (ptr) = (type *)checked_realloc((ptr), sizeof(type) * (++(n) + 1));        \
+    (ptr) = (type *)REALLOC((ptr), sizeof(type) * (++(n) + 1));                \
     (ptr)[n - 1] = (value);                                                    \
     (ptr)[n] = NULL;                                                           \
   } while (0)

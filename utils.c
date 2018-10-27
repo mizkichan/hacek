@@ -1,23 +1,10 @@
+#include "alloc.h"
 #include "error.h"
 #include "utils.h"
 #include <fcntl.h>
-#include <stdint.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
-
-void *checked_malloc(size_t size) {
-  void *ptr = malloc(size);
-  PANIC_IF(!ptr);
-  return ptr;
-}
-
-void *checked_realloc(void *ptr, size_t size) {
-  PANIC_IF(size <= 0);
-  ptr = realloc(ptr, size);
-  PANIC_IF(!ptr);
-  return ptr;
-}
 
 char *read_from_file(char *pathname) {
   int fd;
@@ -42,7 +29,7 @@ char *read_from_file(char *pathname) {
   size_t size = (size_t)statbuf.st_size;
 
   /* read source file */
-  char *buf = checked_malloc(sizeof(char) * (size + 1));
+  char *buf = MALLOC(sizeof(char) * (size + 1));
   ssize_t how_many_read = read(fd, buf, size);
   ERROR_IF(how_many_read < 0, "%s", pathname);
   ERROR_IF(how_many_read != (ssize_t)size,
@@ -55,14 +42,18 @@ char *read_from_file(char *pathname) {
 
 char *append_str(char *str, char c) {
   size_t length = strlen(str);
-  str = checked_realloc(str, sizeof(char) * (length + 2));
+  str = REALLOC(str, sizeof(char) * (length + 2));
   str[length] = c;
   str[length + 1] = '\0';
   return str;
 }
 
-char *clone_str_range(const char *begin, const char *const end) {
-  return strndup(begin, (size_t)(end - begin));
+char *clone_str_range(const char *const begin, const char *const end) {
+  size_t n = (size_t)(end - begin);
+  char *cloned = MALLOC(n + 1);
+  strncpy(cloned, begin, n);
+  cloned[n] = '\0';
+  return cloned;
 }
 
 bool starts_with(const char *haystack, const char *needle) {

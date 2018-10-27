@@ -1,3 +1,4 @@
+#include "alloc.h"
 #include "error.h"
 #include "preprocessor.h"
 #include "utils.h"
@@ -19,19 +20,19 @@ void reconstruct_lines(char *src) {
 struct PPToken **tokenize(char *input) {
   size_t pp_tokens_count = 0;
   struct PPToken **pp_tokens = NULL;
-  struct PPToken *buf = checked_malloc(sizeof(struct PPToken));
+  struct PPToken *buf = MALLOC(sizeof(struct PPToken));
   struct PPToken *last = NULL, *one_before_last = NULL;
 
   if (match_white_space_characters(&input, buf)) {
     PUSH_BACK(struct PPToken *, pp_tokens, pp_tokens_count, buf);
-    buf = checked_malloc(sizeof(struct PPToken));
+    buf = MALLOC(sizeof(struct PPToken));
   }
 
   while (*input) {
     if (*input == '\n') {
       buf->kind = PP_NEWLINE;
       PUSH_BACK(struct PPToken *, pp_tokens, pp_tokens_count, buf);
-      buf = checked_malloc(sizeof(struct PPToken));
+      buf = MALLOC(sizeof(struct PPToken));
       ++input;
     }
 
@@ -53,19 +54,18 @@ struct PPToken **tokenize(char *input) {
           match_nwsc(&input, buf)));
 
     PUSH_BACK(struct PPToken *, pp_tokens, pp_tokens_count, buf);
-    buf = checked_malloc(sizeof(struct PPToken));
+    buf = MALLOC(sizeof(struct PPToken));
     one_before_last = last;
     last = pp_tokens[pp_tokens_count - 1];
 
     if (match_white_space_characters(&input, buf)) {
       PUSH_BACK(struct PPToken *, pp_tokens, pp_tokens_count, buf);
-      buf = checked_malloc(sizeof(struct PPToken));
+      buf = MALLOC(sizeof(struct PPToken));
     }
   }
 
   buf->kind = PP_NEWLINE;
   PUSH_BACK(struct PPToken *, pp_tokens, pp_tokens_count, buf);
-  buf = checked_malloc(sizeof(struct PPToken));
 
   return pp_tokens;
 }
@@ -77,7 +77,7 @@ void execute_pp_directives(struct PPToken **pp_tokens) {
 struct Token **convert_pp_tokens_into_tokens(struct PPToken **pp_tokens) {
   size_t token_count = 0;
   struct Token **tokens = NULL;
-  struct Token *buf = checked_malloc(sizeof(struct Token));
+  struct Token *buf = MALLOC(sizeof(struct Token));
 
   for (struct PPToken *pp_token = *pp_tokens; pp_token; ++pp_token) {
     switch (pp_token->kind) {
@@ -120,9 +120,10 @@ struct Token **convert_pp_tokens_into_tokens(struct PPToken **pp_tokens) {
     }
 
     PUSH_BACK(struct Token *, tokens, token_count, buf);
-    buf = checked_malloc(sizeof(struct PPToken));
+    buf = MALLOC(sizeof(struct PPToken));
   }
 
+  FREE(buf);
   return tokens;
 }
 
@@ -265,7 +266,7 @@ bool match_character_constant(char **c, struct PPToken *buf) {
   }
   (*c) += 1;
 
-  chars = checked_malloc(sizeof(char));
+  chars = MALLOC(sizeof(char));
   *chars = '\0';
   while (**c != '\'') {
     ERROR_IF(**c == '\n',
@@ -308,7 +309,7 @@ bool match_string_literal(char **c, struct PPToken *buf) {
   }
   (*c) += 1;
 
-  chars = checked_malloc(sizeof(char));
+  chars = MALLOC(sizeof(char));
   *chars = '\0';
   while (**c != '"') {
     ERROR_IF(**c == '\n',

@@ -1,3 +1,4 @@
+#include "alloc.h"
 #include "greatest.h"
 #include "utils.h"
 
@@ -15,10 +16,20 @@ TEST test_remove_str(void) {
 
 TEST test_clone_str_range(void) {
   char *src = "foobar2000";
+  char *result;
 
-  ASSERT_STR_EQ("foo", clone_str_range(&src[0], &src[3]));
-  ASSERT_STR_EQ("bar2", clone_str_range(&src[3], &src[7]));
-  ASSERT_STR_EQ("000", clone_str_range(&src[7], &src[10]));
+  result = clone_str_range(&src[0], &src[3]);
+  ASSERT_STR_EQ("foo", result);
+  FREE(result);
+
+  result = clone_str_range(&src[3], &src[7]);
+  ASSERT_STR_EQ("bar2", result);
+  FREE(result);
+
+  result = clone_str_range(&src[7], &src[10]);
+  ASSERT_STR_EQ("000", result);
+  FREE(result);
+
   PASS();
 }
 

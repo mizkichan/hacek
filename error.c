@@ -2,7 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 
-void debug(char *file, int line, int errnum, const char *format, ...) {
+void debug(const char *file, int line, int errnum, bool exit,
+           const char *format, ...) {
   va_list ap;
 
   fprintf(stderr, "%s:%d", file, line);
@@ -19,6 +20,10 @@ void debug(char *file, int line, int errnum, const char *format, ...) {
   }
 
   fputc('\n', stderr);
+
+  if (exit) {
+    abort();
+  }
 }
 
 // vim: set ft=c ts=2 sw=2 et:

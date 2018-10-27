@@ -1,3 +1,4 @@
+#include "alloc.h"
 #include "greatest.h"
 
 SUITE_EXTERN(preprocessor);
@@ -6,6 +7,7 @@ SUITE_EXTERN(utils);
 GREATEST_MAIN_DEFS();
 int main(int argc, char **argv) {
   GREATEST_MAIN_BEGIN();
+  alloc_init();
 
   RUN_SUITE(preprocessor);
   RUN_SUITE(utils);

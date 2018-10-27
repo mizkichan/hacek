@@ -190,6 +190,8 @@ struct PPToken {
   };
 };
 
+void free_pp_token(struct PPToken *) __attribute__((nonnull));
+
 bool str_to_keyword(const char *, enum Keyword *);
 
 const char *keyword_str(int);

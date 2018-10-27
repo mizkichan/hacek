@@ -1,3 +1,4 @@
+#include "alloc.h"
 #include "greatest.h"
 #include "preprocessor.h"
 #include "token.h"
@@ -46,6 +47,11 @@ TEST test_tokenize(void) {
   ASSERT(result[6] != NULL);
   ASSERT_ENUM_EQ(PP_NEWLINE, result[6]->kind, pp_token_kind_str);
 
+  for (struct PPToken **token = result; *token; ++token) {
+    free_pp_token(*token);
+  }
+  FREE(result);
+
   PASS();
 }
 
@@ -59,6 +65,7 @@ TEST test_match_header_name_q(void) {
   ASSERT_STR_EQ("hello.h", buf.header_name.chars);
   ASSERT_EQ(*src, '\0');
 
+  FREE(buf.header_name.chars);
   PASS();
 }
 
@@ -72,6 +79,7 @@ TEST test_match_header_name_h(void) {
   ASSERT_STR_EQ("stdio.h", buf.header_name.chars);
   ASSERT_EQ(*src, '\0');
 
+  FREE(buf.header_name.chars);
   PASS();
 }
 
@@ -84,6 +92,7 @@ TEST test_match_identifier(void) {
   ASSERT_STR_EQ("foobar2000", buf.chars);
   ASSERT_EQ(*src, '\0');
 
+  FREE(buf.chars);
   PASS();
 }
 
@@ -96,6 +105,7 @@ TEST test_match_pp_number(void) {
   ASSERT_STR_EQ(".01ae+E-p+P-.", buf.chars);
   ASSERT_EQ(*src, '\0');
 
+  FREE(buf.chars);
   PASS();
 }
 
@@ -110,6 +120,7 @@ TEST test_match_character_constant(void) {
   ASSERT_STR_EQ("foobar2000", buf.character_constant.chars);
   ASSERT_EQ(*src, '\0');
 
+  FREE(buf.character_constant.chars);
   PASS();
 }
 
@@ -124,6 +135,7 @@ TEST test_match_character_constant_wchar(void) {
   ASSERT_STR_EQ("foobar2000", buf.character_constant.chars);
   ASSERT_EQ(*src, '\0');
 
+  FREE(buf.character_constant.chars);
   PASS();
 }
 
@@ -138,6 +150,7 @@ TEST test_match_character_constant_char16(void) {
   ASSERT_STR_EQ("foobar2000", buf.character_constant.chars);
   ASSERT_EQ(*src, '\0');
 
+  FREE(buf.character_constant.chars);
   PASS();
 }
 
@@ -152,6 +165,7 @@ TEST test_match_character_constant_char32(void) {
   ASSERT_STR_EQ("foobar2000", buf.character_constant.chars);
   ASSERT_EQ(*src, '\0');
 
+  FREE(buf.character_constant.chars);
   PASS();
 }
 
@@ -166,6 +180,7 @@ TEST test_match_string_literal(void) {
   ASSERT_STR_EQ("foobar2000", buf.string_literal.chars);
   ASSERT_EQ(*src, '\0');
 
+  FREE(buf.string_literal.chars);
   PASS();
 }
 
@@ -180,6 +195,7 @@ TEST test_match_string_literal_utf8(void) {
   ASSERT_STR_EQ("foobar2000", buf.string_literal.chars);
   ASSERT_EQ(*src, '\0');
 
+  FREE(buf.string_literal.chars);
   PASS();
 }
 
@@ -194,6 +210,7 @@ TEST test_match_string_literal_char16(void) {
   ASSERT_STR_EQ("foobar2000", buf.string_literal.chars);
   ASSERT_EQ(*src, '\0');
 
+  FREE(buf.string_literal.chars);
   PASS();
 }
 
@@ -208,6 +225,7 @@ TEST test_match_string_literal_char32(void) {
   ASSERT_STR_EQ("foobar2000", buf.string_literal.chars);
   ASSERT_EQ(*src, '\0');
 
+  FREE(buf.string_literal.chars);
   PASS();
 }
 
@@ -222,6 +240,7 @@ TEST test_match_string_literal_wchar(void) {
   ASSERT_STR_EQ("foobar2000", buf.string_literal.chars);
   ASSERT_EQ(*src, '\0');
 
+  FREE(buf.string_literal.chars);
   PASS();
 }
 

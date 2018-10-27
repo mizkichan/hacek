@@ -1,3 +1,4 @@
+#include "alloc.h"
 #include "error.h"
 #include "parser.h"
 #include "preprocessor.h"
@@ -82,6 +83,8 @@ int main(int argc, char **argv) {
   struct Token **tokens;
   struct AST *ast;
 
+  alloc_init();
+
   if (!parse_args(argc, argv, &args)) {
     return EXIT_FAILURE;
   }
@@ -110,6 +113,7 @@ int main(int argc, char **argv) {
 
   if (args.eflag) {
     // output preprocessed code
+    FREE(source);
     return EXIT_SUCCESS;
   }
 
@@ -129,16 +133,20 @@ int main(int argc, char **argv) {
 
   if (args.sflag) {
     // output assembly code
+    FREE(source);
     return EXIT_SUCCESS;
   }
 
   if (args.cflag) {
     // output object file
+    FREE(source);
     return EXIT_SUCCESS;
   }
 
   // Phase 8. Linking
   // output executable file
+
+  FREE(source);
   return EXIT_SUCCESS;
 }
 

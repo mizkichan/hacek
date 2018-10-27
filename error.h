@@ -3,19 +3,15 @@
 
 #include <errno.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdlib.h>
-#include <stdnoreturn.h>
 
-void debug(char *, int, int, const char *, ...)
-    __attribute__((format(printf, 4, 5)));
+void debug(const char *, int, int, bool, const char *, ...)
+    __attribute__((format(printf, 5, 6), nonnull(1)));
 
-#define WARN(...) debug(__FILE__, __LINE__, errno, __VA_ARGS__)
-#define ERROR(...)                                                             \
-  do {                                                                         \
-    WARN(__VA_ARGS__);                                                         \
-    exit(EXIT_FAILURE);                                                        \
-  } while (0)
-#define PANIC() ERROR(NULL)
+#define WARN(...) debug(__FILE__, __LINE__, errno, false, __VA_ARGS__)
+#define ERROR(...) debug(__FILE__, __LINE__, errno, true, __VA_ARGS__)
+#define PANIC() debug(__FILE__, __LINE__, errno, true, NULL)
 
 #define WARN_IF(cond, ...)                                                     \
   if (cond)                                                                    \

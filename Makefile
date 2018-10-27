@@ -3,7 +3,7 @@ CPPFLAGS += -D_POSIX_C_SOURCE=200809L
 LDFLAGS += -Wno-unused-command-line-argument
 
 PROGRAMS = hacek
-PROGRAM_SRCS = utils.c error.c preprocessor.c token.c parser.c
+PROGRAM_SRCS = utils.c error.c preprocessor.c token.c parser.c alloc.c
 PROGRAM_OBJS = $(PROGRAM_SRCS:.c=.o)
 
 TESTS = test
@@ -31,5 +31,5 @@ $(TESTS): %: %.o $(TEST_OBJS)
 
 .PHONY: clean
 clean:
-	$(RM) $(PROGRAMS) $(PROGRAM_OBJS)
-	$(RM) $(TESTS) $(TEST_OBJS)
+	$(RM) $(PROGRAMS) $(PROGRAMS:=.o) $(PROGRAM_OBJS)
+	$(RM) $(TESTS) $(TESTS:=.o) $(TEST_OBJS)
