@@ -91,7 +91,9 @@ int main(int argc, char **argv) {
     return EXIT_SUCCESS;
   }
 
-  EXIT_MESSAGE_IF(!args.input, "no input file");
+  if (!args.input) {
+    ERROR("no input file");
+  }
 
   // Phase 1.
   source = read_from_file(args.input);

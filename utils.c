@@ -53,7 +53,7 @@ char *read_from_file(char *pathname) {
   return buf;
 }
 
-char *append_char(char *str, char c) {
+char *append_str(char *str, char c) {
   size_t length = strlen(str);
   str = checked_realloc(str, sizeof(char) * (length + 2));
   str[length] = c;
@@ -65,20 +65,13 @@ char *clone_str_range(const char *begin, const char *const end) {
   return strndup(begin, (size_t)(end - begin));
 }
 
-char *append_str(char *head, char *tail) {
-  size_t len_head = strlen(head), len_tail = strlen(tail);
-  head = checked_realloc(head, sizeof(char) * (len_head + len_tail + 1));
-  strcat(head, tail);
-  return head;
-}
-
 bool starts_with(const char *haystack, const char *needle) {
   return strstr(haystack, needle) == haystack;
 }
 
 bool str_equals(const char *s1, const char *s2) { return strcmp(s1, s2) == 0; }
 
-void remove_str(char *str, char c) {
+char *remove_str(char *str, char c) {
   size_t diff = 0, i = 0;
 
   do {
@@ -87,6 +80,8 @@ void remove_str(char *str, char c) {
     }
     str[i] = str[i + diff];
   } while (str[i++ + diff]);
+
+  return str;
 }
 
 // vim: set ft=c ts=2 sw=2 et:

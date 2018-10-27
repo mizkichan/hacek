@@ -2,7 +2,6 @@
 #include "preprocessor.h"
 #include "utils.h"
 #include <ctype.h>
-#include <string.h>
 
 void reconstruct_lines(char *src) {
   char *c = src;
@@ -269,10 +268,9 @@ bool match_character_constant(char **c, struct PPToken *buf) {
   chars = checked_malloc(sizeof(char));
   *chars = '\0';
   while (**c != '\'') {
-    EXIT_MESSAGE_IF(
-        **c == '\n',
-        "Newline character must not be appear in a character constant.");
-    chars = append_char(chars, **c);
+    ERROR_IF(**c == '\n',
+             "Newline character must not be appear in a character constant.");
+    chars = append_str(chars, **c);
     ++(*c);
   }
   (*c) += 1;
@@ -313,10 +311,9 @@ bool match_string_literal(char **c, struct PPToken *buf) {
   chars = checked_malloc(sizeof(char));
   *chars = '\0';
   while (**c != '"') {
-    EXIT_MESSAGE_IF(
-        **c == '\n',
-        "Newline character must not be appear in a string literal.");
-    chars = append_char(chars, **c);
+    ERROR_IF(**c == '\n',
+             "Newline character must not be appear in a string literal.");
+    chars = append_str(chars, **c);
     ++(*c);
   }
   (*c) += 1;
@@ -551,7 +548,7 @@ void unescape(char *str) {
       break;
 
     default:
-      EXIT_MESSAGE("Invalid escape sequence: \\%c (\\x%x)", c[1], c[1]);
+      ERROR("Invalid escape sequence: \\%c (\\x%x)", c[1], c[1]);
     }
 
     c += 2;
