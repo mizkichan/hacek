@@ -96,18 +96,22 @@ struct Token **convert_pp_tokens_into_tokens(struct PPToken **pp_tokens) {
     case PP_NUMBER:
       // number can be either integer constant or floating constant.
       ERROR("Not implemented yet");
+      break;
 
     case PP_CHARACTER_CONSTANT:
       // character constant can only be character constant.
       ERROR("Not implemented yet");
+      break;
 
     case PP_STRING_LITERAL:
       // string literal can only be string literal.
       ERROR("Not implemented yet");
+      break;
 
     case PP_PUNCTUATOR:
       // punctuator can only be punctuator.
       ERROR("Not implemented yet");
+      break;
 
     case PP_HEADER_NAME:
     case PP_NWSC:
@@ -549,7 +553,8 @@ void unescape(char *str) {
       break;
 
     default:
-      ERROR("Invalid escape sequence: \\%c (\\x%x)", c[1], c[1]);
+      ERROR("Invalid escape sequence: \\%c (%s\\x%x)", c[1],
+            (c[1] < 0 ? "-" : ""), (unsigned)c[1]);
     }
 
     c += 2;

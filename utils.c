@@ -9,6 +9,9 @@
 char *read_from_file(char *pathname) {
   int fd;
   struct stat statbuf;
+  size_t size;
+  char *buf;
+  ssize_t how_many_read;
 
   /* open the file */
   fd = open(pathname, O_RDONLY);
@@ -26,14 +29,15 @@ char *read_from_file(char *pathname) {
   if (!S_ISREG(statbuf.st_mode)) {
     return NULL;
   }
-  size_t size = (size_t)statbuf.st_size;
+  size = (size_t)statbuf.st_size;
 
   /* read source file */
-  char *buf = MALLOC(sizeof(char) * (size + 1));
-  ssize_t how_many_read = read(fd, buf, size);
+  buf = MALLOC(sizeof(char) * (size + 1));
+  how_many_read = read(fd, buf, size);
   ERROR_IF(how_many_read < 0, "%s", pathname);
   ERROR_IF(how_many_read != (ssize_t)size,
-           "size mismatch (read() == %ld, size == %ld)", how_many_read, size);
+           "size mismatch (read() == %ld, size == %ld)", how_many_read,
+           (ssize_t)size);
   buf[size] = '\0';
 
   WARN_IF(close(fd) < 0, "%s", pathname);
