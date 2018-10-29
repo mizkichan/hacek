@@ -10,9 +10,9 @@ int main(int argc, char **argv) {
   GREATEST_MAIN_BEGIN();
   alloc_init();
 
+  RUN_SUITE(utils);
   RUN_SUITE(lexer);
   RUN_SUITE(preprocessor);
-  RUN_SUITE(utils);
 
   GREATEST_MAIN_END();
 }

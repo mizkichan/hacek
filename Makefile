@@ -30,7 +30,7 @@ all: $(PROGRAMS)
 $(PROGRAMS): %: %.o $(PROGRAM_OBJS) $(COMMON_OBJS)
 
 $(TESTS): CFLAGS += -g -O0 --coverage
-$(TESTS): LDFLAGS += --coverage
+$(TESTS): LDFLAGS += -g -O0 --coverage
 $(TESTS): %: %.o $(TEST_OBJS) $(COMMON_OBJS)
 
 .PHONY: clean

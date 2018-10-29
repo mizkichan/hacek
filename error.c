@@ -2,11 +2,11 @@
 #include <stdio.h>
 #include <string.h>
 
-void debug(const char *file, int line, int errnum, bool exit,
+void debug(const char *func, const char *file, int line, int errnum, bool exit,
            const char *format, ...) {
   va_list ap;
 
-  fprintf(stderr, "%s:%d", file, line);
+  fprintf(stderr, "%s:%s:%d", func, file, line);
 
   if (format) {
     fputs(": ", stderr);

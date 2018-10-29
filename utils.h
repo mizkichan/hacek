@@ -17,8 +17,8 @@ bool str_range_equals(const char *, const char *, const char *)
 
 #define PUSH_BACK(type, ptr, n, value)                                         \
   do {                                                                         \
-    (ptr) = (type *)REALLOC((ptr), sizeof(type) * (++(n) + 1));                \
-    (ptr)[n - 1] = (value);                                                    \
+    (ptr) = (type *)REALLOC(ptr, sizeof(type) * (++(n) + 1));                  \
+    (ptr)[(n)-1] = (value);                                                    \
     (ptr)[n] = NULL;                                                           \
   } while (0)
 

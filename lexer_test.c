@@ -14,16 +14,41 @@ TEST test_reconstruct_lines(void) {
 }
 
 TEST test_replace_comments_multiline(void) {
-  char src[] = "foo/*comment\ncomment*/bar";
-  replace_comments(src);
-  ASSERT_STR_EQ("foo bar", src);
+  char src[] = "foo/*comment\ncomment*/bar\n";
+  struct PPToken **pp_tokens = tokenize(src);
+  replace_comments(src, pp_tokens);
+
+  ASSERT_STR_EQ("foo bar\n", src);
+  ASSERT(pp_tokens != NULL);
+
+  ASSERT(pp_tokens[0] != NULL);
+  ASSERT_ENUM_EQ(PP_IDENTIFIER, pp_tokens[0]->kind, pp_token_kind_str);
+  ASSERT_EQ(src, pp_tokens[0]->position.begin);
+  ASSERT_EQ(src + 3, pp_tokens[0]->position.end);
+
+  ASSERT_ENUM_EQ(PP_IDENTIFIER, pp_tokens[1]->kind, pp_token_kind_str);
+  ASSERT_ENUM_EQ(PP_IDENTIFIER, pp_tokens[1]->kind, pp_token_kind_str);
+  ASSERT_EQ(src + 4, pp_tokens[1]->position.begin);
+  ASSERT_EQ(src + 7, pp_tokens[1]->position.end);
+
+  for (struct PPToken **pp_token = pp_tokens; *pp_token; ++pp_token) {
+    FREE(*pp_token);
+  }
+  FREE(pp_tokens);
   PASS();
 }
 
 TEST test_replace_comments_oneline(void) {
-  char src[] = "foo//comment\nbar";
-  replace_comments(src);
-  ASSERT_STR_EQ("foo \nbar", src);
+  char src[] = "foo//comment\nbar\n";
+  struct PPToken **pp_tokens = tokenize(src);
+  replace_comments(src, pp_tokens);
+
+  ASSERT_STR_EQ("foo \nbar\n", src);
+
+  for (struct PPToken **pp_token = pp_tokens; *pp_token; ++pp_token) {
+    FREE(*pp_token);
+  }
+  FREE(pp_tokens);
   PASS();
 }
 
@@ -56,6 +81,8 @@ TEST test_tokenize(void) {
 
   ASSERT(result[4] != NULL);
   ASSERT_ENUM_EQ(PP_NEWLINE, result[4]->kind, pp_token_kind_str);
+
+  ASSERT(result[5] == NULL);
 
   for (struct PPToken **pp_token = result; *pp_token; ++pp_token) {
     FREE(*pp_token);
@@ -314,9 +341,9 @@ TEST test_match_punctuator(void) {
 
 SUITE(lexer) {
   RUN_TEST(test_reconstruct_lines);
+  RUN_TEST(test_tokenize);
   RUN_TEST(test_replace_comments_multiline);
   RUN_TEST(test_replace_comments_oneline);
-  RUN_TEST(test_tokenize);
 
   RUN_TEST(test_match_header_name_q);
   RUN_TEST(test_match_header_name_h);

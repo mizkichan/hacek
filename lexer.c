@@ -17,11 +17,13 @@ static bool match_string_literal(char **, struct PPToken *)
 static bool match_punctuator(char **, struct PPToken *)
     __attribute__((nonnull));
 static bool match_nwsc(char **, struct PPToken *) __attribute__((nonnull));
+static bool match_newline(char **, struct PPToken *) __attribute__((nonnull));
 static bool is_include_directive(struct PPToken *,
                                  struct PPToken *); // params can be null
 static bool is_nondigit(char) __attribute__((const));
 static bool is_digit(char) __attribute__((const));
 static bool is_whitespace(char) __attribute__((const));
+static size_t replace_comments_impl(char *, char *);
 
 void reconstruct_lines(char *src) {
   char *c = src;
@@ -36,66 +38,71 @@ void reconstruct_lines(char *src) {
   remove_str(src, DEL);
 }
 
-void replace_comments(char *src) {
-  char *c = src;
-  while (*c) {
-    if (starts_with(c, "/*")) {
-      erase_str(c, search_str(c + 2, "*/") + 1);
-      PANIC_IF(*c != '/');
-      *c = ' ';
-    } else if (starts_with(c, "//")) {
-      erase_str(c, search_char(c + 2, '\n') - 1);
-      PANIC_IF(c[1] != '\n');
-      *c = ' ';
+void replace_comments(char *src, struct PPToken **pp_tokens) {
+  char *ws_begin, *ws_end;
+
+  if (!pp_tokens[0]) {
+    return;
+  }
+
+  ws_begin = src;
+  ws_end = pp_tokens[0]->position.begin;
+
+  for (size_t i = 0; pp_tokens[i]; ++i) {
+    size_t how_many_moved = 0;
+
+    how_many_moved = replace_comments_impl(ws_begin, ws_end);
+
+    for (size_t j = i; pp_tokens[j]; ++j) {
+      pp_tokens[j]->position.begin -= how_many_moved;
+      pp_tokens[j]->position.end -= how_many_moved;
     }
 
-    ++c;
+    if (!pp_tokens[i + 1]) {
+      break;
+    }
+    ws_begin = pp_tokens[i]->position.end;
+    ws_end = pp_tokens[i + 1]->position.begin;
   }
 }
 
 struct PPToken **tokenize(char *input) {
   size_t pp_tokens_count = 0;
   struct PPToken **pp_tokens = NULL;
-  struct PPToken *buf = MALLOC(sizeof(struct PPToken));
+  struct PPToken *buf;
   struct PPToken *last = NULL, *one_before_last = NULL;
 
   match_white_space_characters(&input);
 
   while (*input) {
-    if (*input == '\n') {
-      buf->kind = PP_NEWLINE;
-      PUSH_BACK(struct PPToken *, pp_tokens, pp_tokens_count, buf);
-      buf = MALLOC(sizeof(struct PPToken));
-      ++input;
-    }
-
-    // header-name
-    PANIC_IF(
-        !((is_include_directive(one_before_last, last) &&
-           match_header_name(&input, buf)) ||
-          // identifier
-          match_identifier(&input, buf) ||
-          // pp-number
-          match_pp_number(&input, buf) ||
-          // character-constant
-          match_character_constant(&input, buf) ||
-          // string-literal
-          match_string_literal(&input, buf) ||
-          // punctuator
-          match_punctuator(&input, buf) ||
-          // "each non-white-space character that cannot be one of the above"
-          match_nwsc(&input, buf)));
+    buf = MALLOC(sizeof(struct PPToken));
+    PANIC_IF(!(
+        // header-name
+        (is_include_directive(one_before_last, last) &&
+         match_header_name(&input, buf)) ||
+        // identifier
+        match_identifier(&input, buf) ||
+        // pp-number
+        match_pp_number(&input, buf) ||
+        // character-constant
+        match_character_constant(&input, buf) ||
+        // string-literal
+        match_string_literal(&input, buf) ||
+        // punctuator
+        match_punctuator(&input, buf) ||
+        // newline
+        match_newline(&input, buf) ||
+        // "each non-white-space character that cannot be one of the above"
+        match_nwsc(&input, buf) ||
+        //
+        false));
 
     PUSH_BACK(struct PPToken *, pp_tokens, pp_tokens_count, buf);
-    buf = MALLOC(sizeof(struct PPToken));
     one_before_last = last;
     last = pp_tokens[pp_tokens_count - 1];
 
     match_white_space_characters(&input);
   }
-
-  buf->kind = PP_NEWLINE;
-  PUSH_BACK(struct PPToken *, pp_tokens, pp_tokens_count, buf);
 
   return pp_tokens;
 }
@@ -480,6 +487,17 @@ static bool match_nwsc(char **c, struct PPToken *buf) {
   return true;
 }
 
+static bool match_newline(char **c, struct PPToken *buf) {
+  if (**c != '\n') {
+    return false;
+  }
+  buf->kind = PP_NEWLINE;
+  buf->position.begin = *c;
+  ++(*c);
+  buf->position.end = *c;
+  return true;
+}
+
 static bool is_include_directive(struct PPToken *one_before_last,
                                  struct PPToken *last) {
   return one_before_last && last && one_before_last->kind == PP_PUNCTUATOR &&
@@ -493,6 +511,37 @@ static bool is_digit(char c) { return isdigit(c); }
 
 static bool is_whitespace(char c) {
   return c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f';
+}
+
+static size_t replace_comments_impl(char *begin, char *end) {
+  size_t result = 0;
+  char *erase_begin, *erase_end;
+
+  while (begin < end) {
+    if (starts_with(begin, "/*")) {
+      erase_begin = begin;
+
+      erase_end = search_str(begin + 2, "*/");
+      PANIC_IF(!erase_end);
+      ++erase_end;
+
+      erase_str(erase_begin, erase_end);
+      *begin = ' ';
+      result += (size_t)(erase_end - erase_begin);
+    } else if (starts_with(begin, "//")) {
+      erase_begin = begin;
+      erase_end = search_char(begin + 2, '\n');
+      PANIC_IF(!erase_end);
+      --erase_end;
+
+      erase_str(erase_begin, erase_end);
+      *begin = ' ';
+      result += (size_t)(erase_end - erase_begin);
+    }
+    ++begin;
+  }
+
+  return result;
 }
 
 // vim: set ft=c ts=2 sw=2 et:
