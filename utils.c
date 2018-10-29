@@ -79,4 +79,21 @@ char *remove_str(char *str, char c) {
   return str;
 }
 
+void erase_str(char *begin, char *end) {
+  while (*end) {
+    *begin = *end;
+    ++begin;
+    ++end;
+  }
+  *begin = '\0';
+}
+
+char *search_str(const char *haystack, const char *needle) {
+  return strstr(haystack, needle);
+}
+
+char *search_char(const char *haystack, char needle) {
+  return strchr(haystack, needle);
+}
+
 // vim: set ft=c ts=2 sw=2 et:

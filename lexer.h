@@ -5,6 +5,7 @@
 #include <stdbool.h>
 
 void reconstruct_lines(char *) __attribute__((nonnull));
+void replace_comments(char *) __attribute__((nonnull));
 struct PPToken **tokenize(char *) __attribute__((returns_nonnull, nonnull));
 
 #endif

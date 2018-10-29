@@ -1,5 +1,6 @@
 #include "alloc.h"
 #include "error.h"
+#include "lexer.h"
 #include "parser.h"
 #include "preprocessor.h"
 #include "token.h"
@@ -107,6 +108,7 @@ int main(int argc, char **argv) {
   reconstruct_lines(source);
 
   // Phase 3. Tokenization of the source text into preprocessing tokens.
+  replace_comments(source);
   pp_tokens = tokenize(source);
 
   // Phase 4. Execution of preprocessing directives.

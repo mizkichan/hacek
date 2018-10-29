@@ -12,6 +12,20 @@ TEST test_reconstruct_lines(void) {
   PASS();
 }
 
+TEST test_replace_comments_multiline(void) {
+  char src[] = "foo/*comment\ncomment*/bar";
+  replace_comments(src);
+  ASSERT_STR_EQ("foo bar", src);
+  PASS();
+}
+
+TEST test_replace_comments_oneline(void) {
+  char src[] = "foo//comment\nbar";
+  replace_comments(src);
+  ASSERT_STR_EQ("foo \nbar", src);
+  PASS();
+}
+
 TEST test_tokenize(void) {
   char *src = "  foo\t'a'+123\n";
   struct PPToken **result = tokenize(src);
@@ -317,7 +331,10 @@ TEST test_match_punctuator(void) {
 
 SUITE(lexer) {
   RUN_TEST(test_reconstruct_lines);
+  RUN_TEST(test_replace_comments_multiline);
+  RUN_TEST(test_replace_comments_oneline);
   RUN_TEST(test_tokenize);
+
   RUN_TEST(test_match_header_name_q);
   RUN_TEST(test_match_header_name_h);
   RUN_TEST(test_match_identifier);

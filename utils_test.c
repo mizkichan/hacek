@@ -15,6 +15,28 @@ TEST test_remove_str(void) {
   PASS();
 }
 
+TEST test_erase_str(void) {
+  char src[] = "foobarbaz";
+  erase_str(src, src + 2);
+  ASSERT_STR_EQ("obarbaz", src);
+  erase_str(src + 5, src + 7);
+  ASSERT_STR_EQ("obarb", src);
+  erase_str(src + 2, src + 3);
+  ASSERT_STR_EQ("obrb", src);
+  erase_str(src, src);
+  ASSERT_STR_EQ("obrb", src);
+  erase_str(src + 4, src + 4);
+  ASSERT_STR_EQ("obrb", src);
+  erase_str(src + 1, src + 1);
+  ASSERT_STR_EQ("obrb", src);
+  erase_str(src + 2, src + 4);
+  ASSERT_STR_EQ("ob", src);
+  erase_str(src, src + 2);
+  ASSERT_STR_EQ("", src);
+
+  PASS();
+}
+
 TEST test_clone_str_range(void) {
   char *src = "foobar2000";
   char *result;
@@ -36,6 +58,7 @@ TEST test_clone_str_range(void) {
 
 SUITE(utils) {
   RUN_TEST(test_remove_str);
+  RUN_TEST(test_erase_str);
   RUN_TEST(test_clone_str_range);
 }
 

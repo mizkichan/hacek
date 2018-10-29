@@ -37,6 +37,23 @@ void reconstruct_lines(char *src) {
   remove_str(src, DEL);
 }
 
+void replace_comments(char *src) {
+  char *c = src;
+  while (*c) {
+    if (starts_with(c, "/*")) {
+      erase_str(c, search_str(c + 2, "*/") + 1);
+      PANIC_IF(*c != '/');
+      *c = ' ';
+    } else if (starts_with(c, "//")) {
+      erase_str(c, search_char(c + 2, '\n') - 1);
+      PANIC_IF(c[1] != '\n');
+      *c = ' ';
+    }
+
+    ++c;
+  }
+}
+
 struct PPToken **tokenize(char *input) {
   size_t pp_tokens_count = 0;
   struct PPToken **pp_tokens = NULL;
