@@ -4,10 +4,7 @@
 #include "alloc.h"
 #include <stdbool.h>
 
-char *clone_str_range(const char *, const char *)
-    __attribute__((returns_nonnull, nonnull));
 char *read_from_file(char *) __attribute__((nonnull));
-
 char *append_str(char *, char) __attribute__((returns_nonnull, nonnull));
 char *remove_str(char *, char) __attribute__((returns_nonnull, nonnull));
 void erase_str(char *, char *) __attribute__((nonnull));
@@ -15,7 +12,8 @@ char *search_str(const char *, const char *)
     __attribute__((returns_nonnull, nonnull));
 char *search_char(const char *, char) __attribute__((nonnull));
 bool starts_with(const char *, const char *) __attribute__((nonnull));
-bool str_equals(const char *, const char *) __attribute__((nonnull));
+bool str_range_equals(const char *, const char *, const char *)
+    __attribute__((nonnull));
 
 #define PUSH_BACK(type, ptr, n, value)                                         \
   do {                                                                         \

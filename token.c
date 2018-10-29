@@ -1,4 +1,3 @@
-#include "alloc.h"
 #include "error.h"
 #include "token.h"
 #include "utils.h"
@@ -273,18 +272,18 @@ const char *pp_token_kind_str(int x) {
   ERROR("unknown enum variant: %d", x);
 }
 
-const char *encoding_prefix_str(int x) {
-  switch ((enum EncodingPrefix)x) {
-  case ENCODING_PREFIX_UTF8:
-    return "ENCODING_PREFIX_UTF8";
-  case ENCODING_PREFIX_CHAR16:
-    return "ENCODING_PREFIX_CHAR16";
-  case ENCODING_PREFIX_CHAR32:
-    return "ENCODING_PREFIX_CHAR32";
-  case ENCODING_PREFIX_WCHAR:
-    return "ENCODING_PREFIX_WCHAR";
-  case ENCODING_PREFIX_NONE:
-    return "ENCODING_PREFIX_NONE";
+const char *string_literal_prefix_str(int x) {
+  switch ((enum StringLiteralPrefix)x) {
+  case STRING_LITERAL_PREFIX_UTF8:
+    return "STRING_LITERAL_PREFIX_UTF8";
+  case STRING_LITERAL_PREFIX_CHAR16:
+    return "STRING_LITERAL_PREFIX_CHAR16";
+  case STRING_LITERAL_PREFIX_CHAR32:
+    return "STRING_LITERAL_PREFIX_CHAR32";
+  case STRING_LITERAL_PREFIX_WCHAR:
+    return "STRING_LITERAL_PREFIX_WCHAR";
+  case STRING_LITERAL_PREFIX_NONE:
+    return "STRING_LITERAL_PREFIX_NONE";
   }
   ERROR("unknown enum variant: %d", x);
 }
@@ -301,34 +300,6 @@ const char *character_constant_prefix_str(int x) {
     return "CHARACTER_CONSTANT_PREFIX_NONE";
   }
   ERROR("unknown enum variant: %d", x);
-}
-
-void free_pp_token(struct PPToken *pp_token) {
-  switch (pp_token->kind) {
-  case PP_HEADER_NAME:
-    FREE(pp_token->header_name.chars);
-    break;
-
-  case PP_IDENTIFIER:
-  case PP_NUMBER:
-    FREE(pp_token->chars);
-    break;
-
-  case PP_CHARACTER_CONSTANT:
-    FREE(pp_token->character_constant.chars);
-    break;
-
-  case PP_STRING_LITERAL:
-    FREE(pp_token->string_literal.chars);
-    break;
-
-  case PP_PUNCTUATOR:
-  case PP_NWSC:
-  case PP_NEWLINE:
-      // do nothing
-      ;
-  }
-  FREE(pp_token);
 }
 
 // vim: set ft=c ts=2 sw=2 et:

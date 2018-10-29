@@ -4,8 +4,8 @@
 #include "utils.h"
 #include <ctype.h>
 
-static void unescape(char *) __attribute__((nonnull));
-static bool str_to_keyword(const char *, enum Keyword *)
+static void unescape(char *, char *) __attribute__((nonnull));
+static bool str_to_keyword(const char *, const char *, enum Keyword *)
     __attribute__((nonnull));
 
 void execute_pp_directives(struct PPToken **pp_tokens) {
@@ -16,16 +16,12 @@ void convert_escape_sequences(struct PPToken **pp_tokens) {
   // FIXME only simple-escape-sequence is implemented
 
   for (struct PPToken *pp_token = *pp_tokens; pp_token; ++pp_token) {
-    char *str;
-    if (pp_token->kind == PP_CHARACTER_CONSTANT) {
-      str = pp_token->character_constant.chars;
-    } else if (pp_token->kind == PP_STRING_LITERAL) {
-      str = pp_token->string_literal.chars;
-    } else {
+    if (pp_token->kind != PP_CHARACTER_CONSTANT ||
+        pp_token->kind != PP_STRING_LITERAL) {
       break;
     }
 
-    unescape(str);
+    unescape(pp_token->position.begin, pp_token->position.end);
   }
 }
 
@@ -43,12 +39,13 @@ struct Token **convert_pp_tokens_into_tokens(struct PPToken **pp_tokens) {
     case PP_IDENTIFIER:
       // identifier can be either keyword, identifier or enumeration constant.
 
-      if (str_to_keyword(pp_token->chars, &buf->keyword)) {
+      if (str_to_keyword(pp_token->position.begin, pp_token->position.end,
+                         &buf->keyword)) {
         buf->kind = TOKEN_KEYWORD;
       } else {
         // NOTE THAT THIS STUFF CAN BE ENUMERATION CONSTANT!
         buf->kind = TOKEN_IDENTIFIER;
-        buf->chars = pp_token->chars;
+        buf->position = pp_token->position;
       }
       break;
 
@@ -88,9 +85,10 @@ struct Token **convert_pp_tokens_into_tokens(struct PPToken **pp_tokens) {
   return tokens;
 }
 
-static void unescape(char *str) {
-  char *c = str;
-  while (*c) {
+static void unescape(char *begin, char *end) {
+  char *c = begin;
+
+  while (c < end) {
     if (*c != '\\') {
       ++c;
       continue;
@@ -134,97 +132,97 @@ static void unescape(char *str) {
     c += 2;
   }
 
-  remove_str(str, DEL);
+  remove_str(begin, DEL);
 }
 
-bool str_to_keyword(const char *str, enum Keyword *buf) {
-  if (str_equals(str, "_Alignas")) {
+bool str_to_keyword(const char *begin, const char *end, enum Keyword *buf) {
+  if (str_range_equals("_Alignas", begin, end)) {
     *buf = ALIGNAS;
-  } else if (str_equals(str, "_Alignof")) {
+  } else if (str_range_equals("_Alignof", begin, end)) {
     *buf = ALIGNOF;
-  } else if (str_equals(str, "_Atomic")) {
+  } else if (str_range_equals("_Atomic", begin, end)) {
     *buf = ATOMIC;
-  } else if (str_equals(str, "auto")) {
+  } else if (str_range_equals("auto", begin, end)) {
     *buf = AUTO;
-  } else if (str_equals(str, "_Bool")) {
+  } else if (str_range_equals("_Bool", begin, end)) {
     *buf = BOOL;
-  } else if (str_equals(str, "break")) {
+  } else if (str_range_equals("break", begin, end)) {
     *buf = BREAK;
-  } else if (str_equals(str, "case")) {
+  } else if (str_range_equals("case", begin, end)) {
     *buf = CASE;
-  } else if (str_equals(str, "char")) {
+  } else if (str_range_equals("char", begin, end)) {
     *buf = CHAR;
-  } else if (str_equals(str, "_Complex")) {
+  } else if (str_range_equals("_Complex", begin, end)) {
     *buf = COMPLEX;
-  } else if (str_equals(str, "const")) {
+  } else if (str_range_equals("const", begin, end)) {
     *buf = CONST;
-  } else if (str_equals(str, "continue")) {
+  } else if (str_range_equals("continue", begin, end)) {
     *buf = CONTINUE;
-  } else if (str_equals(str, "default")) {
+  } else if (str_range_equals("default", begin, end)) {
     *buf = DEFAULT;
-  } else if (str_equals(str, "do")) {
+  } else if (str_range_equals("do", begin, end)) {
     *buf = DO;
-  } else if (str_equals(str, "double")) {
+  } else if (str_range_equals("double", begin, end)) {
     *buf = DOUBLE;
-  } else if (str_equals(str, "else")) {
+  } else if (str_range_equals("else", begin, end)) {
     *buf = ELSE;
-  } else if (str_equals(str, "enum")) {
+  } else if (str_range_equals("enum", begin, end)) {
     *buf = ENUM;
-  } else if (str_equals(str, "extern")) {
+  } else if (str_range_equals("extern", begin, end)) {
     *buf = EXTERN;
-  } else if (str_equals(str, "float")) {
+  } else if (str_range_equals("float", begin, end)) {
     *buf = FLOAT;
-  } else if (str_equals(str, "for")) {
+  } else if (str_range_equals("for", begin, end)) {
     *buf = FOR;
-  } else if (str_equals(str, "_Generic")) {
+  } else if (str_range_equals("_Generic", begin, end)) {
     *buf = GENERIC;
-  } else if (str_equals(str, "goto")) {
+  } else if (str_range_equals("goto", begin, end)) {
     *buf = GOTO;
-  } else if (str_equals(str, "if")) {
+  } else if (str_range_equals("if", begin, end)) {
     *buf = IF;
-  } else if (str_equals(str, "_Imaginary")) {
+  } else if (str_range_equals("_Imaginary", begin, end)) {
     *buf = IMAGINARY;
-  } else if (str_equals(str, "inline")) {
+  } else if (str_range_equals("inline", begin, end)) {
     *buf = INLINE;
-  } else if (str_equals(str, "int")) {
+  } else if (str_range_equals("int", begin, end)) {
     *buf = INT;
-  } else if (str_equals(str, "long")) {
+  } else if (str_range_equals("long", begin, end)) {
     *buf = LONG;
-  } else if (str_equals(str, "_Noreturn")) {
+  } else if (str_range_equals("_Noreturn", begin, end)) {
     *buf = NORETURN;
-  } else if (str_equals(str, "register")) {
+  } else if (str_range_equals("register", begin, end)) {
     *buf = REGISTER;
-  } else if (str_equals(str, "restrict")) {
+  } else if (str_range_equals("restrict", begin, end)) {
     *buf = RESTRICT;
-  } else if (str_equals(str, "return")) {
+  } else if (str_range_equals("return", begin, end)) {
     *buf = RETURN;
-  } else if (str_equals(str, "short")) {
+  } else if (str_range_equals("short", begin, end)) {
     *buf = SHORT;
-  } else if (str_equals(str, "signed")) {
+  } else if (str_range_equals("signed", begin, end)) {
     *buf = SIGNED;
-  } else if (str_equals(str, "sizeof")) {
+  } else if (str_range_equals("sizeof", begin, end)) {
     *buf = SIZEOF;
-  } else if (str_equals(str, "static")) {
+  } else if (str_range_equals("static", begin, end)) {
     *buf = STATIC;
-  } else if (str_equals(str, "_Static_assert")) {
+  } else if (str_range_equals("_Static_assert", begin, end)) {
     *buf = STATIC_ASSERT;
-  } else if (str_equals(str, "struct")) {
+  } else if (str_range_equals("struct", begin, end)) {
     *buf = STRUCT;
-  } else if (str_equals(str, "switch")) {
+  } else if (str_range_equals("switch", begin, end)) {
     *buf = SWITCH;
-  } else if (str_equals(str, "_Thread_local")) {
+  } else if (str_range_equals("_Thread_local", begin, end)) {
     *buf = THREAD_LOCAL;
-  } else if (str_equals(str, "typedef")) {
+  } else if (str_range_equals("typedef", begin, end)) {
     *buf = TYPEDEF;
-  } else if (str_equals(str, "union")) {
+  } else if (str_range_equals("union", begin, end)) {
     *buf = UNION;
-  } else if (str_equals(str, "unsigned")) {
+  } else if (str_range_equals("unsigned", begin, end)) {
     *buf = UNSIGNED;
-  } else if (str_equals(str, "void")) {
+  } else if (str_range_equals("void", begin, end)) {
     *buf = VOID;
-  } else if (str_equals(str, "volatile")) {
+  } else if (str_range_equals("volatile", begin, end)) {
     *buf = VOLATILE;
-  } else if (str_equals(str, "while")) {
+  } else if (str_range_equals("while", begin, end)) {
     *buf = WHILE;
   } else {
     return false;

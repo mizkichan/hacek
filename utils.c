@@ -52,19 +52,9 @@ char *append_str(char *str, char c) {
   return str;
 }
 
-char *clone_str_range(const char *const begin, const char *const end) {
-  size_t n = (size_t)(end - begin);
-  char *cloned = MALLOC(n + 1);
-  strncpy(cloned, begin, n);
-  cloned[n] = '\0';
-  return cloned;
-}
-
 bool starts_with(const char *haystack, const char *needle) {
   return strstr(haystack, needle) == haystack;
 }
-
-bool str_equals(const char *s1, const char *s2) { return strcmp(s1, s2) == 0; }
 
 char *remove_str(char *str, char c) {
   size_t diff = 0, i = 0;
@@ -94,6 +84,10 @@ char *search_str(const char *haystack, const char *needle) {
 
 char *search_char(const char *haystack, char needle) {
   return strchr(haystack, needle);
+}
+
+bool str_range_equals(const char *str, const char *begin, const char *end) {
+  return strncmp(str, begin, (size_t)(end - begin)) == 0;
 }
 
 // vim: set ft=c ts=2 sw=2 et:

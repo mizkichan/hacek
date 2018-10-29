@@ -5,9 +5,8 @@
 #include <stddef.h>
 
 struct Position {
-  char *name;
-  size_t line;
-  size_t column;
+  char *begin;
+  char *end;
 };
 
 enum Keyword {
@@ -124,32 +123,6 @@ struct Constant {
   char *chars;
 };
 
-struct HeaderName {
-  enum HeaderNameKind { H_CHAR_SEQUENCE, Q_CHAR_SEQUENCE } kind;
-  char *chars;
-};
-
-struct CharacterConstant {
-  enum CharacterConstantPrefix {
-    CHARACTER_CONSTANT_PREFIX_WCHAR,
-    CHARACTER_CONSTANT_PREFIX_CHAR16,
-    CHARACTER_CONSTANT_PREFIX_CHAR32,
-    CHARACTER_CONSTANT_PREFIX_NONE
-  } prefix;
-  char *chars;
-};
-
-struct StringLiteral {
-  enum EncodingPrefix {
-    ENCODING_PREFIX_UTF8,
-    ENCODING_PREFIX_CHAR16,
-    ENCODING_PREFIX_CHAR32,
-    ENCODING_PREFIX_WCHAR,
-    ENCODING_PREFIX_NONE
-  } encoding_prefix;
-  char *chars;
-};
-
 struct Token {
   struct Position position;
   enum TokenKind {
@@ -161,7 +134,7 @@ struct Token {
   } kind;
   union {
     enum Keyword keyword;
-    struct StringLiteral header_name;
+    // struct StringLiteral header_name;
     enum Punctuator punctuator;
     char *chars;
   };
@@ -180,16 +153,24 @@ struct PPToken {
     PP_NEWLINE
   } kind;
   union {
-    struct HeaderName header_name;
-    struct CharacterConstant character_constant;
-    struct StringLiteral string_literal;
+    enum HeaderNameKind { H_CHAR_SEQUENCE, Q_CHAR_SEQUENCE } header_name_kind;
+    enum CharacterConstantPrefix {
+      CHARACTER_CONSTANT_PREFIX_WCHAR,
+      CHARACTER_CONSTANT_PREFIX_CHAR16,
+      CHARACTER_CONSTANT_PREFIX_CHAR32,
+      CHARACTER_CONSTANT_PREFIX_NONE
+    } character_constant_prefix;
+    enum StringLiteralPrefix {
+      STRING_LITERAL_PREFIX_UTF8,
+      STRING_LITERAL_PREFIX_CHAR16,
+      STRING_LITERAL_PREFIX_CHAR32,
+      STRING_LITERAL_PREFIX_WCHAR,
+      STRING_LITERAL_PREFIX_NONE
+    } string_literal_prefix;
     enum Punctuator punctuator;
     char nwsc;
-    char *chars;
   };
 };
-
-void free_pp_token(struct PPToken *) __attribute__((nonnull));
 
 const char *keyword_str(int);
 const char *punctuator_str(int);
@@ -197,7 +178,7 @@ const char *constant_kind_str(int);
 const char *header_name_kind_str(int);
 const char *token_kind_str(int);
 const char *pp_token_kind_str(int);
-const char *encoding_prefix_str(int);
+const char *string_literal_prefix_str(int);
 const char *character_constant_prefix_str(int);
 
 #endif

@@ -150,17 +150,17 @@ static bool match_header_name(char **c, struct PPToken *buf) {
     (*c) += 1;
   }
 
-  end = *c;
-
   if ((kind == H_CHAR_SEQUENCE && **c != '>') ||
       (kind == Q_CHAR_SEQUENCE && **c != '"')) {
     return false;
   }
-  (*c) += 1;
+  end = *c;
+  ++(*c);
 
   buf->kind = PP_HEADER_NAME;
-  buf->header_name.kind = kind;
-  buf->header_name.chars = clone_str_range(begin, end);
+  buf->header_name_kind = kind;
+  buf->position.begin = begin;
+  buf->position.end = end;
   return true;
 }
 
@@ -177,7 +177,8 @@ static bool match_identifier(char **c, struct PPToken *buf) {
   } while (is_nondigit(**c) || is_digit(**c));
 
   buf->kind = PP_IDENTIFIER;
-  buf->chars = clone_str_range(begin, *c);
+  buf->position.begin = begin;
+  buf->position.end = *c;
   return true;
 }
 
@@ -206,13 +207,14 @@ static bool match_pp_number(char **c, struct PPToken *buf) {
   }
 
   buf->kind = PP_NUMBER;
-  buf->chars = clone_str_range(begin, *c);
+  buf->position.begin = begin;
+  buf->position.end = *c;
   return true;
 }
 
 static bool match_character_constant(char **c, struct PPToken *buf) {
   enum CharacterConstantPrefix prefix;
-  char *chars;
+  char *begin, *end;
 
   if ((*c)[0] == 'L') {
     prefix = CHARACTER_CONSTANT_PREFIX_WCHAR;
@@ -230,68 +232,68 @@ static bool match_character_constant(char **c, struct PPToken *buf) {
   if (**c != '\'') {
     return false;
   }
-  (*c) += 1;
+  ++(*c);
+  begin = *c;
 
-  chars = MALLOC(sizeof(char));
-  *chars = '\0';
   while (**c != '\'') {
     ERROR_IF(**c == '\n',
              "Newline character must not be appear in a character constant.");
-    chars = append_str(chars, **c);
     ++(*c);
   }
-  (*c) += 1;
+  end = *c;
+  ++(*c);
 
   buf->kind = PP_CHARACTER_CONSTANT;
-  buf->character_constant.prefix = prefix;
-  buf->character_constant.chars = chars;
+  buf->character_constant_prefix = prefix;
+  buf->position.begin = begin;
+  buf->position.end = end;
   return true;
 }
 
 static bool match_string_literal(char **c, struct PPToken *buf) {
-  enum EncodingPrefix encoding_prefix;
-  char *chars;
+  enum StringLiteralPrefix string_literal_prefix;
+  char *begin, *end;
 
   if ((*c)[0] == 'u') {
     if ((*c)[1] == '8') {
-      encoding_prefix = ENCODING_PREFIX_UTF8;
+      string_literal_prefix = STRING_LITERAL_PREFIX_UTF8;
       (*c) += 2;
     } else {
-      encoding_prefix = ENCODING_PREFIX_CHAR16;
+      string_literal_prefix = STRING_LITERAL_PREFIX_CHAR16;
       (*c) += 1;
     }
   } else if ((*c)[0] == 'U') {
-    encoding_prefix = ENCODING_PREFIX_CHAR32;
+    string_literal_prefix = STRING_LITERAL_PREFIX_CHAR32;
     (*c) += 1;
   } else if ((*c)[0] == 'L') {
-    encoding_prefix = ENCODING_PREFIX_WCHAR;
+    string_literal_prefix = STRING_LITERAL_PREFIX_WCHAR;
     (*c) += 1;
   } else {
-    encoding_prefix = ENCODING_PREFIX_NONE;
+    string_literal_prefix = STRING_LITERAL_PREFIX_NONE;
   }
 
   if (**c != '"') {
     return false;
   }
-  (*c) += 1;
+  ++(*c);
 
-  chars = MALLOC(sizeof(char));
-  *chars = '\0';
+  begin = *c;
   while (**c != '"') {
-    ERROR_IF(**c == '\n',
-             "Newline character must not be appear in a string literal.");
-    chars = append_str(chars, **c);
     ++(*c);
   }
-  (*c) += 1;
+  end = *c;
+  ++(*c);
 
   buf->kind = PP_STRING_LITERAL;
-  buf->string_literal.encoding_prefix = encoding_prefix;
-  buf->string_literal.chars = chars;
+  buf->string_literal_prefix = string_literal_prefix;
+  buf->position.begin = begin;
+  buf->position.end = end;
   return true;
 }
 
 static bool match_punctuator(char **c, struct PPToken *buf) {
+  char *begin = *c;
+
   if (starts_with(*c, "%:%:")) {
     buf->punctuator = DIGRAPH_DOUBLE_SIGN;
     (*c) += 4;
@@ -467,6 +469,8 @@ static bool match_punctuator(char **c, struct PPToken *buf) {
   }
 
   buf->kind = PP_PUNCTUATOR;
+  buf->position.begin = begin;
+  buf->position.end = *c;
   return true;
 }
 
@@ -480,7 +484,7 @@ static bool is_include_directive(struct PPToken *one_before_last,
                                  struct PPToken *last) {
   return one_before_last && last && one_before_last->kind == PP_PUNCTUATOR &&
          one_before_last->punctuator == SIGN && last->kind == PP_IDENTIFIER &&
-         str_equals(last->chars, "include");
+         str_range_equals("include", last->position.begin, last->position.end);
 }
 
 static bool is_nondigit(char c) { return isalpha(c) || c == '_'; }

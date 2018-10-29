@@ -7,8 +7,8 @@
 SUITE(preprocessor);
 
 TEST test_unescape(void) {
-  char src[] = "hoge\\nfuga\\tpiyo";
-  unescape(src);
+  char src[17] = "hoge\\nfuga\\tpiyo";
+  unescape(src, src + 17);
   ASSERT_STR_EQ("hoge\nfuga\tpiyo", src);
   PASS();
 }
