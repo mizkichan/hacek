@@ -29,7 +29,8 @@ all: $(PROGRAMS)
 
 $(PROGRAMS): %: %.o $(PROGRAM_OBJS) $(COMMON_OBJS)
 
-$(TESTS): CFLAGS += -g -O0
+$(TESTS): CFLAGS += -g -O0 --coverage
+$(TESTS): LDFLAGS += --coverage
 $(TESTS): %: %.o $(TEST_OBJS) $(COMMON_OBJS)
 
 .PHONY: clean
@@ -37,3 +38,4 @@ clean:
 	$(RM) $(PROGRAMS) $(PROGRAMS:=.o) $(PROGRAM_OBJS)
 	$(RM) $(TESTS) $(TESTS:=.o) $(TEST_OBJS)
 	$(RM) $(COMMON_OBJS)
+	$(RM) *.gcno *.gcda *.gcov

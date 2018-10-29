@@ -1,3 +1,6 @@
 /hacek
 /test
 *.o
+*.gcov
+*.gcno
+*.gcda
