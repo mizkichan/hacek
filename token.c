@@ -267,8 +267,6 @@ const char *pp_token_kind_str(int x) {
     return "PP_PUNCTUATOR";
   case PP_NWSC:
     return "PP_NWSC";
-  case PP_WHITE_SPACE_CHARACTERS:
-    return "PP_WHITE_SPACE_CHARACTERS";
   case PP_NEWLINE:
     return "PP_NEWLINE";
   }
@@ -326,7 +324,6 @@ void free_pp_token(struct PPToken *pp_token) {
 
   case PP_PUNCTUATOR:
   case PP_NWSC:
-  case PP_WHITE_SPACE_CHARACTERS:
   case PP_NEWLINE:
       // do nothing
       ;

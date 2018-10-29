@@ -77,9 +77,7 @@ struct Token **convert_pp_tokens_into_tokens(struct PPToken **pp_tokens) {
     case PP_NEWLINE:
       ERROR("Preprocessing token `%s` must not be appeared at this phase.",
             pp_token_kind_str((int)pp_token->kind));
-    case PP_WHITE_SPACE_CHARACTERS:
-        // do nothing.
-        ;
+      break;
     }
 
     PUSH_BACK(struct Token *, tokens, token_count, buf);

@@ -4,8 +4,7 @@
 #include "utils.h"
 #include <ctype.h>
 
-static bool match_white_space_characters(char **, struct PPToken *)
-    __attribute__((nonnull));
+static void match_white_space_characters(char **) __attribute__((nonnull));
 static bool match_header_name(char **, struct PPToken *)
     __attribute__((nonnull));
 static bool match_identifier(char **, struct PPToken *)
@@ -60,10 +59,7 @@ struct PPToken **tokenize(char *input) {
   struct PPToken *buf = MALLOC(sizeof(struct PPToken));
   struct PPToken *last = NULL, *one_before_last = NULL;
 
-  if (match_white_space_characters(&input, buf)) {
-    PUSH_BACK(struct PPToken *, pp_tokens, pp_tokens_count, buf);
-    buf = MALLOC(sizeof(struct PPToken));
-  }
+  match_white_space_characters(&input);
 
   while (*input) {
     if (*input == '\n') {
@@ -95,10 +91,7 @@ struct PPToken **tokenize(char *input) {
     one_before_last = last;
     last = pp_tokens[pp_tokens_count - 1];
 
-    if (match_white_space_characters(&input, buf)) {
-      PUSH_BACK(struct PPToken *, pp_tokens, pp_tokens_count, buf);
-      buf = MALLOC(sizeof(struct PPToken));
-    }
+    match_white_space_characters(&input);
   }
 
   buf->kind = PP_NEWLINE;
@@ -107,12 +100,10 @@ struct PPToken **tokenize(char *input) {
   return pp_tokens;
 }
 
-static bool match_white_space_characters(char **c, struct PPToken *buf) {
-  bool result = false;
+static void match_white_space_characters(char **c) {
   bool was_there_whitespace = false;
 
   do {
-    result = was_there_whitespace;
     was_there_whitespace = false;
 
     while (is_whitespace(**c) && **c != '\n') {
@@ -137,11 +128,6 @@ static bool match_white_space_characters(char **c, struct PPToken *buf) {
       was_there_whitespace = true;
     }
   } while (was_there_whitespace);
-
-  if (result) {
-    buf->kind = PP_WHITE_SPACE_CHARACTERS;
-  }
-  return result;
 }
 
 static bool match_header_name(char **c, struct PPToken *buf) {
