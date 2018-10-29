@@ -95,7 +95,8 @@ int main(int argc, char **argv) {
   }
 
   if (!args.input) {
-    ERROR("no input file");
+    WARN("no input file");
+    return EXIT_FAILURE;
   }
 
   // Phase 1.

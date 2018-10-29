@@ -1,6 +1,7 @@
 #include "alloc.h"
 #include "greatest.h"
-#include "utils.h"
+
+#include "utils.c"
 
 SUITE(utils);
 
