@@ -68,8 +68,7 @@ static void alloc_add(char const *func, char const *file, int line, void *ptr) {
     }
 
     if (alloc_list[i].ptr == ptr) {
-      debug(func, file, line, 0, true,
-            "The pointer has already been registered.");
+      debug(func, file, line, 0, "The pointer has already been registered.");
     };
 
     alloc_list[i].ptr = ptr;
@@ -115,7 +114,7 @@ static void alloc_remove(const char *func, const char *file, int line,
     }
   }
 
-  debug(func, file, line, 0, true, "The pointer has never been registered.");
+  debug(func, file, line, 0, "The pointer has never been registered.");
 }
 
 // vim: set ft=c ts=2 sw=2 et:
