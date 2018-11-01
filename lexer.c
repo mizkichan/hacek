@@ -46,7 +46,7 @@ void replace_comments(char *src, struct PPToken **pp_tokens) {
   }
 
   ws_begin = src;
-  ws_end = pp_tokens[0]->position.begin;
+  ws_end = pp_tokens[0]->begin;
 
   for (size_t i = 0; pp_tokens[i]; ++i) {
     size_t how_many_moved = 0;
@@ -54,15 +54,15 @@ void replace_comments(char *src, struct PPToken **pp_tokens) {
     how_many_moved = replace_comments_impl(ws_begin, ws_end);
 
     for (size_t j = i; pp_tokens[j]; ++j) {
-      pp_tokens[j]->position.begin -= how_many_moved;
-      pp_tokens[j]->position.end -= how_many_moved;
+      pp_tokens[j]->begin -= how_many_moved;
+      pp_tokens[j]->end -= how_many_moved;
     }
 
     if (!pp_tokens[i + 1]) {
       break;
     }
-    ws_begin = pp_tokens[i]->position.end;
-    ws_end = pp_tokens[i + 1]->position.begin;
+    ws_begin = pp_tokens[i]->end;
+    ws_end = pp_tokens[i + 1]->begin;
   }
 }
 
@@ -166,8 +166,8 @@ static bool match_header_name(char **c, struct PPToken *buf) {
 
   buf->kind = PP_HEADER_NAME;
   buf->header_name_kind = kind;
-  buf->position.begin = begin;
-  buf->position.end = end;
+  buf->begin = begin;
+  buf->end = end;
   return true;
 }
 
@@ -184,8 +184,8 @@ static bool match_identifier(char **c, struct PPToken *buf) {
   } while (is_nondigit(**c) || is_digit(**c));
 
   buf->kind = PP_IDENTIFIER;
-  buf->position.begin = begin;
-  buf->position.end = *c;
+  buf->begin = begin;
+  buf->end = *c;
   return true;
 }
 
@@ -214,8 +214,8 @@ static bool match_pp_number(char **c, struct PPToken *buf) {
   }
 
   buf->kind = PP_NUMBER;
-  buf->position.begin = begin;
-  buf->position.end = *c;
+  buf->begin = begin;
+  buf->end = *c;
   return true;
 }
 
@@ -252,8 +252,8 @@ static bool match_character_constant(char **c, struct PPToken *buf) {
 
   buf->kind = PP_CHARACTER_CONSTANT;
   buf->character_constant_prefix = prefix;
-  buf->position.begin = begin;
-  buf->position.end = end;
+  buf->begin = begin;
+  buf->end = end;
   return true;
 }
 
@@ -293,8 +293,8 @@ static bool match_string_literal(char **c, struct PPToken *buf) {
 
   buf->kind = PP_STRING_LITERAL;
   buf->string_literal_prefix = string_literal_prefix;
-  buf->position.begin = begin;
-  buf->position.end = end;
+  buf->begin = begin;
+  buf->end = end;
   return true;
 }
 
@@ -476,8 +476,8 @@ static bool match_punctuator(char **c, struct PPToken *buf) {
   }
 
   buf->kind = PP_PUNCTUATOR;
-  buf->position.begin = begin;
-  buf->position.end = *c;
+  buf->begin = begin;
+  buf->end = *c;
   return true;
 }
 
@@ -492,9 +492,9 @@ static bool match_newline(char **c, struct PPToken *buf) {
     return false;
   }
   buf->kind = PP_NEWLINE;
-  buf->position.begin = *c;
+  buf->begin = *c;
   ++(*c);
-  buf->position.end = *c;
+  buf->end = *c;
   return true;
 }
 
@@ -502,7 +502,7 @@ static bool is_include_directive(struct PPToken *one_before_last,
                                  struct PPToken *last) {
   return one_before_last && last && one_before_last->kind == PP_PUNCTUATOR &&
          one_before_last->punctuator == SIGN && last->kind == PP_IDENTIFIER &&
-         str_range_equals("include", last->position.begin, last->position.end);
+         str_range_equals("include", last->begin, last->end);
 }
 
 static bool is_nondigit(char c) { return isalpha(c) || c == '_'; }

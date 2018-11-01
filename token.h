@@ -4,11 +4,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct Position {
-  char *begin;
-  char *end;
-};
-
 enum Keyword {
   ALIGNAS,
   ALIGNOF,
@@ -124,7 +119,8 @@ struct Constant {
 };
 
 struct Token {
-  struct Position position;
+  char *begin;
+  char *end;
   enum TokenKind {
     TOKEN_KEYWORD,
     TOKEN_IDENTIFIER,
@@ -141,7 +137,8 @@ struct Token {
 };
 
 struct PPToken {
-  struct Position position;
+  char *begin;
+  char *end;
   enum PPTokenKind {
     PP_HEADER_NAME,
     PP_IDENTIFIER,

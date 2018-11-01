@@ -21,7 +21,7 @@ void convert_escape_sequences(struct PPToken **pp_tokens) {
       break;
     }
 
-    unescape(pp_token->position.begin, pp_token->position.end);
+    unescape(pp_token->begin, pp_token->end);
   }
 }
 
@@ -39,13 +39,13 @@ struct Token **convert_pp_tokens_into_tokens(struct PPToken **pp_tokens) {
     case PP_IDENTIFIER:
       // identifier can be either keyword, identifier or enumeration constant.
 
-      if (str_to_keyword(pp_token->position.begin, pp_token->position.end,
-                         &buf->keyword)) {
+      if (str_to_keyword(pp_token->begin, pp_token->end, &buf->keyword)) {
         buf->kind = TOKEN_KEYWORD;
       } else {
         // NOTE THAT THIS STUFF CAN BE ENUMERATION CONSTANT!
         buf->kind = TOKEN_IDENTIFIER;
-        buf->position = pp_token->position;
+        buf->begin = pp_token->begin;
+        buf->end = pp_token->end;
       }
       break;
 
