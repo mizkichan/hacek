@@ -48,9 +48,33 @@ TEST test_str_range_equals(void) {
   PASS();
 }
 
+TEST test_clone_str(void) {
+  char *str = "foobar2000";
+  char *cloned;
+
+  cloned = clone_str(str, str);
+  ASSERT_STR_EQ("", cloned);
+  FREE(cloned);
+
+  cloned = clone_str(str, str + 10);
+  ASSERT_STR_EQ("foobar2000", cloned);
+  FREE(cloned);
+
+  cloned = clone_str(str + 10, str + 10);
+  ASSERT_STR_EQ("", cloned);
+  FREE(cloned);
+
+  cloned = clone_str(str, NULL);
+  ASSERT_STR_EQ("foobar2000", cloned);
+  FREE(cloned);
+
+  PASS();
+}
+
 SUITE(utils) {
   RUN_TEST(test_remove_str);
   RUN_TEST(test_erase_str);
+  RUN_TEST(test_clone_str);
   RUN_TEST(test_str_range_equals);
 }
 

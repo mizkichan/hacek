@@ -5,87 +5,158 @@
 
 SUITE(lexer);
 
-TEST test_reconstruct_lines(void) {
-  char src[] = "foo\\\nbar\nhogefuga\n";
+TEST test_split_source_into_lines(void) {
+  struct Line **lines = split_source_into_lines("foo\nbar\n");
 
-  reconstruct_lines(src);
-  ASSERT_STR_EQ("foobar\nhogefuga\n", src);
+  ASSERT(lines != NULL);
+
+  ASSERT(lines[0] != NULL);
+  ASSERT_EQ(1, lines[0]->linenum);
+  ASSERT_STR_EQ("foo", lines[0]->value);
+  FREE(lines[0]->value);
+  FREE(lines[0]);
+
+  ASSERT(lines[1] != NULL);
+  ASSERT_EQ(2, lines[1]->linenum);
+  ASSERT_STR_EQ("bar", lines[1]->value);
+  FREE(lines[1]->value);
+  FREE(lines[1]);
+
+  ASSERT(lines[2] == NULL);
+
+  FREE(lines);
+  PASS();
+}
+
+TEST test_reconstruct_lines(void) {
+  struct Line **lines = split_source_into_lines("foo\\\nbar\nbaz\n");
+
+  reconstruct_lines(lines);
+  ASSERT(lines != NULL);
+
+  ASSERT(lines[0] != NULL);
+  ASSERT_EQ(1, lines[0]->linenum);
+  ASSERT_STR_EQ("foo bar", lines[0]->value);
+  FREE(lines[0]->value);
+  FREE(lines[0]);
+
+  ASSERT(lines[1] != NULL);
+  ASSERT_EQ(3, lines[1]->linenum);
+  ASSERT_STR_EQ("baz", lines[1]->value);
+  FREE(lines[1]->value);
+  FREE(lines[1]);
+
+  ASSERT(lines[2] == NULL);
+
+  FREE(lines);
   PASS();
 }
 
 TEST test_replace_comments_multiline(void) {
-  char src[] = "foo/*comment\ncomment*/bar\n";
-  struct PPToken **pp_tokens = tokenize(src);
-  replace_comments(src, pp_tokens);
+  struct Line **lines = split_source_into_lines("foo/*comment\ncomment*/bar\n");
+  ASSERT_MEM_EQ("comment*/bar", lines[1]->value, 13);
+  replace_comments(lines);
 
-  ASSERT_STR_EQ("foo bar\n", src);
-  ASSERT(pp_tokens != NULL);
+  ASSERT(lines != NULL);
 
-  ASSERT(pp_tokens[0] != NULL);
-  ASSERT_ENUM_EQ(PP_IDENTIFIER, pp_tokens[0]->kind, pp_token_kind_str);
-  ASSERT_EQ(src, pp_tokens[0]->begin);
-  ASSERT_EQ(src + 3, pp_tokens[0]->end);
+  ASSERT(lines[0] != NULL);
+  ASSERT_EQ(1, lines[0]->linenum);
+  ASSERT_STR_EQ("foo", lines[0]->value);
+  FREE(lines[0]->value);
+  FREE(lines[0]);
 
-  ASSERT_ENUM_EQ(PP_IDENTIFIER, pp_tokens[1]->kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(PP_IDENTIFIER, pp_tokens[1]->kind, pp_token_kind_str);
-  ASSERT_EQ(src + 4, pp_tokens[1]->begin);
-  ASSERT_EQ(src + 7, pp_tokens[1]->end);
+  ASSERT(lines[1] != NULL);
+  ASSERT_EQ(2, lines[1]->linenum);
+  ASSERT_MEM_EQ("bar", lines[1]->value, 4);
+  FREE(lines[1]->value);
+  FREE(lines[1]);
 
-  for (struct PPToken **pp_token = pp_tokens; *pp_token; ++pp_token) {
-    FREE(*pp_token);
-  }
-  FREE(pp_tokens);
+  ASSERT(lines[2] == NULL);
+
+  FREE(lines);
   PASS();
 }
 
 TEST test_replace_comments_oneline(void) {
-  char src[] = "foo//comment\nbar\n";
-  struct PPToken **pp_tokens = tokenize(src);
-  replace_comments(src, pp_tokens);
+  struct Line **lines = split_source_into_lines("foo//comment\nbar\n");
+  ASSERT_MEM_EQ("bar", lines[1]->value, 4);
+  replace_comments(lines);
 
-  ASSERT_STR_EQ("foo \nbar\n", src);
+  ASSERT(lines[0] != NULL);
+  ASSERT_EQ(1, lines[0]->linenum);
+  ASSERT_STR_EQ("foo", lines[0]->value);
+  FREE(lines[0]->value);
+  FREE(lines[0]);
 
-  for (struct PPToken **pp_token = pp_tokens; *pp_token; ++pp_token) {
-    FREE(*pp_token);
-  }
-  FREE(pp_tokens);
+  ASSERT(lines[1] != NULL);
+  ASSERT_EQ(2, lines[1]->linenum);
+  ASSERT_MEM_EQ("bar", lines[1]->value, 4);
+  FREE(lines[1]->value);
+  FREE(lines[1]);
+
+  ASSERT(lines[2] == NULL);
+
+  FREE(lines);
+  PASS();
+}
+
+TEST test_replace_comments_oneline2(void) {
+  struct Line **lines = split_source_into_lines("foo/*comment*/bar\n");
+  replace_comments(lines);
+
+  ASSERT(lines[0] != NULL);
+  ASSERT_EQ(1, lines[0]->linenum);
+  ASSERT_STR_EQ("foo bar", lines[0]->value);
+  FREE(lines[0]->value);
+  FREE(lines[0]);
+
+  ASSERT(lines[1] == NULL);
+
+  FREE(lines);
   PASS();
 }
 
 TEST test_tokenize(void) {
-  char *src = "  foo\t'a'+123\n";
-  struct PPToken **result = tokenize(src);
+  struct Line **lines = split_source_into_lines("  foo\t'a'+123\n");
+  struct PPTokenLine **pp_token_lines = tokenize(lines);
+  struct PPToken **pp_tokens;
 
-  ASSERT(result != NULL);
+  ASSERT(pp_token_lines != NULL);
+  ASSERT(pp_token_lines[0] != NULL);
+  pp_tokens = pp_token_lines[0]->pp_tokens;
+  ASSERT(pp_tokens != NULL);
 
-  ASSERT(result[0] != NULL);
-  ASSERT_ENUM_EQ(PP_IDENTIFIER, result[0]->kind, pp_token_kind_str);
-  ASSERT_STR_RANGE_EQ("foo", result[0]->begin, result[0]->end);
+  ASSERT(pp_tokens[0] != NULL);
+  ASSERT_ENUM_EQ(PP_IDENTIFIER, pp_tokens[0]->kind, pp_token_kind_str);
+  ASSERT_STR_RANGE_EQ("foo", pp_tokens[0]->begin, pp_tokens[0]->end);
+  FREE(pp_tokens[0]);
 
-  ASSERT(result[1] != NULL);
-  ASSERT_ENUM_EQ(PP_CHARACTER_CONSTANT, result[1]->kind, pp_token_kind_str);
-  ASSERT_STR_RANGE_EQ("a", result[1]->begin, result[1]->end);
+  ASSERT(pp_tokens[1] != NULL);
+  ASSERT_ENUM_EQ(PP_CHARACTER_CONSTANT, pp_tokens[1]->kind, pp_token_kind_str);
+  ASSERT_STR_RANGE_EQ("a", pp_tokens[1]->begin, pp_tokens[1]->end);
   ASSERT_ENUM_EQ(CHARACTER_CONSTANT_PREFIX_NONE,
-                 result[1]->character_constant_prefix,
+                 pp_tokens[1]->character_constant_prefix,
                  character_constant_prefix_str);
+  FREE(pp_tokens[1]);
 
-  ASSERT(result[2] != NULL);
-  ASSERT_ENUM_EQ(PP_PUNCTUATOR, result[2]->kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(PLUS, result[2]->punctuator, punctuator_str);
+  ASSERT(pp_tokens[2] != NULL);
+  ASSERT_ENUM_EQ(PP_PUNCTUATOR, pp_tokens[2]->kind, pp_token_kind_str);
+  ASSERT_ENUM_EQ(PLUS, pp_tokens[2]->punctuator, punctuator_str);
+  FREE(pp_tokens[2]);
 
-  ASSERT(result[3] != NULL);
-  ASSERT_ENUM_EQ(PP_NUMBER, result[3]->kind, pp_token_kind_str);
-  ASSERT_STR_RANGE_EQ("123", result[3]->begin, result[3]->end);
+  ASSERT(pp_tokens[3] != NULL);
+  ASSERT_ENUM_EQ(PP_NUMBER, pp_tokens[3]->kind, pp_token_kind_str);
+  ASSERT_STR_RANGE_EQ("123", pp_tokens[3]->begin, pp_tokens[3]->end);
+  FREE(pp_tokens[3]);
 
-  ASSERT(result[4] != NULL);
-  ASSERT_ENUM_EQ(PP_NEWLINE, result[4]->kind, pp_token_kind_str);
+  ASSERT(pp_tokens[4] == NULL);
 
-  ASSERT(result[5] == NULL);
-
-  for (struct PPToken **pp_token = result; *pp_token; ++pp_token) {
-    FREE(*pp_token);
-  }
-  FREE(result);
+  FREE(pp_token_lines[0]->pp_tokens);
+  FREE(pp_token_lines[0]);
+  FREE(pp_token_lines);
+  FREE(lines[0]->value);
+  FREE(lines[0]);
+  FREE(lines);
   PASS();
 }
 
@@ -338,10 +409,12 @@ TEST test_match_punctuator(void) {
 }
 
 SUITE(lexer) {
+  RUN_TEST(test_split_source_into_lines);
   RUN_TEST(test_reconstruct_lines);
   RUN_TEST(test_tokenize);
   RUN_TEST(test_replace_comments_multiline);
   RUN_TEST(test_replace_comments_oneline);
+  RUN_TEST(test_replace_comments_oneline2);
 
   RUN_TEST(test_match_header_name_q);
   RUN_TEST(test_match_header_name_h);

@@ -44,7 +44,7 @@ char *read_from_file(char *pathname) {
   return buf;
 }
 
-char *append_str(char *str, char c) {
+char *append_char(char *str, char c) {
   size_t length = strlen(str);
   str = REALLOC(str, sizeof(char) * (length + 2));
   str[length] = c;
@@ -88,6 +88,29 @@ char *search_char(const char *haystack, char needle) {
 
 bool str_range_equals(const char *str, const char *begin, const char *end) {
   return strncmp(str, begin, (size_t)(end - begin)) == 0;
+}
+
+char *clone_str(const char *begin, const char *end) {
+  char *result;
+  size_t n;
+
+  if (end) {
+    n = (size_t)(end - begin);
+  } else {
+    n = strlen(begin) + 1;
+  }
+
+  result = MALLOC(n + 1);
+  strncpy(result, begin, n);
+  result[n] = '\0';
+  return result;
+}
+
+size_t length_str(const char *str) { return strlen(str); }
+
+char *append_str(char *a, const char *b) {
+  a = REALLOC(a, length_str(a) + length_str(b) + 1);
+  return strcat(a, b);
 }
 
 // vim: set ft=c ts=2 sw=2 et:

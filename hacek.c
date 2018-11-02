@@ -80,7 +80,8 @@ bool parse_args(int argc, char **argv, struct Args *args) {
 int main(int argc, char **argv) {
   struct Args args;
   char *source;
-  struct PPToken **pp_tokens;
+  struct Line **lines;
+  struct PPTokenLine **pp_token_lines;
   struct Token **tokens;
   struct AST *ast;
 
@@ -103,17 +104,17 @@ int main(int argc, char **argv) {
   // Phase 1.
   source = read_from_file(args.input);
   ERROR_IF(!source, "%s", args.input);
+  lines = split_source_into_lines(source);
 
   // Phase 2. Line reconstruction.
-  reconstruct_lines(source);
+  reconstruct_lines(lines);
 
   // Phase 3. Tokenization of the source text into preprocessing tokens.
-  // And then replacing comments.
-  pp_tokens = tokenize(source);
-  replace_comments(source, pp_tokens);
+  replace_comments(lines);
+  pp_token_lines = tokenize(lines);
 
   // Phase 4. Execution of preprocessing directives.
-  execute_pp_directives(pp_tokens);
+  execute_pp_directives(pp_token_lines);
 
   if (args.eflag) {
     // output preprocessed code
@@ -122,14 +123,14 @@ int main(int argc, char **argv) {
   }
 
   // Phase 5. Escape sequences conversion.
-  convert_escape_sequences(pp_tokens);
+  convert_escape_sequences(pp_token_lines);
 
   // Phase 6. Concatenation adjacent string literals.
-  concatenate_adjacent_string_literals(pp_tokens);
+  concatenate_adjacent_string_literals(pp_token_lines);
 
   // Phase 7. Conversion of preprocessing tokens into tokens,
   // parsing, translation and assembling.
-  tokens = convert_pp_tokens_into_tokens(pp_tokens);
+  tokens = convert_pp_tokens_into_tokens(pp_token_lines);
   ast = parse(tokens);
   /*
   assembly = translate(ast);

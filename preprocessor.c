@@ -9,81 +9,40 @@ static void unescape(char *, char *) __attribute__((nonnull));
 static bool str_to_keyword(const char *, const char *, enum Keyword *)
     __attribute__((nonnull));
 
-void execute_pp_directives(struct PPToken **pp_tokens) {
-  ERROR("Not implemented yet");
+void execute_pp_directives(struct PPTokenLine **pp_token_lines) {
+  for (size_t i = 0; pp_token_lines[i]; ++i) {
+    for (size_t j = 0; pp_token_lines[i]->pp_tokens[j]; ++j) {
+      struct PPToken *pp_token = pp_token_lines[i]->pp_tokens[j];
+      ERROR_IF(pp_token->kind == PP_PUNCTUATOR &&
+                   (pp_token->punctuator == SIGN),
+               "Not implemented yet");
+    }
+  }
 }
 
-void convert_escape_sequences(struct PPToken **pp_tokens) {
+void convert_escape_sequences(struct PPTokenLine **pp_token_lines) {
   // FIXME only simple-escape-sequence is implemented
 
-  for (struct PPToken *pp_token = *pp_tokens; pp_token; ++pp_token) {
-    if (pp_token->kind != PP_CHARACTER_CONSTANT ||
-        pp_token->kind != PP_STRING_LITERAL) {
-      break;
-    }
+  for (size_t i = 0; pp_token_lines[i]; ++i) {
+    for (size_t j = 0; pp_token_lines[i]->pp_tokens[j]; ++j) {
+      struct PPToken *pp_token = pp_token_lines[i]->pp_tokens[j];
+      if (pp_token->kind != PP_CHARACTER_CONSTANT ||
+          pp_token->kind != PP_STRING_LITERAL) {
+        break;
+      }
 
-    unescape(pp_token->begin, pp_token->end);
+      unescape(pp_token->begin, pp_token->end);
+    }
   }
 }
 
-void concatenate_adjacent_string_literals(struct PPToken **pp_tokens) {
+void concatenate_adjacent_string_literals(struct PPTokenLine **pp_token_lines) {
   ERROR("Not implemented yet");
 }
 
-struct Token **convert_pp_tokens_into_tokens(struct PPToken **pp_tokens) {
-  size_t token_count = 0;
-  struct Token **tokens = NULL;
-  struct Token *buf = MALLOC(sizeof(struct Token));
-
-  for (struct PPToken *pp_token = *pp_tokens; pp_token; ++pp_token) {
-    switch (pp_token->kind) {
-    case PP_IDENTIFIER:
-      // identifier can be either keyword, identifier or enumeration constant.
-
-      if (str_to_keyword(pp_token->begin, pp_token->end, &buf->keyword)) {
-        buf->kind = TOKEN_KEYWORD;
-      } else {
-        // NOTE THAT THIS STUFF CAN BE ENUMERATION CONSTANT!
-        buf->kind = TOKEN_IDENTIFIER;
-        buf->begin = pp_token->begin;
-        buf->end = pp_token->end;
-      }
-      break;
-
-    case PP_NUMBER:
-      // number can be either integer constant or floating constant.
-      ERROR("Not implemented yet");
-      break;
-
-    case PP_CHARACTER_CONSTANT:
-      // character constant can only be character constant.
-      ERROR("Not implemented yet");
-      break;
-
-    case PP_STRING_LITERAL:
-      // string literal can only be string literal.
-      ERROR("Not implemented yet");
-      break;
-
-    case PP_PUNCTUATOR:
-      // punctuator can only be punctuator.
-      ERROR("Not implemented yet");
-      break;
-
-    case PP_HEADER_NAME:
-    case PP_NWSC:
-    case PP_NEWLINE:
-      ERROR("Preprocessing token `%s` must not be appeared at this phase.",
-            pp_token_kind_str((int)pp_token->kind));
-      break;
-    }
-
-    PUSH_BACK(struct Token *, tokens, token_count, buf);
-    buf = MALLOC(sizeof(struct PPToken));
-  }
-
-  FREE(buf);
-  return tokens;
+struct Token **
+convert_pp_tokens_into_tokens(struct PPTokenLine **pp_token_lines) {
+  ERROR("Not implemented yet");
 }
 
 static void unescape(char *begin, char *end) {

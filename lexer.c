@@ -23,88 +23,145 @@ static bool is_include_directive(struct PPToken *,
 static bool is_nondigit(char) __attribute__((const));
 static bool is_digit(char) __attribute__((const));
 static bool is_whitespace(char) __attribute__((const));
-static size_t replace_comments_impl(char *, char *);
 
-void reconstruct_lines(char *src) {
-  char *c = src;
+struct Line **split_source_into_lines(const char *src) {
+  const char *c = src;
+  const char *begin = src;
+  struct Line **lines = NULL;
+  struct Line *line;
+  size_t count = 0;
+
   while (*c) {
-    if (starts_with(c, "\\\n")) {
-      c[0] = c[1] = DEL;
-      c += 2;
-    } else {
-      c += 1;
+    if (c[0] == '\n') {
+      line = MALLOC(sizeof(struct Line));
+      line->linenum = count + 1;
+      line->value = clone_str(begin, c);
+      PUSH_BACK(struct Line *, lines, count, line);
+      begin = c + 1;
     }
+    ++c;
   }
-  remove_str(src, DEL);
+
+  return lines;
 }
 
-void replace_comments(char *src, struct PPToken **pp_tokens) {
-  char *ws_begin, *ws_end;
+void reconstruct_lines(struct Line **lines) {
+  for (size_t i = 0; lines[i]; ++i) {
+    size_t last = length_str(lines[i]->value) - 1;
+    if (lines[i]->value[last] == '\\') {
+      ERROR_IF(!lines[i + 1], "The last line should not end with backslash.");
 
-  if (!pp_tokens[0]) {
-    return;
-  }
+      lines[i]->value[last] = ' ';
+      lines[i]->value = append_str(lines[i]->value, lines[i + 1]->value);
+      FREE(lines[i + 1]->value);
+      FREE(lines[i + 1]);
+      ++i;
 
-  ws_begin = src;
-  ws_end = pp_tokens[0]->begin;
-
-  for (size_t i = 0; pp_tokens[i]; ++i) {
-    size_t how_many_moved = 0;
-
-    how_many_moved = replace_comments_impl(ws_begin, ws_end);
-
-    for (size_t j = i; pp_tokens[j]; ++j) {
-      pp_tokens[j]->begin -= how_many_moved;
-      pp_tokens[j]->end -= how_many_moved;
+      for (size_t j = i; lines[j]; ++j) {
+        lines[j] = lines[j + 1];
+      }
     }
-
-    if (!pp_tokens[i + 1]) {
-      break;
-    }
-    ws_begin = pp_tokens[i]->end;
-    ws_end = pp_tokens[i + 1]->begin;
   }
 }
 
-struct PPToken **tokenize(char *input) {
-  size_t pp_tokens_count = 0;
-  struct PPToken **pp_tokens = NULL;
-  struct PPToken *buf;
-  struct PPToken *last = NULL, *one_before_last = NULL;
+void replace_comments(struct Line **lines) {
+  bool next_line_is_comment = false;
 
-  match_white_space_characters(&input);
+  // process each line
+  for (size_t i = 0; lines[i]; ++i) {
+    char *line = lines[i]->value;
+    char *comment_begin, *comment_end;
 
-  while (*input) {
-    buf = MALLOC(sizeof(struct PPToken));
-    PANIC_IF(!(
-        // header-name
-        (is_include_directive(one_before_last, last) &&
-         match_header_name(&input, buf)) ||
-        // identifier
-        match_identifier(&input, buf) ||
-        // pp-number
-        match_pp_number(&input, buf) ||
-        // character-constant
-        match_character_constant(&input, buf) ||
-        // string-literal
-        match_string_literal(&input, buf) ||
-        // punctuator
-        match_punctuator(&input, buf) ||
-        // newline
-        match_newline(&input, buf) ||
-        // "each non-white-space character that cannot be one of the above"
-        match_nwsc(&input, buf) ||
-        //
-        false));
+    if (next_line_is_comment) {
+      if ((comment_end = search_str(line, "*/"))) {
+        next_line_is_comment = false;
+        lines[i]->value = clone_str(comment_end + 2, NULL);
+        FREE(line);
+        line = lines[i]->value;
+      } else {
+        FREE(lines[i]->value);
+        FREE(lines[i]);
+        for (size_t j = i; lines[j]; ++j) {
+          lines[j] = lines[j + 1];
+        }
+        continue;
+      }
+    }
 
-    PUSH_BACK(struct PPToken *, pp_tokens, pp_tokens_count, buf);
-    one_before_last = last;
-    last = pp_tokens[pp_tokens_count - 1];
+    if ((comment_begin = search_str(line, "//"))) {
+      *comment_begin = '\0';
+      continue;
+    }
 
-    match_white_space_characters(&input);
+    while (true) {
+      if ((comment_begin = search_str(line, "/*"))) {
+        if ((comment_end = search_str(line, "*/"))) {
+          *comment_begin = ' ';
+          erase_str(comment_begin + 1, comment_end + 2);
+        } else {
+          next_line_is_comment = true;
+          *comment_begin = '\0';
+          break;
+        }
+      } else {
+        break;
+      }
+    }
+  }
+}
+
+struct PPTokenLine **tokenize(struct Line **lines) {
+  struct PPTokenLine **pp_token_lines = NULL;
+  size_t pp_token_lines_count = 0;
+  struct PPTokenLine *pp_token_line;
+
+  for (size_t i = 0; lines[i]; ++i) {
+    size_t pp_tokens_count = 0;
+    struct PPToken **pp_tokens = NULL;
+    struct PPToken *last = NULL, *one_before_last = NULL;
+    struct PPToken *buf;
+    char *line = lines[i]->value;
+
+    match_white_space_characters(&line);
+
+    while (*line) {
+      buf = MALLOC(sizeof(struct PPToken));
+      PANIC_IF(!(
+          // header-name
+          (is_include_directive(one_before_last, last) &&
+           match_header_name(&line, buf)) ||
+          // identifier
+          match_identifier(&line, buf) ||
+          // pp-number
+          match_pp_number(&line, buf) ||
+          // character-constant
+          match_character_constant(&line, buf) ||
+          // string-literal
+          match_string_literal(&line, buf) ||
+          // punctuator
+          match_punctuator(&line, buf) ||
+          // newline
+          match_newline(&line, buf) ||
+          // "each non-white-space character that cannot be one of the above"
+          match_nwsc(&line, buf) ||
+          //
+          false));
+
+      PUSH_BACK(struct PPToken *, pp_tokens, pp_tokens_count, buf);
+      one_before_last = last;
+      last = pp_tokens[pp_tokens_count - 1];
+
+      match_white_space_characters(&line);
+    }
+
+    pp_token_line = MALLOC(sizeof(struct PPTokenLine));
+    pp_token_line->linenum = lines[i]->linenum;
+    pp_token_line->pp_tokens = pp_tokens;
+    PUSH_BACK(struct PPTokenLine *, pp_token_lines, pp_token_lines_count,
+              pp_token_line);
   }
 
-  return pp_tokens;
+  return pp_token_lines;
 }
 
 static void match_white_space_characters(char **c) {
@@ -511,37 +568,6 @@ static bool is_digit(char c) { return isdigit(c); }
 
 static bool is_whitespace(char c) {
   return c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f';
-}
-
-static size_t replace_comments_impl(char *begin, char *end) {
-  size_t result = 0;
-  char *erase_begin, *erase_end;
-
-  while (begin < end) {
-    if (starts_with(begin, "/*")) {
-      erase_begin = begin;
-
-      erase_end = search_str(begin + 2, "*/");
-      PANIC_IF(!erase_end);
-      ++erase_end;
-
-      erase_str(erase_begin, erase_end);
-      *begin = ' ';
-      result += (size_t)(erase_end - erase_begin);
-    } else if (starts_with(begin, "//")) {
-      erase_begin = begin;
-      erase_end = search_char(begin + 2, '\n');
-      PANIC_IF(!erase_end);
-      --erase_end;
-
-      erase_str(erase_begin, erase_end);
-      *begin = ' ';
-      result += (size_t)(erase_end - erase_begin);
-    }
-    ++begin;
-  }
-
-  return result;
 }
 
 // vim: set ft=c ts=2 sw=2 et:
