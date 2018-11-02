@@ -1,7 +1,7 @@
 #ifndef PREPROCESSOR_H
 #define PREPROCESSOR_H
 
-#include "token.h"
+#include "pp_token.h"
 #include <stdbool.h>
 
 void execute_pp_directives(struct PPToken **) __attribute__((nonnull));

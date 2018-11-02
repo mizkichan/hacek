@@ -10,7 +10,7 @@ TESTS = test
 TEST_SRCS = test.c preprocessor_test.c utils_test.c lexer_test.c
 TEST_OBJS = $(TEST_SRCS:.c=.o)
 
-COMMON_SRCS = alloc.c error.c token.c
+COMMON_SRCS = alloc.c error.c token.c common_token.c pp_token.c
 COMMON_OBJS = $(COMMON_SRCS:.c=.o)
 
 SHELL = /bin/sh
