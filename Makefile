@@ -1,38 +1,40 @@
 CFLAGS += -std=c17 -Weverything -Wno-disabled-macro-expansion -Wno-padded -Wno-unused-command-line-argument
 CPPFLAGS += -D_POSIX_C_SOURCE=200809L
-LDFLAGS += -Wno-unused-command-line-argument
+LDFLAGS +=
 
 PROGRAMS = hacek
-PROGRAM_SRCS = hacek.c utils.c preprocessor.c parser.c lexer.c
+PROGRAM_SRCS = alloc.c common_token.c error.c hacek.c lexer.c parser.c pp_token.c preprocessor.c token.c utils.c
 PROGRAM_OBJS = $(PROGRAM_SRCS:.c=.o)
+PROGRAM_DEPS = $(PROGRAM_SRCS:.c=.d)
 
-TESTS = test
-TEST_SRCS = test.c preprocessor_test.c utils_test.c lexer_test.c
+TESTS = test foo
+TEST_SRCS = test.c lexer_test.c preprocessor_test.c utils_test.c \
+	    alloc.c common_token.c error.c pp_token.c
 TEST_OBJS = $(TEST_SRCS:.c=.o)
-
-COMMON_SRCS = alloc.c error.c token.c common_token.c pp_token.c
-COMMON_OBJS = $(COMMON_SRCS:.c=.o)
-
-SHELL = /bin/sh
-
-.PHONY: debug
-debug: CFLAGS += -g -O0
-debug: all
-
-.PHONY: release
-release: CFLAGS += -O3 -march=native
-release: CPPFLAGS += -DNDEBUG -D_FORTIFY_SOURCE=2
-release: all
+TEST_DEPS = $(TEST_SRCS:.c=.d)
 
 .PHONY: all
 all: $(PROGRAMS)
 
-$(PROGRAMS): $(PROGRAM_OBJS) $(COMMON_OBJS)
-
-$(TESTS): CFLAGS += -g -O0 --coverage
-$(TESTS): LDFLAGS += -g -O0 --coverage
-$(TESTS): $(TEST_OBJS) $(COMMON_OBJS)
+.PHONY: check
+check: $(TESTS)
+	./$<
 
 .PHONY: clean
 clean:
-	$(RM) $(PROGRAMS) $(TESTS) *.o *.gcno *.gcda *.gcov
+	$(RM) $(PROGRAMS) $(PROGRAM_OBJS) $(PROGRAM_DEPS)
+	$(RM) $(TESTS) $(TEST_OBJS) $(TEST_DEPS)
+
+$(PROGRAMS): $(PROGRAM_OBJS)
+$(TESTS): $(TEST_OBJS)
+
+%.o: %.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c -MMD -MP -o $@ $<
+
+%: %.o
+	$(CC) $(LDFLAGS) $(CFLAGS) -o $@ $^
+
+-include $(PROGRAM_DEPS)
+-include $(TEST_DEPS)
+
+.SUFFIXES:
