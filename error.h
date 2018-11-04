@@ -2,7 +2,6 @@
 #define ERROR_H
 
 #include <errno.h>
-#include <stdarg.h>
 #include <stdnoreturn.h>
 
 void debug(const char *, const char *, int, int, const char *, ...)

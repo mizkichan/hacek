@@ -1,10 +1,6 @@
 #ifndef PREPROCESSOR_H
 #define PREPROCESSOR_H
 
-#include "lexer.h"
-#include "pp_token.h"
-#include <stdbool.h>
-
 void execute_pp_directives(struct PPTokenLine **) __attribute__((nonnull));
 void convert_escape_sequences(struct PPTokenLine **) __attribute__((nonnull));
 void concatenate_adjacent_string_literals(struct PPTokenLine **)

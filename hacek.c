@@ -3,7 +3,6 @@
 #include "lexer.h"
 #include "parser.h"
 #include "preprocessor.h"
-#include "token.h"
 #include "utils.h"
 #include <stdbool.h>
 #include <stdio.h>

@@ -1,6 +1,6 @@
+#include "defs.h"
 #include "error.h"
 #include "lexer.h"
-#include "pp_token.h"
 #include "utils.h"
 #include <ctype.h>
 

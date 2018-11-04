@@ -3,13 +3,13 @@ CPPFLAGS += -D_POSIX_C_SOURCE=200809L
 LDFLAGS +=
 
 PROGRAMS = hacek
-PROGRAM_SRCS = alloc.c common_token.c error.c hacek.c lexer.c parser.c pp_token.c preprocessor.c token.c utils.c
+PROGRAM_SRCS = alloc.c error.c hacek.c lexer.c parser.c preprocessor.c token.c utils.c
 PROGRAM_OBJS = $(PROGRAM_SRCS:.c=.o)
 PROGRAM_DEPS = $(PROGRAM_SRCS:.c=.d)
 
 TESTS = test foo
 TEST_SRCS = test.c lexer_test.c preprocessor_test.c utils_test.c \
-	    alloc.c common_token.c error.c pp_token.c
+	    alloc.c error.c token.c
 TEST_OBJS = $(TEST_SRCS:.c=.o)
 TEST_DEPS = $(TEST_SRCS:.c=.d)
 

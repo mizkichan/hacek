@@ -1,7 +1,7 @@
 #include "alloc.h"
+#include "defs.h"
 #include "error.h"
 #include "preprocessor.h"
-#include "token.h"
 #include "utils.h"
 #include <ctype.h>
 

@@ -1,5 +1,6 @@
 #include "greatest.h"
 #include "test.h"
+#include "token.h"
 
 #include "lexer.c"
 
