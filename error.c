@@ -1,7 +1,6 @@
 #include "error.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdnoreturn.h>
 #include <string.h>
 
 static void vdebug(const char *, const char *, int, int, const char *, va_list)
@@ -32,8 +31,8 @@ void debug(const char *func, const char *file, int line, int errnum,
   va_end(ap);
 }
 
-noreturn void debug_abort(const char *func, const char *file, int line,
-                          int errnum, const char *format, ...) {
+void debug_abort(const char *func, const char *file, int line, int errnum,
+                 const char *format, ...) {
   va_list ap;
 
   va_start(ap, format);

@@ -3,10 +3,12 @@
 
 #include <errno.h>
 #include <stdarg.h>
+#include <stdnoreturn.h>
 
 void debug(const char *, const char *, int, int, const char *, ...)
     __attribute__((format(printf, 5, 6), nonnull(1)));
-void debug_abort(const char *, const char *, int, int, const char *, ...)
+noreturn void debug_abort(const char *, const char *, int, int, const char *,
+                          ...)
     __attribute__((format(printf, 5, 6), nonnull(1)));
 
 #define WARN(...) debug(__func__, __FILE__, __LINE__, errno, __VA_ARGS__)
