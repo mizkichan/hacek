@@ -9,13 +9,29 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+struct Pathname {
+  char *pathname;
+  char **include_dirs;
+  char **lib_dirs;
+  char **libs;
+};
+
+struct Definition {
+  char *name;
+  char *value;
+};
+
 struct Args {
-  char *input;
-  char *output;
-  bool eflag;
-  bool sflag;
-  bool cflag;
-  bool help;
+  bool help : 1;
+  bool compile_only : 1;
+  struct Definition **definitions;
+  bool preprocess_only : 1;
+  bool debug : 1;
+  char *optlevel;
+  char *outfile;
+  bool strip : 1;
+  char **undefines;
+  struct Pathname **pathnames;
 };
 
 static void usage(void);
@@ -28,51 +44,120 @@ static void usage(void) {
   puts("| | | | (_| | (_|  __/   <");
   puts("|_| |_|\\__,_|\\___\\___|_|\\_\\");
   puts("");
-  puts("Usage: hacek [options] file");
+  puts("Usage: hacek [options...] pathname [[pathname] [-I directory]");
+  puts("             [-L directory] [-l library]]...");
   puts("Options:");
-  puts("  -h         Display this information.");
-  puts("  -o <file>  Place the output into <file>.");
-  puts("  -E         Preprocess only; do not compile, assemble or link.");
-  puts("  -S         Compile only; do not assemble or link.");
-  puts("  -c         Compile and assemble, but do not link.");
+  puts("  -h               Show this information.");
+  puts("  -c               Compile but do not link.");
+  puts("  -D name[=value]  Define name to value or 1 if value is omitted.");
+  puts("  -E               Preprocess but do not compile.");
+  puts("  -g               Produce debug information.");
+  puts("  -I directory     Add directory to include search paths.");
+  puts("  -L directory     Add directory to library search paths.");
+  puts("  -l library       Add library.");
+  puts("  -O optlevel      Set optimization level (default is 0).");
+  puts("  -o outfile       Write output to outfile.");
+  puts("  -s               Produce stripped binary.");
+  puts("  -U name          Undefine name.");
 }
 
 bool parse_args(int argc, char **argv, struct Args *args) {
   int opt;
+  size_t pathnames_count = 0, d_count = 0, u_count = 0;
 
-  args->output = "a.out";
-  args->eflag = false;
-  args->sflag = false;
-  args->cflag = false;
   args->help = false;
+  args->compile_only = false;
+  args->definitions = NULL;
+  args->preprocess_only = false;
+  args->debug = false;
+  args->optlevel = "0";
+  args->outfile = "a.out";
+  args->strip = false;
+  args->undefines = NULL;
+  args->pathnames = NULL;
 
-  while ((opt = getopt(argc, argv, "hESco:")) > 0) {
+  while ((opt = getopt(argc, argv, "hcD:EgO:o:sU:")) > 0) {
+    struct Definition *buf;
+    char *equal;
+
     switch (opt) {
     case 'h':
       args->help = true;
       break;
-    case 'E':
-      args->eflag = true;
-      break;
-
-    case 'S':
-      args->sflag = true;
-      break;
-
     case 'c':
-      args->cflag = true;
+      args->compile_only = true;
       break;
-
+    case 'D':
+      buf = MALLOC(sizeof(struct Definition));
+      if ((equal = search_char(optarg, '='))) {
+        buf->name = clone_str(optarg, equal);
+        buf->value = equal + 1;
+      } else {
+        buf->name = optarg;
+        buf->value = "1";
+      }
+      PUSH_BACK(struct Definition *, args->definitions, d_count, buf);
+      break;
+    case 'E':
+      args->preprocess_only = true;
+      break;
+    case 'g':
+      args->debug = true;
+      break;
+    case 'O':
+      args->optlevel = optarg;
+      break;
     case 'o':
-      args->output = optarg;
+      args->outfile = optarg;
       break;
-
+    case 's':
+      args->strip = true;
+      break;
+    case 'U':
+      PUSH_BACK(char *, args->undefines, u_count, optarg);
+      break;
     case '?':
       return false;
+    default:
+      ERROR("opt == %c, optopt == %c", opt, optopt);
     }
   }
 
-  args->input = argv[optind];
+  argc -= optind;
+  argv += optind;
+  optind = 1;
+  while (argv[optind - 1]) {
+    struct Pathname *buf;
+    size_t include_dirs_count = 0;
+    size_t lib_dirs_count = 0;
+    size_t libs_count = 0;
+
+    buf = MALLOC(sizeof(struct Pathname));
+    buf->pathname = argv[optind - 1];
+    buf->include_dirs = NULL;
+    buf->lib_dirs = NULL;
+    buf->libs = NULL;
+
+    while ((opt = getopt(argc, argv, "I:L:l:")) > 0) {
+      switch (opt) {
+      case 'I':
+        PUSH_BACK(char *, buf->include_dirs, include_dirs_count, optarg);
+        break;
+      case 'L':
+        PUSH_BACK(char *, buf->lib_dirs, lib_dirs_count, optarg);
+        break;
+      case 'l':
+        PUSH_BACK(char *, buf->libs, libs_count, optarg);
+        break;
+      default:
+        ERROR("opt == %c, optopt == %c", opt, optopt);
+      }
+    }
+
+    PUSH_BACK(struct Pathname *, args->pathnames, pathnames_count, buf);
+    ++optind;
+  }
+
   return true;
 }
 
@@ -85,6 +170,7 @@ int main(int argc, char **argv) {
   struct AST *ast;
 
   alloc_init();
+  setenv("POSIXLY_CORRECT", "", false);
 
   if (!parse_args(argc, argv, &args)) {
     return EXIT_FAILURE;
@@ -95,62 +181,61 @@ int main(int argc, char **argv) {
     return EXIT_SUCCESS;
   }
 
-  if (!args.input) {
+  if (!args.pathnames) {
     WARN("no input file");
     return EXIT_FAILURE;
   }
 
-  // Phase 1.
-  source = read_from_file(args.input);
-  ERROR_IF(!source, "%s", args.input);
-  lines = split_source_into_lines(source);
+  for (size_t i = 0; args.pathnames[i]; ++i) {
+    struct Pathname *pathname = args.pathnames[i];
 
-  // Phase 2. Line reconstruction.
-  reconstruct_lines(lines);
+    // Phase 1.
+    source = read_from_file(pathname->pathname);
+    ERROR_IF(!source, "%s", pathname->pathname);
+    lines = split_source_into_lines(source);
 
-  // Phase 3. Tokenization of the source text into preprocessing tokens.
-  replace_comments(lines);
-  pp_token_lines = tokenize(lines);
+    // Phase 2. Line reconstruction.
+    reconstruct_lines(lines);
 
-  // Phase 4. Execution of preprocessing directives.
-  execute_pp_directives(pp_token_lines);
+    // Phase 3. Tokenization of the source text into preprocessing tokens.
+    replace_comments(lines);
+    pp_token_lines = tokenize(lines);
 
-  if (args.eflag) {
-    // output preprocessed code
+    // Phase 4. Execution of preprocessing directives.
+    execute_pp_directives(pp_token_lines);
+
+    if (args.preprocess_only) {
+      // output preprocessed code
+      FREE(source);
+      return EXIT_SUCCESS;
+    }
+
+    // Phase 5. Escape sequences conversion.
+    convert_escape_sequences(pp_token_lines);
+
+    // Phase 6. Concatenation adjacent string literals.
+    concatenate_adjacent_string_literals(pp_token_lines);
+
+    // Phase 7. Conversion of preprocessing tokens into tokens,
+    // parsing, translation and assembling.
+    tokens = convert_pp_tokens_into_tokens(pp_token_lines);
+    ast = parse(tokens);
+    /*
+       assembly = translate(ast);
+       */
+
+    if (args.compile_only) {
+      // output object file
+      FREE(source);
+      return EXIT_SUCCESS;
+    }
+
+    // Phase 8. Linking
+    // output executable file
+
     FREE(source);
-    return EXIT_SUCCESS;
   }
 
-  // Phase 5. Escape sequences conversion.
-  convert_escape_sequences(pp_token_lines);
-
-  // Phase 6. Concatenation adjacent string literals.
-  concatenate_adjacent_string_literals(pp_token_lines);
-
-  // Phase 7. Conversion of preprocessing tokens into tokens,
-  // parsing, translation and assembling.
-  tokens = convert_pp_tokens_into_tokens(pp_token_lines);
-  ast = parse(tokens);
-  /*
-  assembly = translate(ast);
-  */
-
-  if (args.sflag) {
-    // output assembly code
-    FREE(source);
-    return EXIT_SUCCESS;
-  }
-
-  if (args.cflag) {
-    // output object file
-    FREE(source);
-    return EXIT_SUCCESS;
-  }
-
-  // Phase 8. Linking
-  // output executable file
-
-  FREE(source);
   return EXIT_SUCCESS;
 }
 
