@@ -7,6 +7,10 @@
 
 static void unescape(char *) __attribute__((nonnull));
 static bool str_to_keyword(const char *, const char *, enum Keyword *)
+    __attribute__((nonnull(1, 3)));
+static struct Token *convert_pp_identifier(struct Identifier *)
+    __attribute__((nonnull));
+static struct Token *convert_pp_number(struct PPNumber *)
     __attribute__((nonnull));
 
 void execute_pp_directives(struct PPTokenLine **pp_token_lines) {
@@ -74,7 +78,52 @@ void concatenate_adjacent_string_literals(struct PPToken **pp_tokens) {
 }
 
 struct Token **convert_pp_tokens_into_tokens(struct PPToken **pp_tokens) {
-  ERROR("Not implemented yet");
+  struct Token **result = NULL;
+  size_t count = 0;
+
+  while (*pp_tokens) {
+    struct Token *buf = NULL;
+
+    switch ((*pp_tokens)->kind) {
+    case PP_IDENTIFIER:
+      buf = convert_pp_identifier((*pp_tokens)->identifier);
+      break;
+
+    case PP_NUMBER:
+      buf = convert_pp_number((*pp_tokens)->number);
+      break;
+
+    case PP_CHARACTER_CONSTANT:
+      buf = MALLOC(sizeof(struct PPToken));
+      buf->kind = TOKEN_CONSTANT;
+      buf->constant = MALLOC(sizeof(struct Constant));
+      buf->constant->kind = CHARACTER_CONSTANT;
+      buf->constant->character_constant = (*pp_tokens)->character_constant;
+      break;
+
+    case PP_STRING_LITERAL:
+      buf = MALLOC(sizeof(struct PPToken));
+      buf->kind = TOKEN_STRING_LITERAL;
+      buf->string_literal = (*pp_tokens)->string_literal;
+      break;
+
+    case PP_PUNCTUATOR:
+      buf = MALLOC(sizeof(struct PPToken));
+      buf->kind = TOKEN_PUNCTUATOR;
+      buf->punctuator = (*pp_tokens)->punctuator;
+      break;
+
+    case PP_NWSC:
+    case PP_HEADER_NAME:
+      PANIC();
+    }
+
+    if (buf) {
+      PUSH_BACK(struct Token *, result, count, buf);
+    }
+  }
+
+  return result;
 }
 
 static void unescape(char *const str) {
@@ -220,6 +269,44 @@ bool str_to_keyword(const char *begin, const char *end, enum Keyword *buf) {
     return false;
   }
   return true;
+}
+
+static struct Token *convert_pp_identifier(struct Identifier *identifier) {
+  struct Token *result = MALLOC(sizeof(struct Token));
+  enum Keyword keyword;
+
+  if (str_to_keyword(identifier->value, NULL, &keyword)) {
+    result->kind = TOKEN_KEYWORD;
+    result->keyword = keyword;
+  } else {
+    result->kind = TOKEN_IDENTIFIER;
+    result->identifier = identifier;
+  }
+  return result;
+}
+
+static struct Token *convert_pp_number(struct PPNumber *pp_number) {
+  struct Token *result = MALLOC(sizeof(struct Token));
+
+  result->kind = TOKEN_CONSTANT;
+  result->constant = MALLOC(sizeof(struct Constant));
+
+  // I think the code below should be moved into another function
+  if (match_decimal_constant(pp_number->value)) {
+    result->constant->kind = INTEGER_CONSTANT;
+    result->constant->integer_constant = MALLOC(sizeof(struct IntegerConstant));
+    result->constant->integer_constant->value = /* FIXME */;
+  } else if (match_octal_constant(pp_number->value)) {
+    result->constant->kind = INTEGER_CONSTANT;
+    result->constant->integer_constant = MALLOC(sizeof(struct IntegerConstant));
+    result->constant->integer_constant->value = /* FIXME */;
+  } else if (match_hexdecimal_constant(pp_number->value)) {
+    result->constant->kind = INTEGER_CONSTANT;
+    result->constant->integer_constant = MALLOC(sizeof(struct IntegerConstant));
+    result->constant->integer_constant->value = /* FIXME */;
+  } else {
+    PANIC();
+  }
 }
 
 // vim: set ft=c ts=2 sw=2 et:

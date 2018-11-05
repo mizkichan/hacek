@@ -50,10 +50,15 @@ TEST test_concatenate_adjacent_string_literals(void) {
   PASS();
 }
 
+TEST test_convert_pp_identifier(void) {}
+TEST test_convert_pp_number(void) {}
+
 SUITE(preprocessor) {
   RUN_TEST(test_unescape);
   RUN_TEST(test_concatenate_pp_token_lines);
   RUN_TEST(test_concatenate_adjacent_string_literals);
+  RUN_TEST(test_convert_pp_identifier);
+  RUN_TEST(test_convert_pp_number);
 }
 
 // vim: set ft=c ts=2 sw=2 et:

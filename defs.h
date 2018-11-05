@@ -56,6 +56,26 @@ enum Keyword {
   WHILE,
 };
 
+struct IntegerConstant {
+  struct Position pos;
+  uintmax_t value;
+};
+
+struct Constant {
+  enum ConstantKind {
+    INTEGER_CONSTANT,
+    FLOATING_CONSTANT,
+    ENUMERATION_CONSTANT,
+    CHARACTER_CONSTANT,
+  } kind;
+  union {
+    struct IntegerConstant *integer_constant;
+    struct FloatingConstant *floating_constant;
+    struct EnumerationConstant *enumeration_constant;
+    struct CharacterConstant *character_constant;
+  };
+};
+
 struct Token {
   enum TokenKind {
     TOKEN_KEYWORD,
@@ -66,8 +86,10 @@ struct Token {
   } kind;
   union {
     enum Keyword keyword;
+    struct Identifier *identifier;
+    struct Constant *constant;
+    struct StringLiteral *string_literal;
     struct Punctuator *punctuator;
-    char *chars;
   };
 };
 
