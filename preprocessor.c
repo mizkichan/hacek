@@ -20,27 +20,23 @@ void execute_pp_directives(struct PPTokenLine **pp_token_lines) {
   }
 }
 
-void convert_escape_sequences(struct PPTokenLine **pp_token_lines) {
+void convert_escape_sequences(struct PPToken **pp_tokens) {
   // FIXME only simple-escape-sequence is implemented
 
-  for (size_t i = 0; pp_token_lines[i]; ++i) {
-    for (size_t j = 0; pp_token_lines[i]->pp_tokens[j]; ++j) {
-      struct PPToken *pp_token = pp_token_lines[i]->pp_tokens[j];
-      if (pp_token->kind == PP_CHARACTER_CONSTANT) {
-        unescape(pp_token->character_constant->value);
-      } else if (pp_token->kind == PP_STRING_LITERAL) {
-        unescape(pp_token->string_literal->value);
-      }
+  for (size_t i = 0; pp_tokens[i]; ++i) {
+    if (pp_tokens[i]->kind == PP_CHARACTER_CONSTANT) {
+      unescape(pp_tokens[i]->character_constant->value);
+    } else if (pp_tokens[i]->kind == PP_STRING_LITERAL) {
+      unescape(pp_tokens[i]->string_literal->value);
     }
   }
 }
 
-void concatenate_adjacent_string_literals(struct PPTokenLine **pp_token_lines) {
+void concatenate_adjacent_string_literals(struct PPToken **pp_tokens) {
   ERROR("Not implemented yet");
 }
 
-struct Token **
-convert_pp_tokens_into_tokens(struct PPTokenLine **pp_token_lines) {
+struct Token **convert_pp_tokens_into_tokens(struct PPToken **pp_tokens) {
   ERROR("Not implemented yet");
 }
 

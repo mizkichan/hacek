@@ -163,11 +163,6 @@ bool parse_args(int argc, char **argv, struct Args *args) {
 
 int main(int argc, char **argv) {
   struct Args args;
-  char *source;
-  struct Line **lines;
-  struct PPTokenLine **pp_token_lines;
-  struct Token **tokens;
-  struct AST *ast;
 
   alloc_init();
   setenv("POSIXLY_CORRECT", "", false);
@@ -188,6 +183,12 @@ int main(int argc, char **argv) {
 
   for (size_t i = 0; args.pathnames[i]; ++i) {
     struct Pathname *pathname = args.pathnames[i];
+    char *source;
+    struct Line **lines;
+    struct PPTokenLine **pp_token_lines;
+    struct PPToken **pp_tokens;
+    struct Token **tokens;
+    struct AST *ast;
 
     // Phase 1.
     source = read_from_file(pathname->pathname);
@@ -206,19 +207,20 @@ int main(int argc, char **argv) {
 
     if (args.preprocess_only) {
       // output preprocessed code
-      FREE(source);
-      return EXIT_SUCCESS;
+      ERROR("Not implemented yet");
     }
 
+    pp_tokens = concatenate_pp_token_lines(pp_token_lines);
+
     // Phase 5. Escape sequences conversion.
-    convert_escape_sequences(pp_token_lines);
+    convert_escape_sequences(pp_tokens);
 
     // Phase 6. Concatenation adjacent string literals.
-    concatenate_adjacent_string_literals(pp_token_lines);
+    concatenate_adjacent_string_literals(pp_tokens);
 
     // Phase 7. Conversion of preprocessing tokens into tokens,
     // parsing, translation and assembling.
-    tokens = convert_pp_tokens_into_tokens(pp_token_lines);
+    tokens = convert_pp_tokens_into_tokens(pp_tokens);
     ast = parse(tokens);
     /*
        assembly = translate(ast);
@@ -226,14 +228,12 @@ int main(int argc, char **argv) {
 
     if (args.compile_only) {
       // output object file
-      FREE(source);
-      return EXIT_SUCCESS;
+      ERROR("Not implemented yet");
     }
 
     // Phase 8. Linking
     // output executable file
-
-    FREE(source);
+    ERROR("Not implemented yet");
   }
 
   return EXIT_SUCCESS;
