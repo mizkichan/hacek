@@ -13,18 +13,13 @@ TEST test_split_source_into_lines(void) {
   ASSERT(lines[0] != NULL);
   ASSERT_EQ(1, lines[0]->linenum);
   ASSERT_STR_EQ("foo", lines[0]->value);
-  FREE(lines[0]->value);
-  FREE(lines[0]);
 
   ASSERT(lines[1] != NULL);
   ASSERT_EQ(2, lines[1]->linenum);
   ASSERT_STR_EQ("bar", lines[1]->value);
-  FREE(lines[1]->value);
-  FREE(lines[1]);
 
   ASSERT(lines[2] == NULL);
 
-  FREE(lines);
   PASS();
 }
 
@@ -37,18 +32,13 @@ TEST test_reconstruct_lines(void) {
   ASSERT(lines[0] != NULL);
   ASSERT_EQ(1, lines[0]->linenum);
   ASSERT_STR_EQ("foo bar", lines[0]->value);
-  FREE(lines[0]->value);
-  FREE(lines[0]);
 
   ASSERT(lines[1] != NULL);
   ASSERT_EQ(3, lines[1]->linenum);
   ASSERT_STR_EQ("baz", lines[1]->value);
-  FREE(lines[1]->value);
-  FREE(lines[1]);
 
   ASSERT(lines[2] == NULL);
 
-  FREE(lines);
   PASS();
 }
 
@@ -62,18 +52,13 @@ TEST test_replace_comments_multiline(void) {
   ASSERT(lines[0] != NULL);
   ASSERT_EQ(1, lines[0]->linenum);
   ASSERT_STR_EQ("foo", lines[0]->value);
-  FREE(lines[0]->value);
-  FREE(lines[0]);
 
   ASSERT(lines[1] != NULL);
   ASSERT_EQ(2, lines[1]->linenum);
   ASSERT_MEM_EQ("bar", lines[1]->value, 4);
-  FREE(lines[1]->value);
-  FREE(lines[1]);
 
   ASSERT(lines[2] == NULL);
 
-  FREE(lines);
   PASS();
 }
 
@@ -85,18 +70,13 @@ TEST test_replace_comments_oneline(void) {
   ASSERT(lines[0] != NULL);
   ASSERT_EQ(1, lines[0]->linenum);
   ASSERT_STR_EQ("foo", lines[0]->value);
-  FREE(lines[0]->value);
-  FREE(lines[0]);
 
   ASSERT(lines[1] != NULL);
   ASSERT_EQ(2, lines[1]->linenum);
   ASSERT_MEM_EQ("bar", lines[1]->value, 4);
-  FREE(lines[1]->value);
-  FREE(lines[1]);
 
   ASSERT(lines[2] == NULL);
 
-  FREE(lines);
   PASS();
 }
 
@@ -107,12 +87,9 @@ TEST test_replace_comments_oneline2(void) {
   ASSERT(lines[0] != NULL);
   ASSERT_EQ(1, lines[0]->linenum);
   ASSERT_STR_EQ("foo bar", lines[0]->value);
-  FREE(lines[0]->value);
-  FREE(lines[0]);
 
   ASSERT(lines[1] == NULL);
 
-  FREE(lines);
   PASS();
 }
 
@@ -129,8 +106,6 @@ TEST test_tokenize(void) {
   ASSERT(pp_tokens[0] != NULL);
   ASSERT_ENUM_EQ(PP_IDENTIFIER, pp_tokens[0]->kind, pp_token_kind_str);
   ASSERT_STR_EQ("foo", pp_tokens[0]->identifier->value);
-  FREE(pp_tokens[0]->identifier);
-  FREE(pp_tokens[0]);
 
   ASSERT(pp_tokens[1] != NULL);
   ASSERT_ENUM_EQ(PP_CHARACTER_CONSTANT, pp_tokens[1]->kind, pp_token_kind_str);
@@ -138,28 +113,17 @@ TEST test_tokenize(void) {
   ASSERT_ENUM_EQ(CHARACTER_CONSTANT_PREFIX_NONE,
                  pp_tokens[1]->character_constant->prefix,
                  character_constant_prefix_str);
-  FREE(pp_tokens[1]->character_constant);
-  FREE(pp_tokens[1]);
 
   ASSERT(pp_tokens[2] != NULL);
   ASSERT_ENUM_EQ(PP_PUNCTUATOR, pp_tokens[2]->kind, pp_token_kind_str);
   ASSERT_ENUM_EQ(PLUS, pp_tokens[2]->punctuator, punctuator_str);
-  FREE(pp_tokens[2]);
 
   ASSERT(pp_tokens[3] != NULL);
   ASSERT_ENUM_EQ(PP_NUMBER, pp_tokens[3]->kind, pp_token_kind_str);
   ASSERT_STR_EQ("123", pp_tokens[3]->number->value);
-  FREE(pp_tokens[3]->number);
-  FREE(pp_tokens[3]);
 
   ASSERT(pp_tokens[4] == NULL);
 
-  FREE(pp_token_lines[0]->pp_tokens);
-  FREE(pp_token_lines[0]);
-  FREE(pp_token_lines);
-  FREE(lines[0]->value);
-  FREE(lines[0]);
-  FREE(lines);
   PASS();
 }
 
@@ -173,7 +137,6 @@ TEST test_match_header_name_q(void) {
   ASSERT_STR_EQ("hello.h", buf.header_name->value);
   ASSERT_EQ(*src, '\0');
 
-  FREE(buf.header_name);
   PASS();
 }
 
@@ -187,7 +150,6 @@ TEST test_match_header_name_h(void) {
   ASSERT_STR_EQ("stdio.h", buf.header_name->value);
   ASSERT_EQ(*src, '\0');
 
-  FREE(buf.header_name);
   PASS();
 }
 
@@ -200,7 +162,6 @@ TEST test_match_identifier(void) {
   ASSERT_STR_EQ("foobar2000", buf.identifier->value);
   ASSERT_EQ(*src, '\0');
 
-  FREE(buf.identifier);
   PASS();
 }
 
@@ -213,7 +174,6 @@ TEST test_match_pp_number(void) {
   ASSERT_STR_EQ(".01ae+E-p+P-.", buf.number->value);
   ASSERT_EQ(*src, '\0');
 
-  FREE(buf.number);
   PASS();
 }
 
@@ -228,7 +188,6 @@ TEST test_match_character_constant(void) {
   ASSERT_STR_EQ("foobar2000", buf.character_constant->value);
   ASSERT_EQ(*src, '\0');
 
-  FREE(buf.character_constant);
   PASS();
 }
 
@@ -243,7 +202,6 @@ TEST test_match_character_constant_wchar(void) {
   ASSERT_STR_EQ("foobar2000", buf.character_constant->value);
   ASSERT_EQ(*src, '\0');
 
-  FREE(buf.character_constant);
   PASS();
 }
 
@@ -258,7 +216,6 @@ TEST test_match_character_constant_char16(void) {
   ASSERT_STR_EQ("foobar2000", buf.character_constant->value);
   ASSERT_EQ(*src, '\0');
 
-  FREE(buf.character_constant);
   PASS();
 }
 
@@ -273,7 +230,6 @@ TEST test_match_character_constant_char32(void) {
   ASSERT_STR_EQ("foobar2000", buf.character_constant->value);
   ASSERT_EQ(*src, '\0');
 
-  FREE(buf.character_constant);
   PASS();
 }
 
@@ -288,7 +244,6 @@ TEST test_match_string_literal(void) {
   ASSERT_STR_EQ("foobar2000", buf.string_literal->value);
   ASSERT_EQ(*src, '\0');
 
-  FREE(buf.string_literal);
   PASS();
 }
 
@@ -303,7 +258,6 @@ TEST test_match_string_literal_utf8(void) {
   ASSERT_STR_EQ("foobar2000", buf.string_literal->value);
   ASSERT_EQ(*src, '\0');
 
-  FREE(buf.string_literal);
   PASS();
 }
 
@@ -318,7 +272,6 @@ TEST test_match_string_literal_char16(void) {
   ASSERT_STR_EQ("foobar2000", buf.string_literal->value);
   ASSERT_EQ(*src, '\0');
 
-  FREE(buf.string_literal);
   PASS();
 }
 
@@ -333,7 +286,6 @@ TEST test_match_string_literal_char32(void) {
   ASSERT_STR_EQ("foobar2000", buf.string_literal->value);
   ASSERT_EQ(*src, '\0');
 
-  FREE(buf.string_literal);
   PASS();
 }
 
@@ -348,7 +300,6 @@ TEST test_match_string_literal_wchar(void) {
   ASSERT_STR_EQ("foobar2000", buf.string_literal->value);
   ASSERT_EQ(*src, '\0');
 
-  FREE(buf.string_literal);
   PASS();
 }
 

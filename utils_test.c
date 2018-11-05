@@ -1,4 +1,3 @@
-#include "alloc.h"
 #include "greatest.h"
 
 #include "utils.c"
@@ -55,19 +54,15 @@ TEST test_clone_str(void) {
 
   cloned = clone_str(str, str);
   ASSERT_STR_EQ("", cloned);
-  FREE(cloned);
 
   cloned = clone_str(str, str + 10);
   ASSERT_STR_EQ("foobar2000", cloned);
-  FREE(cloned);
 
   cloned = clone_str(str + 10, str + 10);
   ASSERT_STR_EQ("", cloned);
-  FREE(cloned);
 
   cloned = clone_str(str, NULL);
   ASSERT_STR_EQ("foobar2000", cloned);
-  FREE(cloned);
 
   PASS();
 }

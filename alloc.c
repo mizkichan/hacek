@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef DEBUG
 struct Alloc {
   const void *ptr;
   const char *func;
@@ -116,5 +117,7 @@ static void alloc_remove(const char *func, const char *file, int line,
 
   debug(func, file, line, 0, "The pointer has never been registered.");
 }
+
+#endif
 
 // vim: set ft=c ts=2 sw=2 et:

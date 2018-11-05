@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 
+#ifdef DEBUG
 void alloc_init(void);
 void *checked_malloc(const char *, const char *, int, size_t)
     __attribute__((returns_nonnull, alloc_size(4), nonnull(1)));
@@ -15,6 +16,14 @@ void checked_free(const char *, const char *, int, void *)
 #define REALLOC(ptr, size)                                                     \
   checked_realloc(__func__, __FILE__, __LINE__, ptr, size)
 #define FREE(ptr) checked_free(__func__, __FILE__, __LINE__, ptr)
+
+#else
+#include <stdlib.h>
+#define MALLOC malloc
+#define REALLOC realloc
+#define FREE free
+
+#endif
 
 #endif
 // vim: set ft=c ts=2 sw=2 et:
