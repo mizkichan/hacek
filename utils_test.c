@@ -37,13 +37,14 @@ TEST test_erase_str(void) {
   PASS();
 }
 
-TEST test_str_range_equals(void) {
+TEST test_str_equals(void) {
   char *str = "foobar2000";
 
-  ASSERT(str_range_equals("foobar2000", str, str + 10));
-  ASSERT(!str_range_equals("foobar", str, str + 10));
-  ASSERT(str_range_equals("foobar", str, str + 6));
-  ASSERT(!str_range_equals("foobaz", str, str + 6));
+  ASSERT(str_equals("foobar2000", str, str + 10));
+  ASSERT(str_equals("foobar2000", str, NULL));
+  ASSERT(!str_equals("foobar", str, str + 10));
+  ASSERT(str_equals("foobar", str, str + 6));
+  ASSERT(!str_equals("foobaz", str, str + 6));
 
   PASS();
 }
@@ -75,7 +76,7 @@ SUITE(utils) {
   RUN_TEST(test_remove_str);
   RUN_TEST(test_erase_str);
   RUN_TEST(test_clone_str);
-  RUN_TEST(test_str_range_equals);
+  RUN_TEST(test_str_equals);
 }
 
 // vim: set ft=c ts=2 sw=2 et:

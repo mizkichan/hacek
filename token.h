@@ -2,7 +2,6 @@
 #define PP_TOKEN_H
 
 const char *character_constant_prefix_str(int);
-const char *constant_kind_str(int);
 const char *header_name_kind_str(int);
 const char *keyword_str(int);
 const char *pp_token_kind_str(int);

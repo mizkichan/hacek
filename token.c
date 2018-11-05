@@ -18,8 +18,6 @@ const char *pp_token_kind_str(int x) {
     return "PP_PUNCTUATOR";
   case PP_NWSC:
     return "PP_NWSC";
-  case PP_NEWLINE:
-    return "PP_NEWLINE";
   }
   ERROR("unknown enum variant: %d", x);
 }
@@ -154,20 +152,6 @@ const char *keyword_str(int x) {
     return "VOLATILE";
   case WHILE:
     return "WHILE";
-  }
-  ERROR("unknown enum variant: %d", x);
-}
-
-const char *constant_kind_str(int x) {
-  switch ((enum ConstantKind)x) {
-  case INTEGER_CONSTANT:
-    return "INTEGER_CONSTANT";
-  case FLOATING_CONSTANT:
-    return "FLOATING_CONSTANT";
-  case ENUMERATION_CONSTANT:
-    return "ENUMERATION_CONSTANT";
-  case CHARACTER_CONSTANT:
-    return "CHARACTER_CONSTANT";
   }
   ERROR("unknown enum variant: %d", x);
 }

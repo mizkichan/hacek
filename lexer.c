@@ -17,7 +17,6 @@ static bool match_string_literal(char **, struct PPToken *)
 static bool match_punctuator(char **, struct PPToken *)
     __attribute__((nonnull));
 static bool match_nwsc(char **, struct PPToken *) __attribute__((nonnull));
-static bool match_newline(char **, struct PPToken *) __attribute__((nonnull));
 static bool is_include_directive(struct PPToken *,
                                  struct PPToken *); // params can be null
 static bool is_nondigit(char) __attribute__((const));
@@ -140,8 +139,6 @@ struct PPTokenLine **tokenize(struct Line **lines) {
           match_string_literal(&line, buf) ||
           // punctuator
           match_punctuator(&line, buf) ||
-          // newline
-          match_newline(&line, buf) ||
           // "each non-white-space character that cannot be one of the above"
           match_nwsc(&line, buf) ||
           //
@@ -222,14 +219,15 @@ static bool match_header_name(char **c, struct PPToken *buf) {
   ++(*c);
 
   buf->kind = PP_HEADER_NAME;
-  buf->header_name_kind = kind;
-  buf->begin = begin;
-  buf->end = end;
+  buf->header_name =
+      MALLOC(sizeof(struct HeaderName) + (size_t)(end - begin) + 1);
+  buf->header_name->kind = kind;
+  copy_str(buf->header_name->value, begin, end);
   return true;
 }
 
 static bool match_identifier(char **c, struct PPToken *buf) {
-  char *begin = *c;
+  char *begin = *c, *end;
 
   if (!is_nondigit(**c)) {
     return false;
@@ -239,15 +237,17 @@ static bool match_identifier(char **c, struct PPToken *buf) {
     (*c) += 1;
     // TODO handle universal-character-name
   } while (is_nondigit(**c) || is_digit(**c));
+  end = *c;
 
   buf->kind = PP_IDENTIFIER;
-  buf->begin = begin;
-  buf->end = *c;
+  buf->identifier =
+      MALLOC(sizeof(struct Identifier) + (size_t)(end - begin) + 1);
+  copy_str(buf->identifier->value, begin, end);
   return true;
 }
 
 static bool match_pp_number(char **c, struct PPToken *buf) {
-  char *begin = *c;
+  char *begin = *c, *end;
 
   if (is_digit((*c)[0])) {
     (*c) += 1;
@@ -269,10 +269,11 @@ static bool match_pp_number(char **c, struct PPToken *buf) {
       break;
     }
   }
+  end = *c;
 
   buf->kind = PP_NUMBER;
-  buf->begin = begin;
-  buf->end = *c;
+  buf->number = MALLOC(sizeof(struct PPNumber) + (size_t)(end - begin) + 1);
+  copy_str(buf->number->value, begin, end);
   return true;
 }
 
@@ -308,32 +309,33 @@ static bool match_character_constant(char **c, struct PPToken *buf) {
   ++(*c);
 
   buf->kind = PP_CHARACTER_CONSTANT;
-  buf->character_constant_prefix = prefix;
-  buf->begin = begin;
-  buf->end = end;
+  buf->character_constant =
+      MALLOC(sizeof(struct CharacterConstant) + (size_t)(end - begin) + 1);
+  buf->character_constant->prefix = prefix;
+  copy_str(buf->character_constant->value, begin, end);
   return true;
 }
 
 static bool match_string_literal(char **c, struct PPToken *buf) {
-  enum StringLiteralPrefix string_literal_prefix;
+  enum StringLiteralPrefix prefix;
   char *begin, *end;
 
   if ((*c)[0] == 'u') {
     if ((*c)[1] == '8') {
-      string_literal_prefix = STRING_LITERAL_PREFIX_UTF8;
+      prefix = STRING_LITERAL_PREFIX_UTF8;
       (*c) += 2;
     } else {
-      string_literal_prefix = STRING_LITERAL_PREFIX_CHAR16;
+      prefix = STRING_LITERAL_PREFIX_CHAR16;
       (*c) += 1;
     }
   } else if ((*c)[0] == 'U') {
-    string_literal_prefix = STRING_LITERAL_PREFIX_CHAR32;
+    prefix = STRING_LITERAL_PREFIX_CHAR32;
     (*c) += 1;
   } else if ((*c)[0] == 'L') {
-    string_literal_prefix = STRING_LITERAL_PREFIX_WCHAR;
+    prefix = STRING_LITERAL_PREFIX_WCHAR;
     (*c) += 1;
   } else {
-    string_literal_prefix = STRING_LITERAL_PREFIX_NONE;
+    prefix = STRING_LITERAL_PREFIX_NONE;
   }
 
   if (**c != '"') {
@@ -349,15 +351,14 @@ static bool match_string_literal(char **c, struct PPToken *buf) {
   ++(*c);
 
   buf->kind = PP_STRING_LITERAL;
-  buf->string_literal_prefix = string_literal_prefix;
-  buf->begin = begin;
-  buf->end = end;
+  buf->string_literal =
+      MALLOC(sizeof(struct StringLiteral) + (size_t)(end - begin) + 1);
+  buf->string_literal->prefix = prefix;
+  copy_str(buf->string_literal->value, begin, end);
   return true;
 }
 
 static bool match_punctuator(char **c, struct PPToken *buf) {
-  char *begin = *c;
-
   if (starts_with(*c, "%:%:")) {
     buf->punctuator = DIGRAPH_DOUBLE_SIGN;
     (*c) += 4;
@@ -533,8 +534,6 @@ static bool match_punctuator(char **c, struct PPToken *buf) {
   }
 
   buf->kind = PP_PUNCTUATOR;
-  buf->begin = begin;
-  buf->end = *c;
   return true;
 }
 
@@ -544,22 +543,11 @@ static bool match_nwsc(char **c, struct PPToken *buf) {
   return true;
 }
 
-static bool match_newline(char **c, struct PPToken *buf) {
-  if (**c != '\n') {
-    return false;
-  }
-  buf->kind = PP_NEWLINE;
-  buf->begin = *c;
-  ++(*c);
-  buf->end = *c;
-  return true;
-}
-
 static bool is_include_directive(struct PPToken *one_before_last,
                                  struct PPToken *last) {
   return one_before_last && last && one_before_last->kind == PP_PUNCTUATOR &&
          one_before_last->punctuator == SIGN && last->kind == PP_IDENTIFIER &&
-         str_range_equals("include", last->begin, last->end);
+         str_equals("include", last->identifier->value, NULL);
 }
 
 static bool is_nondigit(char c) { return isalpha(c) || c == '_'; }

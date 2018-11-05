@@ -1,5 +1,4 @@
 #include "greatest.h"
-#include "test.h"
 #include "token.h"
 
 #include "lexer.c"
@@ -129,15 +128,17 @@ TEST test_tokenize(void) {
 
   ASSERT(pp_tokens[0] != NULL);
   ASSERT_ENUM_EQ(PP_IDENTIFIER, pp_tokens[0]->kind, pp_token_kind_str);
-  ASSERT_STR_RANGE_EQ("foo", pp_tokens[0]->begin, pp_tokens[0]->end);
+  ASSERT_STR_EQ("foo", pp_tokens[0]->identifier->value);
+  FREE(pp_tokens[0]->identifier);
   FREE(pp_tokens[0]);
 
   ASSERT(pp_tokens[1] != NULL);
   ASSERT_ENUM_EQ(PP_CHARACTER_CONSTANT, pp_tokens[1]->kind, pp_token_kind_str);
-  ASSERT_STR_RANGE_EQ("a", pp_tokens[1]->begin, pp_tokens[1]->end);
+  ASSERT_STR_EQ("a", pp_tokens[1]->character_constant->value);
   ASSERT_ENUM_EQ(CHARACTER_CONSTANT_PREFIX_NONE,
-                 pp_tokens[1]->character_constant_prefix,
+                 pp_tokens[1]->character_constant->prefix,
                  character_constant_prefix_str);
+  FREE(pp_tokens[1]->character_constant);
   FREE(pp_tokens[1]);
 
   ASSERT(pp_tokens[2] != NULL);
@@ -147,7 +148,8 @@ TEST test_tokenize(void) {
 
   ASSERT(pp_tokens[3] != NULL);
   ASSERT_ENUM_EQ(PP_NUMBER, pp_tokens[3]->kind, pp_token_kind_str);
-  ASSERT_STR_RANGE_EQ("123", pp_tokens[3]->begin, pp_tokens[3]->end);
+  ASSERT_STR_EQ("123", pp_tokens[3]->number->value);
+  FREE(pp_tokens[3]->number);
   FREE(pp_tokens[3]);
 
   ASSERT(pp_tokens[4] == NULL);
@@ -167,10 +169,11 @@ TEST test_match_header_name_q(void) {
 
   ASSERT(match_header_name(&src, &buf));
   ASSERT_ENUM_EQ(PP_HEADER_NAME, buf.kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(Q_CHAR_SEQUENCE, buf.header_name_kind, header_name_kind_str);
-  ASSERT_STR_RANGE_EQ("hello.h", buf.begin, buf.end);
+  ASSERT_ENUM_EQ(Q_CHAR_SEQUENCE, buf.header_name->kind, header_name_kind_str);
+  ASSERT_STR_EQ("hello.h", buf.header_name->value);
   ASSERT_EQ(*src, '\0');
 
+  FREE(buf.header_name);
   PASS();
 }
 
@@ -180,10 +183,11 @@ TEST test_match_header_name_h(void) {
 
   ASSERT(match_header_name(&src, &buf));
   ASSERT_ENUM_EQ(PP_HEADER_NAME, buf.kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(H_CHAR_SEQUENCE, buf.header_name_kind, header_name_kind_str);
-  ASSERT_STR_RANGE_EQ("stdio.h", buf.begin, buf.end);
+  ASSERT_ENUM_EQ(H_CHAR_SEQUENCE, buf.kind, header_name_kind_str);
+  ASSERT_STR_EQ("stdio.h", buf.header_name->value);
   ASSERT_EQ(*src, '\0');
 
+  FREE(buf.header_name);
   PASS();
 }
 
@@ -193,9 +197,10 @@ TEST test_match_identifier(void) {
 
   ASSERT(match_identifier(&src, &buf));
   ASSERT_ENUM_EQ(PP_IDENTIFIER, buf.kind, pp_token_kind_str);
-  ASSERT_STR_RANGE_EQ("foobar2000", buf.begin, buf.end);
+  ASSERT_STR_EQ("foobar2000", buf.identifier->value);
   ASSERT_EQ(*src, '\0');
 
+  FREE(buf.identifier);
   PASS();
 }
 
@@ -205,9 +210,10 @@ TEST test_match_pp_number(void) {
 
   ASSERT(match_pp_number(&src, &buf));
   ASSERT_ENUM_EQ(PP_NUMBER, buf.kind, pp_token_kind_str);
-  ASSERT_STR_RANGE_EQ(".01ae+E-p+P-.", buf.begin, buf.end);
+  ASSERT_STR_EQ(".01ae+E-p+P-.", buf.number->value);
   ASSERT_EQ(*src, '\0');
 
+  FREE(buf.number);
   PASS();
 }
 
@@ -217,11 +223,12 @@ TEST test_match_character_constant(void) {
 
   ASSERT(match_character_constant(&src, &buf));
   ASSERT_ENUM_EQ(PP_CHARACTER_CONSTANT, buf.kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(CHARACTER_CONSTANT_PREFIX_NONE, buf.character_constant_prefix,
+  ASSERT_ENUM_EQ(CHARACTER_CONSTANT_PREFIX_NONE, buf.character_constant->prefix,
                  character_constant_prefix_str);
-  ASSERT_STR_RANGE_EQ("foobar2000", buf.begin, buf.end);
+  ASSERT_STR_EQ("foobar2000", buf.character_constant->value);
   ASSERT_EQ(*src, '\0');
 
+  FREE(buf.character_constant);
   PASS();
 }
 
@@ -231,11 +238,12 @@ TEST test_match_character_constant_wchar(void) {
 
   ASSERT(match_character_constant(&src, &buf));
   ASSERT_ENUM_EQ(PP_CHARACTER_CONSTANT, buf.kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(CHARACTER_CONSTANT_PREFIX_WCHAR, buf.character_constant_prefix,
-                 character_constant_prefix_str);
-  ASSERT_STR_RANGE_EQ("foobar2000", buf.begin, buf.end);
+  ASSERT_ENUM_EQ(CHARACTER_CONSTANT_PREFIX_WCHAR,
+                 buf.character_constant->prefix, character_constant_prefix_str);
+  ASSERT_STR_EQ("foobar2000", buf.character_constant->value);
   ASSERT_EQ(*src, '\0');
 
+  FREE(buf.character_constant);
   PASS();
 }
 
@@ -246,10 +254,11 @@ TEST test_match_character_constant_char16(void) {
   ASSERT(match_character_constant(&src, &buf));
   ASSERT_ENUM_EQ(PP_CHARACTER_CONSTANT, buf.kind, pp_token_kind_str);
   ASSERT_ENUM_EQ(CHARACTER_CONSTANT_PREFIX_CHAR16,
-                 buf.character_constant_prefix, character_constant_prefix_str);
-  ASSERT_STR_RANGE_EQ("foobar2000", buf.begin, buf.end);
+                 buf.character_constant->prefix, character_constant_prefix_str);
+  ASSERT_STR_EQ("foobar2000", buf.character_constant->value);
   ASSERT_EQ(*src, '\0');
 
+  FREE(buf.character_constant);
   PASS();
 }
 
@@ -260,10 +269,11 @@ TEST test_match_character_constant_char32(void) {
   ASSERT(match_character_constant(&src, &buf));
   ASSERT_ENUM_EQ(PP_CHARACTER_CONSTANT, buf.kind, pp_token_kind_str);
   ASSERT_ENUM_EQ(CHARACTER_CONSTANT_PREFIX_CHAR32,
-                 buf.character_constant_prefix, character_constant_prefix_str);
-  ASSERT_STR_RANGE_EQ("foobar2000", buf.begin, buf.end);
+                 buf.character_constant->prefix, character_constant_prefix_str);
+  ASSERT_STR_EQ("foobar2000", buf.character_constant->value);
   ASSERT_EQ(*src, '\0');
 
+  FREE(buf.character_constant);
   PASS();
 }
 
@@ -273,11 +283,12 @@ TEST test_match_string_literal(void) {
 
   ASSERT(match_string_literal(&src, &buf));
   ASSERT_ENUM_EQ(PP_STRING_LITERAL, buf.kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(STRING_LITERAL_PREFIX_NONE, buf.string_literal_prefix,
+  ASSERT_ENUM_EQ(STRING_LITERAL_PREFIX_NONE, buf.string_literal->prefix,
                  string_literal_prefix_str);
-  ASSERT_STR_RANGE_EQ("foobar2000", buf.begin, buf.end);
+  ASSERT_STR_EQ("foobar2000", buf.string_literal->value);
   ASSERT_EQ(*src, '\0');
 
+  FREE(buf.string_literal);
   PASS();
 }
 
@@ -287,11 +298,12 @@ TEST test_match_string_literal_utf8(void) {
 
   ASSERT(match_string_literal(&src, &buf));
   ASSERT_ENUM_EQ(PP_STRING_LITERAL, buf.kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(STRING_LITERAL_PREFIX_UTF8, buf.string_literal_prefix,
+  ASSERT_ENUM_EQ(STRING_LITERAL_PREFIX_UTF8, buf.string_literal->prefix,
                  string_literal_prefix_str);
-  ASSERT_STR_RANGE_EQ("foobar2000", buf.begin, buf.end);
+  ASSERT_STR_EQ("foobar2000", buf.string_literal->value);
   ASSERT_EQ(*src, '\0');
 
+  FREE(buf.string_literal);
   PASS();
 }
 
@@ -301,11 +313,12 @@ TEST test_match_string_literal_char16(void) {
 
   ASSERT(match_string_literal(&src, &buf));
   ASSERT_ENUM_EQ(PP_STRING_LITERAL, buf.kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(STRING_LITERAL_PREFIX_CHAR16, buf.string_literal_prefix,
+  ASSERT_ENUM_EQ(STRING_LITERAL_PREFIX_CHAR16, buf.string_literal->prefix,
                  string_literal_prefix_str);
-  ASSERT_STR_RANGE_EQ("foobar2000", buf.begin, buf.end);
+  ASSERT_STR_EQ("foobar2000", buf.string_literal->value);
   ASSERT_EQ(*src, '\0');
 
+  FREE(buf.string_literal);
   PASS();
 }
 
@@ -315,11 +328,12 @@ TEST test_match_string_literal_char32(void) {
 
   ASSERT(match_string_literal(&src, &buf));
   ASSERT_ENUM_EQ(PP_STRING_LITERAL, buf.kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(STRING_LITERAL_PREFIX_CHAR32, buf.string_literal_prefix,
+  ASSERT_ENUM_EQ(STRING_LITERAL_PREFIX_CHAR32, buf.string_literal->prefix,
                  string_literal_prefix_str);
-  ASSERT_STR_RANGE_EQ("foobar2000", buf.begin, buf.end);
+  ASSERT_STR_EQ("foobar2000", buf.string_literal->value);
   ASSERT_EQ(*src, '\0');
 
+  FREE(buf.string_literal);
   PASS();
 }
 
@@ -329,11 +343,12 @@ TEST test_match_string_literal_wchar(void) {
 
   ASSERT(match_string_literal(&src, &buf));
   ASSERT_ENUM_EQ(PP_STRING_LITERAL, buf.kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(STRING_LITERAL_PREFIX_WCHAR, buf.string_literal_prefix,
+  ASSERT_ENUM_EQ(STRING_LITERAL_PREFIX_WCHAR, buf.string_literal->prefix,
                  string_literal_prefix_str);
-  ASSERT_STR_RANGE_EQ("foobar2000", buf.begin, buf.end);
+  ASSERT_STR_EQ("foobar2000", buf.string_literal->value);
   ASSERT_EQ(*src, '\0');
 
+  FREE(buf.string_literal);
   PASS();
 }
 

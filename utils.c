@@ -85,8 +85,16 @@ char *search_char(const char *haystack, char needle) {
   return strchr(haystack, needle);
 }
 
-bool str_range_equals(const char *str, const char *begin, const char *end) {
-  return strncmp(str, begin, (size_t)(end - begin)) == 0;
+bool str_equals(const char *str, const char *begin, const char *end) {
+  size_t n;
+
+  if (end) {
+    n = (size_t)(end - begin);
+  } else {
+    n = strlen(begin) + 1;
+  }
+
+  return strncmp(str, begin, n) == 0;
 }
 
 char *clone_str(const char *begin, const char *end) {
@@ -110,6 +118,20 @@ size_t length_str(const char *str) { return strlen(str); }
 char *append_str(char *a, const char *b) {
   a = REALLOC(a, length_str(a) + length_str(b) + 1);
   return strcat(a, b);
+}
+
+char *copy_str(char *dest, const char *begin, const char *end) {
+  size_t n;
+
+  if (end) {
+    n = (size_t)(end - begin);
+  } else {
+    n = strlen(begin) + 1;
+  }
+
+  strncpy(dest, begin, n);
+  dest[n] = '\0';
+  return dest;
 }
 
 // vim: set ft=c ts=2 sw=2 et:

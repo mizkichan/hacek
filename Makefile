@@ -7,7 +7,7 @@ PROGRAM_SRCS = alloc.c error.c hacek.c lexer.c parser.c preprocessor.c token.c u
 PROGRAM_OBJS = $(PROGRAM_SRCS:.c=.o)
 PROGRAM_DEPS = $(PROGRAM_SRCS:.c=.d)
 
-TESTS = test foo
+TESTS = test
 TEST_SRCS = test.c lexer_test.c preprocessor_test.c utils_test.c \
 	    alloc.c error.c token.c
 TEST_OBJS = $(TEST_SRCS:.c=.o)

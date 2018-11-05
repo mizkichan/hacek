@@ -3,6 +3,12 @@
 
 #include <stddef.h>
 
+struct Position {
+  char *file;
+  size_t line;
+  size_t column;
+};
+
 enum Punctuator {
   LEFT_BRACKET,          // [
   RIGHT_BRACKET,         // ]
@@ -107,19 +113,7 @@ enum Keyword {
   WHILE,
 };
 
-struct Constant {
-  enum ConstantKind {
-    INTEGER_CONSTANT,
-    FLOATING_CONSTANT,
-    ENUMERATION_CONSTANT,
-    CHARACTER_CONSTANT,
-  } kind;
-  char *chars;
-};
-
 struct Token {
-  char *begin;
-  char *end;
   enum TokenKind {
     TOKEN_KEYWORD,
     TOKEN_IDENTIFIER,
@@ -134,9 +128,46 @@ struct Token {
   };
 };
 
+struct HeaderName {
+  struct Position pos;
+  enum HeaderNameKind { H_CHAR_SEQUENCE, Q_CHAR_SEQUENCE } kind;
+  char value[];
+};
+
+struct Identifier {
+  struct Position pos;
+  char value[];
+};
+
+struct PPNumber {
+  struct Position pos;
+  char value[];
+};
+
+struct CharacterConstant {
+  struct Position pos;
+  enum CharacterConstantPrefix {
+    CHARACTER_CONSTANT_PREFIX_WCHAR,
+    CHARACTER_CONSTANT_PREFIX_CHAR16,
+    CHARACTER_CONSTANT_PREFIX_CHAR32,
+    CHARACTER_CONSTANT_PREFIX_NONE
+  } prefix;
+  char value[];
+};
+
+struct StringLiteral {
+  struct Position pos;
+  enum StringLiteralPrefix {
+    STRING_LITERAL_PREFIX_UTF8,
+    STRING_LITERAL_PREFIX_CHAR16,
+    STRING_LITERAL_PREFIX_CHAR32,
+    STRING_LITERAL_PREFIX_WCHAR,
+    STRING_LITERAL_PREFIX_NONE
+  } prefix;
+  char value[];
+};
+
 struct PPToken {
-  char *begin;
-  char *end;
   enum PPTokenKind {
     PP_HEADER_NAME,
     PP_IDENTIFIER,
@@ -145,23 +176,13 @@ struct PPToken {
     PP_STRING_LITERAL,
     PP_PUNCTUATOR,
     PP_NWSC,
-    PP_NEWLINE
   } kind;
   union {
-    enum HeaderNameKind { H_CHAR_SEQUENCE, Q_CHAR_SEQUENCE } header_name_kind;
-    enum CharacterConstantPrefix {
-      CHARACTER_CONSTANT_PREFIX_WCHAR,
-      CHARACTER_CONSTANT_PREFIX_CHAR16,
-      CHARACTER_CONSTANT_PREFIX_CHAR32,
-      CHARACTER_CONSTANT_PREFIX_NONE
-    } character_constant_prefix;
-    enum StringLiteralPrefix {
-      STRING_LITERAL_PREFIX_UTF8,
-      STRING_LITERAL_PREFIX_CHAR16,
-      STRING_LITERAL_PREFIX_CHAR32,
-      STRING_LITERAL_PREFIX_WCHAR,
-      STRING_LITERAL_PREFIX_NONE
-    } string_literal_prefix;
+    struct HeaderName *header_name;
+    struct Identifier *identifier;
+    struct PPNumber *number;
+    struct CharacterConstant *character_constant;
+    struct StringLiteral *string_literal;
     enum Punctuator punctuator;
     char nwsc;
   };

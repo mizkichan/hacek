@@ -10,13 +10,15 @@ char *append_str(char *, const char *)
     __attribute__((returns_nonnull, nonnull));
 char *clone_str(const char *, const char *)
     __attribute__((returns_nonnull, nonnull(1)));
+char *copy_str(char *, const char *, const char *)
+    __attribute__((returns_nonnull, nonnull(1, 2)));
 char *remove_str(char *, char) __attribute__((returns_nonnull, nonnull));
 void erase_str(char *, char *) __attribute__((nonnull));
 char *search_str(const char *, const char *) __attribute__((nonnull));
 char *search_char(const char *, char) __attribute__((nonnull));
 bool starts_with(const char *, const char *) __attribute__((nonnull));
-bool str_range_equals(const char *, const char *, const char *)
-    __attribute__((nonnull));
+bool str_equals(const char *, const char *, const char *)
+    __attribute__((nonnull(1, 2)));
 size_t length_str(const char *) __attribute__((nonnull));
 
 #define PUSH_BACK(type, ptr, n, value)                                         \
