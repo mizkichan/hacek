@@ -32,8 +32,45 @@ void convert_escape_sequences(struct PPToken **pp_tokens) {
   }
 }
 
+struct PPToken **
+concatenate_pp_token_lines(struct PPTokenLine **pp_token_lines) {
+  struct PPToken **result = NULL;
+  size_t count = 0;
+
+  for (size_t i = 0; pp_token_lines[i]; ++i) {
+    for (size_t j = 0; pp_token_lines[i]->pp_tokens[j]; ++j) {
+      PUSH_BACK(struct PPToken *, result, count,
+                pp_token_lines[i]->pp_tokens[j]);
+    }
+  }
+
+  return result;
+}
+
 void concatenate_adjacent_string_literals(struct PPToken **pp_tokens) {
-  ERROR("Not implemented yet");
+  while (pp_tokens[1]) {
+    size_t size, size0, size1;
+    char *dest;
+
+    if (pp_tokens[0]->kind != PP_STRING_LITERAL ||
+        pp_tokens[1]->kind != PP_STRING_LITERAL) {
+      ++pp_tokens;
+      continue;
+    }
+
+    size0 = length_str(pp_tokens[0]->string_literal->value);
+    size1 = length_str(pp_tokens[1]->string_literal->value);
+    size = sizeof(struct StringLiteral) + size0 + size1 + 1;
+    pp_tokens[0]->string_literal = REALLOC(pp_tokens[0]->string_literal, size);
+    dest = pp_tokens[0]->string_literal->value + size0;
+    copy_str(dest, pp_tokens[1]->string_literal->value, NULL);
+    FREE(pp_tokens[1]->string_literal);
+    FREE(pp_tokens[1]);
+
+    for (struct PPToken **pt = pp_tokens; pt[1]; ++pt) {
+      pt[1] = pt[2];
+    }
+  }
 }
 
 struct Token **convert_pp_tokens_into_tokens(struct PPToken **pp_tokens) {
