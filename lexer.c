@@ -6,19 +6,14 @@
 #include <ctype.h>
 
 static void match_white_space_characters(char **) __attribute__((nonnull));
-static bool match_header_name(char **, struct PPToken **)
+static struct PPToken *match_header_name(char **) __attribute__((nonnull));
+static struct PPToken *match_identifier(char **) __attribute__((nonnull));
+static struct PPToken *match_pp_number(char **) __attribute__((nonnull));
+static struct PPToken *match_character_constant(char **)
     __attribute__((nonnull));
-static bool match_identifier(char **, struct PPToken **)
-    __attribute__((nonnull));
-static bool match_pp_number(char **, struct PPToken **)
-    __attribute__((nonnull));
-static bool match_character_constant(char **, struct PPToken **)
-    __attribute__((nonnull));
-static bool match_string_literal(char **, struct PPToken **)
-    __attribute__((nonnull));
-static bool match_punctuator(char **, struct PPToken **)
-    __attribute__((nonnull));
-static bool match_nwsc(char **, struct PPToken **) __attribute__((nonnull));
+static struct PPToken *match_string_literal(char **) __attribute__((nonnull));
+static struct PPToken *match_punctuator(char **) __attribute__((nonnull));
+static struct PPToken *match_nwsc(char **) __attribute__((nonnull));
 static bool is_include_directive(struct PPToken *,
                                  struct PPToken *); // params can be null
 static bool is_nondigit(char) __attribute__((const));
@@ -129,19 +124,19 @@ struct PPTokenLine **tokenize(struct Line **lines) {
       PANIC_IF(!(
           // header-name
           (is_include_directive(one_before_last, last) &&
-           match_header_name(&line, &token)) ||
+           (token = match_header_name(&line))) ||
           // identifier
-          match_identifier(&line, &token) ||
+          (token = match_identifier(&line)) ||
           // pp-number
-          match_pp_number(&line, &token) ||
+          (token = match_pp_number(&line)) ||
           // character-constant
-          match_character_constant(&line, &token) ||
+          (token = match_character_constant(&line)) ||
           // string-literal
-          match_string_literal(&line, &token) ||
+          (token = match_string_literal(&line)) ||
           // punctuator
-          match_punctuator(&line, &token) ||
+          (token = match_punctuator(&line)) ||
           // "each non-white-space character that cannot be one of the above"
-          match_nwsc(&line, &token) ||
+          (token = match_nwsc(&line)) ||
           //
           false));
 
@@ -192,7 +187,7 @@ static void match_white_space_characters(char **c) {
   } while (was_there_whitespace);
 }
 
-static bool match_header_name(char **c, struct PPToken **buf) {
+static struct PPToken *match_header_name(char **c) {
   char *begin, *end;
   enum HeaderNameKind kind;
 
@@ -201,7 +196,7 @@ static bool match_header_name(char **c, struct PPToken **buf) {
   } else if (**c == '"') {
     kind = Q_CHAR_SEQUENCE;
   } else {
-    return false;
+    return NULL;
   }
 
   (*c) += 1;
@@ -214,21 +209,20 @@ static bool match_header_name(char **c, struct PPToken **buf) {
 
   if ((kind == H_CHAR_SEQUENCE && **c != '>') ||
       (kind == Q_CHAR_SEQUENCE && **c != '"')) {
-    return false;
+    return NULL;
   }
   end = *c;
   ++(*c);
 
-  *buf = new_pp_token(PP_HEADER_NAME,
+  return new_pp_token(PP_HEADER_NAME,
                       new_header_name("foobar2000", 0, 0, kind, begin, end));
-  return true;
 }
 
-static bool match_identifier(char **c, struct PPToken **buf) {
+static struct PPToken *match_identifier(char **c) {
   char *begin = *c, *end;
 
   if (!is_nondigit(**c)) {
-    return false;
+    return NULL;
   }
 
   do {
@@ -237,12 +231,11 @@ static bool match_identifier(char **c, struct PPToken **buf) {
   } while (is_nondigit(**c) || is_digit(**c));
   end = *c;
 
-  *buf = new_pp_token(PP_IDENTIFIER,
+  return new_pp_token(PP_IDENTIFIER,
                       new_identifier("foobar2000", 0, 0, begin, end));
-  return true;
 }
 
-static bool match_pp_number(char **c, struct PPToken **buf) {
+static struct PPToken *match_pp_number(char **c) {
   char *begin = *c, *end;
 
   if (is_digit((*c)[0])) {
@@ -250,7 +243,7 @@ static bool match_pp_number(char **c, struct PPToken **buf) {
   } else if (((*c)[0] == '.') && is_digit((*c)[1])) {
     (*c) += 2;
   } else {
-    return false;
+    return NULL;
   }
 
   // TODO handle universal-character-name
@@ -267,11 +260,10 @@ static bool match_pp_number(char **c, struct PPToken **buf) {
   }
   end = *c;
 
-  *buf = new_pp_token(PP_NUMBER, new_pp_number("foobar2000", 0, 0, begin, end));
-  return true;
+  return new_pp_token(PP_NUMBER, new_pp_number("foobar2000", 0, 0, begin, end));
 }
 
-static bool match_character_constant(char **c, struct PPToken **buf) {
+static struct PPToken *match_character_constant(char **c) {
   enum CharacterConstantPrefix prefix;
   char *begin, *end;
 
@@ -289,7 +281,7 @@ static bool match_character_constant(char **c, struct PPToken **buf) {
   }
 
   if (**c != '\'') {
-    return false;
+    return NULL;
   }
   ++(*c);
   begin = *c;
@@ -302,13 +294,12 @@ static bool match_character_constant(char **c, struct PPToken **buf) {
   end = *c;
   ++(*c);
 
-  *buf = new_pp_token(
+  return new_pp_token(
       PP_CHARACTER_CONSTANT,
       new_character_constant("foobar2000", 0, 0, prefix, begin, end));
-  return true;
 }
 
-static bool match_string_literal(char **c, struct PPToken **buf) {
+static struct PPToken *match_string_literal(char **c) {
   enum StringLiteralPrefix prefix;
   char *begin, *end;
 
@@ -331,7 +322,7 @@ static bool match_string_literal(char **c, struct PPToken **buf) {
   }
 
   if (**c != '"') {
-    return false;
+    return NULL;
   }
   ++(*c);
 
@@ -342,13 +333,12 @@ static bool match_string_literal(char **c, struct PPToken **buf) {
   end = *c;
   ++(*c);
 
-  *buf =
-      new_pp_token(PP_STRING_LITERAL,
-                   new_string_literal("foobar2000", 0, 0, prefix, begin, end));
-  return true;
+  return new_pp_token(
+      PP_STRING_LITERAL,
+      new_string_literal("foobar2000", 0, 0, prefix, begin, end));
 }
 
-static bool match_punctuator(char **c, struct PPToken **buf) {
+static struct PPToken *match_punctuator(char **c) {
   enum Punctuator punctuator;
 
   if (starts_with(*c, "%:%:")) {
@@ -522,16 +512,14 @@ static bool match_punctuator(char **c, struct PPToken **buf) {
   }
 
   else {
-    return false;
+    return NULL;
   }
 
-  *buf = new_pp_token(PP_PUNCTUATOR, (void *)punctuator); // FIXME DANGEROUS
-  return true;
+  return new_pp_token(PP_PUNCTUATOR, (void *)punctuator); // FIXME DANGEROUS
 }
 
-static bool match_nwsc(char **c, struct PPToken **buf) {
-  *buf = new_pp_token(PP_NWSC, (void *)(long)**c); // FIXME OBVIOUSLY DANGEROUS
-  return true;
+static struct PPToken *match_nwsc(char **c) {
+  return new_pp_token(PP_NWSC, (void *)(long)**c); // FIXME OBVIOUSLY DANGEROUS
 }
 
 static bool is_include_directive(struct PPToken *one_before_last,
