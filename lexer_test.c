@@ -128,183 +128,187 @@ TEST test_tokenize(void) {
 }
 
 TEST test_match_header_name_q(void) {
-  struct PPToken buf;
+  struct PPToken *buf;
   char *src = "\"hello.h\"";
 
   ASSERT(match_header_name(&src, &buf));
-  ASSERT_ENUM_EQ(PP_HEADER_NAME, buf.kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(Q_CHAR_SEQUENCE, buf.header_name->kind, header_name_kind_str);
-  ASSERT_STR_EQ("hello.h", buf.header_name->value);
+  ASSERT_ENUM_EQ(PP_HEADER_NAME, buf->kind, pp_token_kind_str);
+  ASSERT_ENUM_EQ(Q_CHAR_SEQUENCE, buf->header_name->kind, header_name_kind_str);
+  ASSERT_STR_EQ("hello.h", buf->header_name->value);
   ASSERT_EQ(*src, '\0');
 
   PASS();
 }
 
 TEST test_match_header_name_h(void) {
-  struct PPToken buf;
+  struct PPToken *buf;
   char *src = "<stdio.h>";
 
   ASSERT(match_header_name(&src, &buf));
-  ASSERT_ENUM_EQ(PP_HEADER_NAME, buf.kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(H_CHAR_SEQUENCE, buf.kind, header_name_kind_str);
-  ASSERT_STR_EQ("stdio.h", buf.header_name->value);
+  ASSERT_ENUM_EQ(PP_HEADER_NAME, buf->kind, pp_token_kind_str);
+  ASSERT_ENUM_EQ(H_CHAR_SEQUENCE, buf->kind, header_name_kind_str);
+  ASSERT_STR_EQ("stdio.h", buf->header_name->value);
   ASSERT_EQ(*src, '\0');
 
   PASS();
 }
 
 TEST test_match_identifier(void) {
-  struct PPToken buf;
+  struct PPToken *buf;
   char *src = "foobar2000";
 
   ASSERT(match_identifier(&src, &buf));
-  ASSERT_ENUM_EQ(PP_IDENTIFIER, buf.kind, pp_token_kind_str);
-  ASSERT_STR_EQ("foobar2000", buf.identifier->value);
+  ASSERT_ENUM_EQ(PP_IDENTIFIER, buf->kind, pp_token_kind_str);
+  ASSERT_STR_EQ("foobar2000", buf->identifier->value);
   ASSERT_EQ(*src, '\0');
 
   PASS();
 }
 
 TEST test_match_pp_number(void) {
-  struct PPToken buf;
+  struct PPToken *buf;
   char *src = ".01ae+E-p+P-.";
 
   ASSERT(match_pp_number(&src, &buf));
-  ASSERT_ENUM_EQ(PP_NUMBER, buf.kind, pp_token_kind_str);
-  ASSERT_STR_EQ(".01ae+E-p+P-.", buf.number->value);
+  ASSERT_ENUM_EQ(PP_NUMBER, buf->kind, pp_token_kind_str);
+  ASSERT_STR_EQ(".01ae+E-p+P-.", buf->number->value);
   ASSERT_EQ(*src, '\0');
 
   PASS();
 }
 
 TEST test_match_character_constant(void) {
-  struct PPToken buf;
+  struct PPToken *buf;
   char *src = "'foobar2000'";
 
   ASSERT(match_character_constant(&src, &buf));
-  ASSERT_ENUM_EQ(PP_CHARACTER_CONSTANT, buf.kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(CHARACTER_CONSTANT_PREFIX_NONE, buf.character_constant->prefix,
+  ASSERT_ENUM_EQ(PP_CHARACTER_CONSTANT, buf->kind, pp_token_kind_str);
+  ASSERT_ENUM_EQ(CHARACTER_CONSTANT_PREFIX_NONE,
+                 buf->character_constant->prefix,
                  character_constant_prefix_str);
-  ASSERT_STR_EQ("foobar2000", buf.character_constant->value);
+  ASSERT_STR_EQ("foobar2000", buf->character_constant->value);
   ASSERT_EQ(*src, '\0');
 
   PASS();
 }
 
 TEST test_match_character_constant_wchar(void) {
-  struct PPToken buf;
+  struct PPToken *buf;
   char *src = "L'foobar2000'";
 
   ASSERT(match_character_constant(&src, &buf));
-  ASSERT_ENUM_EQ(PP_CHARACTER_CONSTANT, buf.kind, pp_token_kind_str);
+  ASSERT_ENUM_EQ(PP_CHARACTER_CONSTANT, buf->kind, pp_token_kind_str);
   ASSERT_ENUM_EQ(CHARACTER_CONSTANT_PREFIX_WCHAR,
-                 buf.character_constant->prefix, character_constant_prefix_str);
-  ASSERT_STR_EQ("foobar2000", buf.character_constant->value);
+                 buf->character_constant->prefix,
+                 character_constant_prefix_str);
+  ASSERT_STR_EQ("foobar2000", buf->character_constant->value);
   ASSERT_EQ(*src, '\0');
 
   PASS();
 }
 
 TEST test_match_character_constant_char16(void) {
-  struct PPToken buf;
+  struct PPToken *buf;
   char *src = "u'foobar2000'";
 
   ASSERT(match_character_constant(&src, &buf));
-  ASSERT_ENUM_EQ(PP_CHARACTER_CONSTANT, buf.kind, pp_token_kind_str);
+  ASSERT_ENUM_EQ(PP_CHARACTER_CONSTANT, buf->kind, pp_token_kind_str);
   ASSERT_ENUM_EQ(CHARACTER_CONSTANT_PREFIX_CHAR16,
-                 buf.character_constant->prefix, character_constant_prefix_str);
-  ASSERT_STR_EQ("foobar2000", buf.character_constant->value);
+                 buf->character_constant->prefix,
+                 character_constant_prefix_str);
+  ASSERT_STR_EQ("foobar2000", buf->character_constant->value);
   ASSERT_EQ(*src, '\0');
 
   PASS();
 }
 
 TEST test_match_character_constant_char32(void) {
-  struct PPToken buf;
+  struct PPToken *buf;
   char *src = "U'foobar2000'";
 
   ASSERT(match_character_constant(&src, &buf));
-  ASSERT_ENUM_EQ(PP_CHARACTER_CONSTANT, buf.kind, pp_token_kind_str);
+  ASSERT_ENUM_EQ(PP_CHARACTER_CONSTANT, buf->kind, pp_token_kind_str);
   ASSERT_ENUM_EQ(CHARACTER_CONSTANT_PREFIX_CHAR32,
-                 buf.character_constant->prefix, character_constant_prefix_str);
-  ASSERT_STR_EQ("foobar2000", buf.character_constant->value);
+                 buf->character_constant->prefix,
+                 character_constant_prefix_str);
+  ASSERT_STR_EQ("foobar2000", buf->character_constant->value);
   ASSERT_EQ(*src, '\0');
 
   PASS();
 }
 
 TEST test_match_string_literal(void) {
-  struct PPToken buf;
+  struct PPToken *buf;
   char *src = "\"foobar2000\"";
 
   ASSERT(match_string_literal(&src, &buf));
-  ASSERT_ENUM_EQ(PP_STRING_LITERAL, buf.kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(STRING_LITERAL_PREFIX_NONE, buf.string_literal->prefix,
+  ASSERT_ENUM_EQ(PP_STRING_LITERAL, buf->kind, pp_token_kind_str);
+  ASSERT_ENUM_EQ(STRING_LITERAL_PREFIX_NONE, buf->string_literal->prefix,
                  string_literal_prefix_str);
-  ASSERT_STR_EQ("foobar2000", buf.string_literal->value);
+  ASSERT_STR_EQ("foobar2000", buf->string_literal->value);
   ASSERT_EQ(*src, '\0');
 
   PASS();
 }
 
 TEST test_match_string_literal_utf8(void) {
-  struct PPToken buf;
+  struct PPToken *buf;
   char *src = "u8\"foobar2000\"";
 
   ASSERT(match_string_literal(&src, &buf));
-  ASSERT_ENUM_EQ(PP_STRING_LITERAL, buf.kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(STRING_LITERAL_PREFIX_UTF8, buf.string_literal->prefix,
+  ASSERT_ENUM_EQ(PP_STRING_LITERAL, buf->kind, pp_token_kind_str);
+  ASSERT_ENUM_EQ(STRING_LITERAL_PREFIX_UTF8, buf->string_literal->prefix,
                  string_literal_prefix_str);
-  ASSERT_STR_EQ("foobar2000", buf.string_literal->value);
+  ASSERT_STR_EQ("foobar2000", buf->string_literal->value);
   ASSERT_EQ(*src, '\0');
 
   PASS();
 }
 
 TEST test_match_string_literal_char16(void) {
-  struct PPToken buf;
+  struct PPToken *buf;
   char *src = "u\"foobar2000\"";
 
   ASSERT(match_string_literal(&src, &buf));
-  ASSERT_ENUM_EQ(PP_STRING_LITERAL, buf.kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(STRING_LITERAL_PREFIX_CHAR16, buf.string_literal->prefix,
+  ASSERT_ENUM_EQ(PP_STRING_LITERAL, buf->kind, pp_token_kind_str);
+  ASSERT_ENUM_EQ(STRING_LITERAL_PREFIX_CHAR16, buf->string_literal->prefix,
                  string_literal_prefix_str);
-  ASSERT_STR_EQ("foobar2000", buf.string_literal->value);
+  ASSERT_STR_EQ("foobar2000", buf->string_literal->value);
   ASSERT_EQ(*src, '\0');
 
   PASS();
 }
 
 TEST test_match_string_literal_char32(void) {
-  struct PPToken buf;
+  struct PPToken *buf;
   char *src = "U\"foobar2000\"";
 
   ASSERT(match_string_literal(&src, &buf));
-  ASSERT_ENUM_EQ(PP_STRING_LITERAL, buf.kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(STRING_LITERAL_PREFIX_CHAR32, buf.string_literal->prefix,
+  ASSERT_ENUM_EQ(PP_STRING_LITERAL, buf->kind, pp_token_kind_str);
+  ASSERT_ENUM_EQ(STRING_LITERAL_PREFIX_CHAR32, buf->string_literal->prefix,
                  string_literal_prefix_str);
-  ASSERT_STR_EQ("foobar2000", buf.string_literal->value);
+  ASSERT_STR_EQ("foobar2000", buf->string_literal->value);
   ASSERT_EQ(*src, '\0');
 
   PASS();
 }
 
 TEST test_match_string_literal_wchar(void) {
-  struct PPToken buf;
+  struct PPToken *buf;
   char *src = "L\"foobar2000\"";
 
   ASSERT(match_string_literal(&src, &buf));
-  ASSERT_ENUM_EQ(PP_STRING_LITERAL, buf.kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(STRING_LITERAL_PREFIX_WCHAR, buf.string_literal->prefix,
+  ASSERT_ENUM_EQ(PP_STRING_LITERAL, buf->kind, pp_token_kind_str);
+  ASSERT_ENUM_EQ(STRING_LITERAL_PREFIX_WCHAR, buf->string_literal->prefix,
                  string_literal_prefix_str);
-  ASSERT_STR_EQ("foobar2000", buf.string_literal->value);
+  ASSERT_STR_EQ("foobar2000", buf->string_literal->value);
   ASSERT_EQ(*src, '\0');
 
   PASS();
 }
 
 TEST test_match_punctuator(void) {
-  struct PPToken buf;
+  struct PPToken *buf;
   struct {
     char *src;
     enum Punctuator expected;
@@ -367,8 +371,8 @@ TEST test_match_punctuator(void) {
 
   for (size_t i = 0; i < sizeof(cases) / sizeof(cases[i]); ++i) {
     ASSERT(match_punctuator(&cases[i].src, &buf));
-    ASSERT_ENUM_EQ(PP_PUNCTUATOR, buf.kind, pp_token_kind_str);
-    ASSERT_ENUM_EQ(cases[i].expected, buf.punctuator, punctuator_str);
+    ASSERT_ENUM_EQ(PP_PUNCTUATOR, buf->kind, pp_token_kind_str);
+    ASSERT_ENUM_EQ(cases[i].expected, buf->punctuator, punctuator_str);
     ASSERT_EQ(*cases[i].src, '\0');
   }
 

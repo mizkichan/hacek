@@ -1,6 +1,6 @@
-#include "defs.h"
 #include "error.h"
 #include "token.h"
+#include "utils.h"
 
 const char *pp_token_kind_str(int x) {
   switch ((enum PPTokenKind)x) {
@@ -284,6 +284,100 @@ const char *punctuator_str(int x) {
     return "DIGRAPH_DOUBLE_SIGN";
   }
   ERROR("unknown enum variant: %d", x);
+}
+
+struct HeaderName *new_header_name(const char *file, size_t line, size_t column,
+                                   enum HeaderNameKind kind, const char *begin,
+                                   const char *end) {
+  struct HeaderName *result =
+      MALLOC(sizeof(struct HeaderName) + (size_t)(end - begin) + 1);
+  result->pos.file = clone_str(file, NULL);
+  result->pos.line = line;
+  result->pos.column = column;
+  result->kind = kind;
+  copy_str(result->value, begin, end);
+  return result;
+}
+
+struct Identifier *new_identifier(const char *file, size_t line, size_t column,
+                                  const char *begin, const char *end) {
+  struct Identifier *result =
+      MALLOC(sizeof(struct Identifier) + (size_t)(end - begin) + 1);
+  result->pos.file = clone_str(file, NULL);
+  result->pos.line = line;
+  result->pos.column = column;
+  copy_str(result->value, begin, end);
+  return result;
+}
+
+struct PPNumber *new_pp_number(const char *file, size_t line, size_t column,
+                               const char *begin, const char *end) {
+  struct PPNumber *result =
+      MALLOC(sizeof(struct PPNumber) + (size_t)(end - begin) + 1);
+  result->pos.file = clone_str(file, NULL);
+  result->pos.line = line;
+  result->pos.column = column;
+  copy_str(result->value, begin, end);
+  return result;
+}
+
+struct CharacterConstant *
+new_character_constant(const char *file, size_t line, size_t column,
+                       enum CharacterConstantPrefix prefix, const char *begin,
+                       const char *end) {
+  struct CharacterConstant *result =
+      MALLOC(sizeof(struct CharacterConstant) + (size_t)(end - begin) + 1);
+  result->pos.file = clone_str(file, NULL);
+  result->pos.line = line;
+  result->pos.column = column;
+  result->prefix = prefix;
+  copy_str(result->value, begin, end);
+  return result;
+}
+
+struct StringLiteral *new_string_literal(const char *file, size_t line,
+                                         size_t column,
+                                         enum StringLiteralPrefix prefix,
+                                         const char *begin, const char *end) {
+  struct StringLiteral *result =
+      MALLOC(sizeof(struct StringLiteral) + (size_t)(end - begin) + 1);
+  result->pos.file = clone_str(file, NULL);
+  result->pos.line = line;
+  result->pos.column = column;
+  result->prefix = prefix;
+  copy_str(result->value, begin, end);
+  return result;
+}
+
+struct PPToken *new_pp_token(enum PPTokenKind kind, void *value) {
+  struct PPToken *result = MALLOC(sizeof(struct PPToken));
+
+  result->kind = kind;
+  switch (kind) {
+  case PP_HEADER_NAME:
+    result->header_name = value;
+    break;
+  case PP_IDENTIFIER:
+    result->identifier = value;
+    break;
+  case PP_NUMBER:
+    result->number = value;
+    break;
+  case PP_CHARACTER_CONSTANT:
+    result->character_constant = value;
+    break;
+  case PP_STRING_LITERAL:
+    result->string_literal = value;
+    break;
+  case PP_PUNCTUATOR:
+    result->punctuator = (enum Punctuator)value; // FIXME APPARENTLY DANGEROUS
+    break;
+  case PP_NWSC:
+    result->nwsc = (char)value; // FIXME APPARENTLY DANGEROUS
+    break;
+  }
+
+  return result;
 }
 
 // vim: set ft=c ts=2 sw=2 et:

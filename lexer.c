@@ -1,22 +1,24 @@
 #include "defs.h"
 #include "error.h"
 #include "lexer.h"
+#include "token.h"
 #include "utils.h"
 #include <ctype.h>
 
 static void match_white_space_characters(char **) __attribute__((nonnull));
-static bool match_header_name(char **, struct PPToken *)
+static bool match_header_name(char **, struct PPToken **)
     __attribute__((nonnull));
-static bool match_identifier(char **, struct PPToken *)
+static bool match_identifier(char **, struct PPToken **)
     __attribute__((nonnull));
-static bool match_pp_number(char **, struct PPToken *) __attribute__((nonnull));
-static bool match_character_constant(char **, struct PPToken *)
+static bool match_pp_number(char **, struct PPToken **)
     __attribute__((nonnull));
-static bool match_string_literal(char **, struct PPToken *)
+static bool match_character_constant(char **, struct PPToken **)
     __attribute__((nonnull));
-static bool match_punctuator(char **, struct PPToken *)
+static bool match_string_literal(char **, struct PPToken **)
     __attribute__((nonnull));
-static bool match_nwsc(char **, struct PPToken *) __attribute__((nonnull));
+static bool match_punctuator(char **, struct PPToken **)
+    __attribute__((nonnull));
+static bool match_nwsc(char **, struct PPToken **) __attribute__((nonnull));
 static bool is_include_directive(struct PPToken *,
                                  struct PPToken *); // params can be null
 static bool is_nondigit(char) __attribute__((const));
@@ -118,33 +120,32 @@ struct PPTokenLine **tokenize(struct Line **lines) {
     size_t pp_tokens_count = 0;
     struct PPToken **pp_tokens = NULL;
     struct PPToken *last = NULL, *one_before_last = NULL;
-    struct PPToken *buf;
+    struct PPToken *token;
     char *line = lines[i]->value;
 
     match_white_space_characters(&line);
 
     while (*line) {
-      buf = MALLOC(sizeof(struct PPToken));
       PANIC_IF(!(
           // header-name
           (is_include_directive(one_before_last, last) &&
-           match_header_name(&line, buf)) ||
+           match_header_name(&line, &token)) ||
           // identifier
-          match_identifier(&line, buf) ||
+          match_identifier(&line, &token) ||
           // pp-number
-          match_pp_number(&line, buf) ||
+          match_pp_number(&line, &token) ||
           // character-constant
-          match_character_constant(&line, buf) ||
+          match_character_constant(&line, &token) ||
           // string-literal
-          match_string_literal(&line, buf) ||
+          match_string_literal(&line, &token) ||
           // punctuator
-          match_punctuator(&line, buf) ||
+          match_punctuator(&line, &token) ||
           // "each non-white-space character that cannot be one of the above"
-          match_nwsc(&line, buf) ||
+          match_nwsc(&line, &token) ||
           //
           false));
 
-      PUSH_BACK(struct PPToken *, pp_tokens, pp_tokens_count, buf);
+      PUSH_BACK(struct PPToken *, pp_tokens, pp_tokens_count, token);
       one_before_last = last;
       last = pp_tokens[pp_tokens_count - 1];
 
@@ -191,7 +192,7 @@ static void match_white_space_characters(char **c) {
   } while (was_there_whitespace);
 }
 
-static bool match_header_name(char **c, struct PPToken *buf) {
+static bool match_header_name(char **c, struct PPToken **buf) {
   char *begin, *end;
   enum HeaderNameKind kind;
 
@@ -218,15 +219,12 @@ static bool match_header_name(char **c, struct PPToken *buf) {
   end = *c;
   ++(*c);
 
-  buf->kind = PP_HEADER_NAME;
-  buf->header_name =
-      MALLOC(sizeof(struct HeaderName) + (size_t)(end - begin) + 1);
-  buf->header_name->kind = kind;
-  copy_str(buf->header_name->value, begin, end);
+  *buf = new_pp_token(PP_HEADER_NAME,
+                      new_header_name("foobar2000", 0, 0, kind, begin, end));
   return true;
 }
 
-static bool match_identifier(char **c, struct PPToken *buf) {
+static bool match_identifier(char **c, struct PPToken **buf) {
   char *begin = *c, *end;
 
   if (!is_nondigit(**c)) {
@@ -239,14 +237,12 @@ static bool match_identifier(char **c, struct PPToken *buf) {
   } while (is_nondigit(**c) || is_digit(**c));
   end = *c;
 
-  buf->kind = PP_IDENTIFIER;
-  buf->identifier =
-      MALLOC(sizeof(struct Identifier) + (size_t)(end - begin) + 1);
-  copy_str(buf->identifier->value, begin, end);
+  *buf = new_pp_token(PP_IDENTIFIER,
+                      new_identifier("foobar2000", 0, 0, begin, end));
   return true;
 }
 
-static bool match_pp_number(char **c, struct PPToken *buf) {
+static bool match_pp_number(char **c, struct PPToken **buf) {
   char *begin = *c, *end;
 
   if (is_digit((*c)[0])) {
@@ -271,13 +267,11 @@ static bool match_pp_number(char **c, struct PPToken *buf) {
   }
   end = *c;
 
-  buf->kind = PP_NUMBER;
-  buf->number = MALLOC(sizeof(struct PPNumber) + (size_t)(end - begin) + 1);
-  copy_str(buf->number->value, begin, end);
+  *buf = new_pp_token(PP_NUMBER, new_pp_number("foobar2000", 0, 0, begin, end));
   return true;
 }
 
-static bool match_character_constant(char **c, struct PPToken *buf) {
+static bool match_character_constant(char **c, struct PPToken **buf) {
   enum CharacterConstantPrefix prefix;
   char *begin, *end;
 
@@ -308,15 +302,13 @@ static bool match_character_constant(char **c, struct PPToken *buf) {
   end = *c;
   ++(*c);
 
-  buf->kind = PP_CHARACTER_CONSTANT;
-  buf->character_constant =
-      MALLOC(sizeof(struct CharacterConstant) + (size_t)(end - begin) + 1);
-  buf->character_constant->prefix = prefix;
-  copy_str(buf->character_constant->value, begin, end);
+  *buf = new_pp_token(
+      PP_CHARACTER_CONSTANT,
+      new_character_constant("foobar2000", 0, 0, prefix, begin, end));
   return true;
 }
 
-static bool match_string_literal(char **c, struct PPToken *buf) {
+static bool match_string_literal(char **c, struct PPToken **buf) {
   enum StringLiteralPrefix prefix;
   char *begin, *end;
 
@@ -350,182 +342,182 @@ static bool match_string_literal(char **c, struct PPToken *buf) {
   end = *c;
   ++(*c);
 
-  buf->kind = PP_STRING_LITERAL;
-  buf->string_literal =
-      MALLOC(sizeof(struct StringLiteral) + (size_t)(end - begin) + 1);
-  buf->string_literal->prefix = prefix;
-  copy_str(buf->string_literal->value, begin, end);
+  *buf =
+      new_pp_token(PP_STRING_LITERAL,
+                   new_string_literal("foobar2000", 0, 0, prefix, begin, end));
   return true;
 }
 
-static bool match_punctuator(char **c, struct PPToken *buf) {
+static bool match_punctuator(char **c, struct PPToken **buf) {
+  enum Punctuator punctuator;
+
   if (starts_with(*c, "%:%:")) {
-    buf->punctuator = DIGRAPH_DOUBLE_SIGN;
+    punctuator = DIGRAPH_DOUBLE_SIGN;
     (*c) += 4;
   }
 
   else if (starts_with(*c, "...")) {
-    buf->punctuator = ELLIPSE;
+    punctuator = ELLIPSE;
     (*c) += 3;
   } else if (starts_with(*c, "<<=")) {
-    buf->punctuator = LEFT_SHIFT_ASSIGN;
+    punctuator = LEFT_SHIFT_ASSIGN;
     (*c) += 3;
   } else if (starts_with(*c, ">>=")) {
-    buf->punctuator = RIGHT_SHIFT_ASSIGN;
+    punctuator = RIGHT_SHIFT_ASSIGN;
     (*c) += 3;
   }
 
   else if (starts_with(*c, "->")) {
-    buf->punctuator = ARROW;
+    punctuator = ARROW;
     (*c) += 2;
   } else if (starts_with(*c, "++")) {
-    buf->punctuator = INCREMENT;
+    punctuator = INCREMENT;
     (*c) += 2;
   } else if (starts_with(*c, "--")) {
-    buf->punctuator = DECREMENT;
+    punctuator = DECREMENT;
     (*c) += 2;
   } else if (starts_with(*c, "<<")) {
-    buf->punctuator = LEFT_SHIFT;
+    punctuator = LEFT_SHIFT;
     (*c) += 2;
   } else if (starts_with(*c, ">>")) {
-    buf->punctuator = RIGHT_SHIFT;
+    punctuator = RIGHT_SHIFT;
     (*c) += 2;
   } else if (starts_with(*c, "<=")) {
-    buf->punctuator = LESS_EQUAL;
+    punctuator = LESS_EQUAL;
     (*c) += 2;
   } else if (starts_with(*c, ">=")) {
-    buf->punctuator = GREATER_EQUAL;
+    punctuator = GREATER_EQUAL;
     (*c) += 2;
   } else if (starts_with(*c, "==")) {
-    buf->punctuator = EQUAL;
+    punctuator = EQUAL;
     (*c) += 2;
   } else if (starts_with(*c, "!=")) {
-    buf->punctuator = NOT_EQUAL;
+    punctuator = NOT_EQUAL;
     (*c) += 2;
   } else if (starts_with(*c, "&&")) {
-    buf->punctuator = LOGICAL_AND;
+    punctuator = LOGICAL_AND;
     (*c) += 2;
   } else if (starts_with(*c, "||")) {
-    buf->punctuator = LOGICAL_OR;
+    punctuator = LOGICAL_OR;
     (*c) += 2;
   } else if (starts_with(*c, "*=")) {
-    buf->punctuator = MULTIPLY_ASSIGN;
+    punctuator = MULTIPLY_ASSIGN;
     (*c) += 2;
   } else if (starts_with(*c, "/=")) {
-    buf->punctuator = DIVIDE_ASSIGN;
+    punctuator = DIVIDE_ASSIGN;
     (*c) += 2;
   } else if (starts_with(*c, "%=")) {
-    buf->punctuator = REMIND_ASSIGN;
+    punctuator = REMIND_ASSIGN;
     (*c) += 2;
   } else if (starts_with(*c, "+=")) {
-    buf->punctuator = ADD_ASSIGN;
+    punctuator = ADD_ASSIGN;
     (*c) += 2;
   } else if (starts_with(*c, "-=")) {
-    buf->punctuator = SUBTRACT_ASSIGN;
+    punctuator = SUBTRACT_ASSIGN;
     (*c) += 2;
   } else if (starts_with(*c, "&=")) {
-    buf->punctuator = AND_ASSIGN;
+    punctuator = AND_ASSIGN;
     (*c) += 2;
   } else if (starts_with(*c, "^=")) {
-    buf->punctuator = EXCLUSIVE_OR_ASSIGN;
+    punctuator = EXCLUSIVE_OR_ASSIGN;
     (*c) += 2;
   } else if (starts_with(*c, "|=")) {
-    buf->punctuator = INCLUSIVE_OR_ASSIGN;
+    punctuator = INCLUSIVE_OR_ASSIGN;
     (*c) += 2;
   } else if (starts_with(*c, "##")) {
-    buf->punctuator = DOUBLE_SIGN;
+    punctuator = DOUBLE_SIGN;
     (*c) += 2;
   } else if (starts_with(*c, "<:")) {
-    buf->punctuator = DIGRAPH_LEFT_BRACKET;
+    punctuator = DIGRAPH_LEFT_BRACKET;
     (*c) += 2;
   } else if (starts_with(*c, ":>")) {
-    buf->punctuator = DIGRAPH_RIGHT_BRACKET;
+    punctuator = DIGRAPH_RIGHT_BRACKET;
     (*c) += 2;
   } else if (starts_with(*c, "<%")) {
-    buf->punctuator = DIGRAPH_LEFT_BRACE;
+    punctuator = DIGRAPH_LEFT_BRACE;
     (*c) += 2;
   } else if (starts_with(*c, "%>")) {
-    buf->punctuator = DIGRAPH_RIGHT_BRACE;
+    punctuator = DIGRAPH_RIGHT_BRACE;
     (*c) += 2;
   } else if (starts_with(*c, "%:")) {
-    buf->punctuator = DIGRAPH_SIGN;
+    punctuator = DIGRAPH_SIGN;
     (*c) += 2;
   }
 
   else if (starts_with(*c, "[")) {
-    buf->punctuator = LEFT_BRACKET;
+    punctuator = LEFT_BRACKET;
     (*c) += 1;
   } else if (starts_with(*c, "]")) {
-    buf->punctuator = RIGHT_BRACKET;
+    punctuator = RIGHT_BRACKET;
     (*c) += 1;
   } else if (starts_with(*c, "(")) {
-    buf->punctuator = LEFT_PAREN;
+    punctuator = LEFT_PAREN;
     (*c) += 1;
   } else if (starts_with(*c, ")")) {
-    buf->punctuator = RIGHT_PAREN;
+    punctuator = RIGHT_PAREN;
     (*c) += 1;
   } else if (starts_with(*c, "{")) {
-    buf->punctuator = LEFT_BRACE;
+    punctuator = LEFT_BRACE;
     (*c) += 1;
   } else if (starts_with(*c, "}")) {
-    buf->punctuator = RIGHT_BRACE;
+    punctuator = RIGHT_BRACE;
     (*c) += 1;
   } else if (starts_with(*c, ".")) {
-    buf->punctuator = DOT;
+    punctuator = DOT;
     (*c) += 1;
   } else if (starts_with(*c, "&")) {
-    buf->punctuator = AMPASAND;
+    punctuator = AMPASAND;
     (*c) += 1;
   } else if (starts_with(*c, "*")) {
-    buf->punctuator = ASTERISK;
+    punctuator = ASTERISK;
     (*c) += 1;
   } else if (starts_with(*c, "+")) {
-    buf->punctuator = PLUS;
+    punctuator = PLUS;
     (*c) += 1;
   } else if (starts_with(*c, "-")) {
-    buf->punctuator = MINUS;
+    punctuator = MINUS;
     (*c) += 1;
   } else if (starts_with(*c, "~")) {
-    buf->punctuator = NEGATE;
+    punctuator = NEGATE;
     (*c) += 1;
   } else if (starts_with(*c, "!")) {
-    buf->punctuator = EXCLAMATION;
+    punctuator = EXCLAMATION;
     (*c) += 1;
   } else if (starts_with(*c, "/")) {
-    buf->punctuator = DIVIDE;
+    punctuator = DIVIDE;
     (*c) += 1;
   } else if (starts_with(*c, "%")) {
-    buf->punctuator = REMIND;
+    punctuator = REMIND;
     (*c) += 1;
   } else if (starts_with(*c, "<")) {
-    buf->punctuator = LESS_THAN;
+    punctuator = LESS_THAN;
     (*c) += 1;
   } else if (starts_with(*c, ">")) {
-    buf->punctuator = GREATER_THAN;
+    punctuator = GREATER_THAN;
     (*c) += 1;
   } else if (starts_with(*c, "^")) {
-    buf->punctuator = EXCLUSIVE_OR;
+    punctuator = EXCLUSIVE_OR;
     (*c) += 1;
   } else if (starts_with(*c, "|")) {
-    buf->punctuator = INCLUSIVE_OR;
+    punctuator = INCLUSIVE_OR;
     (*c) += 1;
   } else if (starts_with(*c, "?")) {
-    buf->punctuator = QUESTION;
+    punctuator = QUESTION;
     (*c) += 1;
   } else if (starts_with(*c, ":")) {
-    buf->punctuator = COLON;
+    punctuator = COLON;
     (*c) += 1;
   } else if (starts_with(*c, ";")) {
-    buf->punctuator = SEMICOLON;
+    punctuator = SEMICOLON;
     (*c) += 1;
   } else if (starts_with(*c, "=")) {
-    buf->punctuator = ASSIGN;
+    punctuator = ASSIGN;
     (*c) += 1;
   } else if (starts_with(*c, ",")) {
-    buf->punctuator = COMMA;
+    punctuator = COMMA;
     (*c) += 1;
   } else if (starts_with(*c, "#")) {
-    buf->punctuator = SIGN;
+    punctuator = SIGN;
     (*c) += 1;
   }
 
@@ -533,13 +525,12 @@ static bool match_punctuator(char **c, struct PPToken *buf) {
     return false;
   }
 
-  buf->kind = PP_PUNCTUATOR;
+  *buf = new_pp_token(PP_PUNCTUATOR, (void *)punctuator); // FIXME DANGEROUS
   return true;
 }
 
-static bool match_nwsc(char **c, struct PPToken *buf) {
-  buf->kind = PP_NWSC;
-  buf->nwsc = **c;
+static bool match_nwsc(char **c, struct PPToken **buf) {
+  *buf = new_pp_token(PP_NWSC, (void *)(long)**c); // FIXME OBVIOUSLY DANGEROUS
   return true;
 }
 
