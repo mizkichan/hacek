@@ -178,7 +178,6 @@ struct PPToken {
     PP_CHARACTER_CONSTANT,
     PP_STRING_LITERAL,
     PP_PUNCTUATOR,
-    PP_NWSC,
   } kind;
   union {
     struct HeaderName *header_name;
@@ -187,7 +186,6 @@ struct PPToken {
     struct CharacterConstant *character_constant;
     struct StringLiteral *string_literal;
     struct Punctuator *punctuator;
-    char *nwsc;
   };
 };
 

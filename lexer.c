@@ -13,7 +13,6 @@ static struct PPToken *match_character_constant(char **)
     __attribute__((nonnull));
 static struct PPToken *match_string_literal(char **) __attribute__((nonnull));
 static struct PPToken *match_punctuator(char **) __attribute__((nonnull));
-static struct PPToken *match_nwsc(char **) __attribute__((nonnull));
 static bool is_include_directive(struct PPToken *,
                                  struct PPToken *); // params can be null
 static bool is_nondigit(char) __attribute__((const));
@@ -135,8 +134,6 @@ struct PPTokenLine **tokenize(struct Line **lines) {
           (token = match_string_literal(&line)) ||
           // punctuator
           (token = match_punctuator(&line)) ||
-          // "each non-white-space character that cannot be one of the above"
-          (token = match_nwsc(&line)) ||
           //
           false));
 
@@ -516,10 +513,6 @@ static struct PPToken *match_punctuator(char **c) {
   }
 
   return new_pp_token(PP_PUNCTUATOR, new_punctuator("foobar2000", 0, 0, kind));
-}
-
-static struct PPToken *match_nwsc(char **c) {
-  return new_pp_token(PP_NWSC, *c);
 }
 
 static bool is_include_directive(struct PPToken *one_before_last,

@@ -16,8 +16,6 @@ const char *pp_token_kind_str(int x) {
     return "PP_STRING_LITERAL";
   case PP_PUNCTUATOR:
     return "PP_PUNCTUATOR";
-  case PP_NWSC:
-    return "PP_NWSC";
   }
   ERROR("unknown enum variant: %d", x);
 }
@@ -381,9 +379,6 @@ struct PPToken *new_pp_token(enum PPTokenKind kind, void *value) {
     break;
   case PP_PUNCTUATOR:
     result->punctuator = value;
-    break;
-  case PP_NWSC:
-    result->nwsc = value;
     break;
   }
 
