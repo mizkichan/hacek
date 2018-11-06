@@ -339,175 +339,175 @@ static struct PPToken *match_string_literal(char **c) {
 }
 
 static struct PPToken *match_punctuator(char **c) {
-  enum Punctuator punctuator;
+  enum PunctuatorKind kind;
 
   if (starts_with(*c, "%:%:")) {
-    punctuator = DIGRAPH_DOUBLE_SIGN;
+    kind = DIGRAPH_DOUBLE_SIGN;
     (*c) += 4;
   }
 
   else if (starts_with(*c, "...")) {
-    punctuator = ELLIPSE;
+    kind = ELLIPSE;
     (*c) += 3;
   } else if (starts_with(*c, "<<=")) {
-    punctuator = LEFT_SHIFT_ASSIGN;
+    kind = LEFT_SHIFT_ASSIGN;
     (*c) += 3;
   } else if (starts_with(*c, ">>=")) {
-    punctuator = RIGHT_SHIFT_ASSIGN;
+    kind = RIGHT_SHIFT_ASSIGN;
     (*c) += 3;
   }
 
   else if (starts_with(*c, "->")) {
-    punctuator = ARROW;
+    kind = ARROW;
     (*c) += 2;
   } else if (starts_with(*c, "++")) {
-    punctuator = INCREMENT;
+    kind = INCREMENT;
     (*c) += 2;
   } else if (starts_with(*c, "--")) {
-    punctuator = DECREMENT;
+    kind = DECREMENT;
     (*c) += 2;
   } else if (starts_with(*c, "<<")) {
-    punctuator = LEFT_SHIFT;
+    kind = LEFT_SHIFT;
     (*c) += 2;
   } else if (starts_with(*c, ">>")) {
-    punctuator = RIGHT_SHIFT;
+    kind = RIGHT_SHIFT;
     (*c) += 2;
   } else if (starts_with(*c, "<=")) {
-    punctuator = LESS_EQUAL;
+    kind = LESS_EQUAL;
     (*c) += 2;
   } else if (starts_with(*c, ">=")) {
-    punctuator = GREATER_EQUAL;
+    kind = GREATER_EQUAL;
     (*c) += 2;
   } else if (starts_with(*c, "==")) {
-    punctuator = EQUAL;
+    kind = EQUAL;
     (*c) += 2;
   } else if (starts_with(*c, "!=")) {
-    punctuator = NOT_EQUAL;
+    kind = NOT_EQUAL;
     (*c) += 2;
   } else if (starts_with(*c, "&&")) {
-    punctuator = LOGICAL_AND;
+    kind = LOGICAL_AND;
     (*c) += 2;
   } else if (starts_with(*c, "||")) {
-    punctuator = LOGICAL_OR;
+    kind = LOGICAL_OR;
     (*c) += 2;
   } else if (starts_with(*c, "*=")) {
-    punctuator = MULTIPLY_ASSIGN;
+    kind = MULTIPLY_ASSIGN;
     (*c) += 2;
   } else if (starts_with(*c, "/=")) {
-    punctuator = DIVIDE_ASSIGN;
+    kind = DIVIDE_ASSIGN;
     (*c) += 2;
   } else if (starts_with(*c, "%=")) {
-    punctuator = REMIND_ASSIGN;
+    kind = REMIND_ASSIGN;
     (*c) += 2;
   } else if (starts_with(*c, "+=")) {
-    punctuator = ADD_ASSIGN;
+    kind = ADD_ASSIGN;
     (*c) += 2;
   } else if (starts_with(*c, "-=")) {
-    punctuator = SUBTRACT_ASSIGN;
+    kind = SUBTRACT_ASSIGN;
     (*c) += 2;
   } else if (starts_with(*c, "&=")) {
-    punctuator = AND_ASSIGN;
+    kind = AND_ASSIGN;
     (*c) += 2;
   } else if (starts_with(*c, "^=")) {
-    punctuator = EXCLUSIVE_OR_ASSIGN;
+    kind = EXCLUSIVE_OR_ASSIGN;
     (*c) += 2;
   } else if (starts_with(*c, "|=")) {
-    punctuator = INCLUSIVE_OR_ASSIGN;
+    kind = INCLUSIVE_OR_ASSIGN;
     (*c) += 2;
   } else if (starts_with(*c, "##")) {
-    punctuator = DOUBLE_SIGN;
+    kind = DOUBLE_SIGN;
     (*c) += 2;
   } else if (starts_with(*c, "<:")) {
-    punctuator = DIGRAPH_LEFT_BRACKET;
+    kind = DIGRAPH_LEFT_BRACKET;
     (*c) += 2;
   } else if (starts_with(*c, ":>")) {
-    punctuator = DIGRAPH_RIGHT_BRACKET;
+    kind = DIGRAPH_RIGHT_BRACKET;
     (*c) += 2;
   } else if (starts_with(*c, "<%")) {
-    punctuator = DIGRAPH_LEFT_BRACE;
+    kind = DIGRAPH_LEFT_BRACE;
     (*c) += 2;
   } else if (starts_with(*c, "%>")) {
-    punctuator = DIGRAPH_RIGHT_BRACE;
+    kind = DIGRAPH_RIGHT_BRACE;
     (*c) += 2;
   } else if (starts_with(*c, "%:")) {
-    punctuator = DIGRAPH_SIGN;
+    kind = DIGRAPH_SIGN;
     (*c) += 2;
   }
 
   else if (starts_with(*c, "[")) {
-    punctuator = LEFT_BRACKET;
+    kind = LEFT_BRACKET;
     (*c) += 1;
   } else if (starts_with(*c, "]")) {
-    punctuator = RIGHT_BRACKET;
+    kind = RIGHT_BRACKET;
     (*c) += 1;
   } else if (starts_with(*c, "(")) {
-    punctuator = LEFT_PAREN;
+    kind = LEFT_PAREN;
     (*c) += 1;
   } else if (starts_with(*c, ")")) {
-    punctuator = RIGHT_PAREN;
+    kind = RIGHT_PAREN;
     (*c) += 1;
   } else if (starts_with(*c, "{")) {
-    punctuator = LEFT_BRACE;
+    kind = LEFT_BRACE;
     (*c) += 1;
   } else if (starts_with(*c, "}")) {
-    punctuator = RIGHT_BRACE;
+    kind = RIGHT_BRACE;
     (*c) += 1;
   } else if (starts_with(*c, ".")) {
-    punctuator = DOT;
+    kind = DOT;
     (*c) += 1;
   } else if (starts_with(*c, "&")) {
-    punctuator = AMPASAND;
+    kind = AMPASAND;
     (*c) += 1;
   } else if (starts_with(*c, "*")) {
-    punctuator = ASTERISK;
+    kind = ASTERISK;
     (*c) += 1;
   } else if (starts_with(*c, "+")) {
-    punctuator = PLUS;
+    kind = PLUS;
     (*c) += 1;
   } else if (starts_with(*c, "-")) {
-    punctuator = MINUS;
+    kind = MINUS;
     (*c) += 1;
   } else if (starts_with(*c, "~")) {
-    punctuator = NEGATE;
+    kind = NEGATE;
     (*c) += 1;
   } else if (starts_with(*c, "!")) {
-    punctuator = EXCLAMATION;
+    kind = EXCLAMATION;
     (*c) += 1;
   } else if (starts_with(*c, "/")) {
-    punctuator = DIVIDE;
+    kind = DIVIDE;
     (*c) += 1;
   } else if (starts_with(*c, "%")) {
-    punctuator = REMIND;
+    kind = REMIND;
     (*c) += 1;
   } else if (starts_with(*c, "<")) {
-    punctuator = LESS_THAN;
+    kind = LESS_THAN;
     (*c) += 1;
   } else if (starts_with(*c, ">")) {
-    punctuator = GREATER_THAN;
+    kind = GREATER_THAN;
     (*c) += 1;
   } else if (starts_with(*c, "^")) {
-    punctuator = EXCLUSIVE_OR;
+    kind = EXCLUSIVE_OR;
     (*c) += 1;
   } else if (starts_with(*c, "|")) {
-    punctuator = INCLUSIVE_OR;
+    kind = INCLUSIVE_OR;
     (*c) += 1;
   } else if (starts_with(*c, "?")) {
-    punctuator = QUESTION;
+    kind = QUESTION;
     (*c) += 1;
   } else if (starts_with(*c, ":")) {
-    punctuator = COLON;
+    kind = COLON;
     (*c) += 1;
   } else if (starts_with(*c, ";")) {
-    punctuator = SEMICOLON;
+    kind = SEMICOLON;
     (*c) += 1;
   } else if (starts_with(*c, "=")) {
-    punctuator = ASSIGN;
+    kind = ASSIGN;
     (*c) += 1;
   } else if (starts_with(*c, ",")) {
-    punctuator = COMMA;
+    kind = COMMA;
     (*c) += 1;
   } else if (starts_with(*c, "#")) {
-    punctuator = SIGN;
+    kind = SIGN;
     (*c) += 1;
   }
 
@@ -515,17 +515,18 @@ static struct PPToken *match_punctuator(char **c) {
     return NULL;
   }
 
-  return new_pp_token(PP_PUNCTUATOR, (void *)punctuator); // FIXME DANGEROUS
+  return new_pp_token(PP_PUNCTUATOR, new_punctuator("foobar2000", 0, 0, kind));
 }
 
 static struct PPToken *match_nwsc(char **c) {
-  return new_pp_token(PP_NWSC, (void *)(long)**c); // FIXME OBVIOUSLY DANGEROUS
+  return new_pp_token(PP_NWSC, *c);
 }
 
 static bool is_include_directive(struct PPToken *one_before_last,
                                  struct PPToken *last) {
   return one_before_last && last && one_before_last->kind == PP_PUNCTUATOR &&
-         one_before_last->punctuator == SIGN && last->kind == PP_IDENTIFIER &&
+         one_before_last->punctuator->kind == SIGN &&
+         last->kind == PP_IDENTIFIER &&
          str_equals("include", last->identifier->value, NULL);
 }
 

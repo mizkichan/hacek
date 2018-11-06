@@ -14,7 +14,7 @@ void execute_pp_directives(struct PPTokenLine **pp_token_lines) {
     for (size_t j = 0; pp_token_lines[i]->pp_tokens[j]; ++j) {
       struct PPToken *pp_token = pp_token_lines[i]->pp_tokens[j];
       ERROR_IF(pp_token->kind == PP_PUNCTUATOR &&
-                   (pp_token->punctuator == SIGN),
+                   (pp_token->punctuator->kind == SIGN),
                "Not implemented yet");
     }
   }

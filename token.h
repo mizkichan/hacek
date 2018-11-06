@@ -7,7 +7,7 @@ const char *character_constant_prefix_str(int);
 const char *header_name_kind_str(int);
 const char *keyword_str(int);
 const char *pp_token_kind_str(int);
-const char *punctuator_str(int);
+const char *punctuator_kind_str(int);
 const char *string_literal_prefix_str(int);
 const char *token_kind_str(int);
 
@@ -27,6 +27,9 @@ struct CharacterConstant *new_character_constant(const char *, size_t, size_t,
 struct StringLiteral *new_string_literal(const char *, size_t, size_t,
                                          enum StringLiteralPrefix, const char *,
                                          const char *)
+    __attribute__((returns_nonnull));
+struct Punctuator *new_punctuator(const char *, size_t, size_t,
+                                  enum PunctuatorKind)
     __attribute__((returns_nonnull));
 struct PPToken *new_pp_token(enum PPTokenKind, void *)
     __attribute__((returns_nonnull));

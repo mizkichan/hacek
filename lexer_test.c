@@ -116,7 +116,7 @@ TEST test_tokenize(void) {
 
   ASSERT(pp_tokens[2] != NULL);
   ASSERT_ENUM_EQ(PP_PUNCTUATOR, pp_tokens[2]->kind, pp_token_kind_str);
-  ASSERT_ENUM_EQ(PLUS, pp_tokens[2]->punctuator, punctuator_str);
+  ASSERT_ENUM_EQ(PLUS, pp_tokens[2]->punctuator->kind, punctuator_kind_str);
 
   ASSERT(pp_tokens[3] != NULL);
   ASSERT_ENUM_EQ(PP_NUMBER, pp_tokens[3]->kind, pp_token_kind_str);
@@ -324,7 +324,7 @@ TEST test_match_punctuator(void) {
   struct PPToken *buf;
   struct {
     char *src;
-    enum Punctuator expected;
+    enum PunctuatorKind expected;
   } cases[54] = {
       {"[", LEFT_BRACKET},
       {"]", RIGHT_BRACKET},
@@ -386,7 +386,8 @@ TEST test_match_punctuator(void) {
     buf = match_punctuator(&cases[i].src);
     ASSERT(buf != NULL);
     ASSERT_ENUM_EQ(PP_PUNCTUATOR, buf->kind, pp_token_kind_str);
-    ASSERT_ENUM_EQ(cases[i].expected, buf->punctuator, punctuator_str);
+    ASSERT_ENUM_EQ(cases[i].expected, buf->punctuator->kind,
+                   punctuator_kind_str);
     ASSERT_EQ(*cases[i].src, '\0');
   }
 

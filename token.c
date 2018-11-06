@@ -172,8 +172,8 @@ const char *token_kind_str(int x) {
   ERROR("unknown enum variant: %d", x);
 }
 
-const char *punctuator_str(int x) {
-  switch ((enum Punctuator)x) {
+const char *punctuator_kind_str(int x) {
+  switch ((enum PunctuatorKind)x) {
   case LEFT_BRACKET:
     return "LEFT_BRACKET";
   case RIGHT_BRACKET:
@@ -349,6 +349,16 @@ struct StringLiteral *new_string_literal(const char *file, size_t line,
   return result;
 }
 
+struct Punctuator *new_punctuator(const char *file, size_t line, size_t column,
+                                  enum PunctuatorKind kind) {
+  struct Punctuator *result = MALLOC(sizeof(struct Punctuator));
+  result->pos.file = clone_str(file, NULL);
+  result->pos.line = line;
+  result->pos.column = column;
+  result->kind = kind;
+  return result;
+}
+
 struct PPToken *new_pp_token(enum PPTokenKind kind, void *value) {
   struct PPToken *result = MALLOC(sizeof(struct PPToken));
 
@@ -370,10 +380,10 @@ struct PPToken *new_pp_token(enum PPTokenKind kind, void *value) {
     result->string_literal = value;
     break;
   case PP_PUNCTUATOR:
-    result->punctuator = (enum Punctuator)value; // FIXME APPARENTLY DANGEROUS
+    result->punctuator = value;
     break;
   case PP_NWSC:
-    result->nwsc = (char)value; // FIXME APPARENTLY DANGEROUS
+    result->nwsc = value;
     break;
   }
 
