@@ -13,6 +13,20 @@ TEST_SRCS = test.c lexer_test.c preprocessor_test.c utils_test.c \
 TEST_OBJS = $(TEST_SRCS:.c=.o)
 TEST_DEPS = $(TEST_SRCS:.c=.d)
 
+.PHONY: help
+help:
+	@echo 'Targets:'
+	@echo '  all       - Build all targets'
+	@echo '  check     - Run tests'
+	@echo '  clean     - Remove generated files'
+	@echo '  help      - Display this information'
+	@echo
+	@echo 'Variables:'
+	@echo '  CC        = $(CC)'
+	@echo '  CFLAGS    = $(CFLAGS)'
+	@echo '  CPPFLAGS  = $(CPPFLAGS)'
+	@echo '  LDFLAGS   = $(LDFLAGS)'
+
 .PHONY: all
 all: $(PROGRAMS)
 
