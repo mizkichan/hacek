@@ -13,11 +13,14 @@ TEST_SRCS = test.c lexer_test.c preprocessor_test.c utils_test.c \
 TEST_OBJS = $(TEST_SRCS:.c=.o)
 TEST_DEPS = $(TEST_SRCS:.c=.d)
 
+DOXYGEN_DIR = html
+
 .PHONY: help
 help:
 	@echo 'Targets:'
 	@echo '  all       - Build all targets'
 	@echo '  check     - Run tests'
+	@echo '  html      - Generate documents'
 	@echo '  clean     - Remove generated files'
 	@echo '  help      - Display this information'
 	@echo
@@ -34,15 +37,22 @@ all: $(PROGRAMS)
 check: $(TESTS)
 	./$<
 
+.PHONY: html
+html: $(DOXYGEN_DIR)
+
 .PHONY: clean
 clean:
 	$(RM) $(PROGRAMS) $(PROGRAM_OBJS) $(PROGRAM_DEPS)
 	$(RM) $(TESTS) $(TEST_OBJS) $(TEST_DEPS)
+	$(RM) $(DOXYGEN_DIR)
 
 $(PROGRAMS): CPPFLAGS += -DDEBUG
 $(PROGRAMS): $(PROGRAM_OBJS)
 
 $(TESTS): $(TEST_OBJS)
+
+$(DOXYGEN_DIR):
+	doxygen
 
 %.o: %.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c -MMD -MP -o $@ $<
