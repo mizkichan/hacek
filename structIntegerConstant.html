@@ -89,24 +89,61 @@ $(document).ready(function(){initNavTree('structIntegerConstant.html','');});
 
 <div class="header">
   <div class="summary">
+<a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-attribs">Data Fields</a>  </div>
   <div class="headertitle">
 <div class="title">IntegerConstant Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
+Public Types</h2></td></tr>
+<tr class="memitem:a147c6f22313b4defb87f1eabc67c5b55"><td class="memItemLeft" align="right" valign="top"><a id="a147c6f22313b4defb87f1eabc67c5b55"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><b>IntegerConstantType</b> { <br />
+&#160;&#160;<b>INTEGER_CONSTANT_INT</b>, 
+<b>INTEGER_CONSTANT_UINT</b>, 
+<b>INTEGER_CONSTANT_LONG</b>, 
+<b>INTEGER_CONSTANT_ULONG</b>, 
+<br />
+&#160;&#160;<b>INTEGER_CONSTANT_LLONG</b>, 
+<b>INTEGER_CONSTANT_ULLONG</b>
+<br />
+ }</td></tr>
+<tr class="separator:a147c6f22313b4defb87f1eabc67c5b55"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
 <tr class="memitem:aaaca1f5838dea7e341477e1a5ee87094"><td class="memItemLeft" align="right" valign="top"><a id="aaaca1f5838dea7e341477e1a5ee87094"></a>
 struct <a class="el" href="structPosition.html">Position</a>&#160;</td><td class="memItemRight" valign="bottom"><b>pos</b></td></tr>
 <tr class="separator:aaaca1f5838dea7e341477e1a5ee87094"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a20ca3ad82d733317185ad63768c56587"><td class="memItemLeft" align="right" valign="top"><a id="a20ca3ad82d733317185ad63768c56587"></a>
-uintmax_t&#160;</td><td class="memItemRight" valign="bottom"><b>value</b></td></tr>
-<tr class="separator:a20ca3ad82d733317185ad63768c56587"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae0e3e958c5df6f000b580a32d4c89f54"><td class="memItemLeft" align="right" valign="top"><a id="ae0e3e958c5df6f000b580a32d4c89f54"></a>
+enum IntegerConstant::IntegerConstantType&#160;</td><td class="memItemRight" valign="bottom"><b>type</b></td></tr>
+<tr class="separator:ae0e3e958c5df6f000b580a32d4c89f54"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3092594ec3cb90d28afcf98f1ef2ae97"><td class="memItemLeft" ><a id="a3092594ec3cb90d28afcf98f1ef2ae97"></a>
+union {</td></tr>
+<tr class="memitem:a7ea7d40ed765de16b32cb4518e7d1fc7"><td class="memItemLeft" >
+&#160;&#160;&#160;int&#160;&#160;&#160;<b>value_int</b></td></tr>
+<tr class="separator:a7ea7d40ed765de16b32cb4518e7d1fc7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaaa5a4d148eed6540f1f1e88b5ddad6b"><td class="memItemLeft" >
+&#160;&#160;&#160;unsigned int&#160;&#160;&#160;<b>value_uint</b></td></tr>
+<tr class="separator:aaaa5a4d148eed6540f1f1e88b5ddad6b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad08a9ac0c5ed10f79a430eaa475a3712"><td class="memItemLeft" >
+&#160;&#160;&#160;long&#160;&#160;&#160;<b>value_long</b></td></tr>
+<tr class="separator:ad08a9ac0c5ed10f79a430eaa475a3712"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a759b7c1d24193e6f9edaca22f39d1ecf"><td class="memItemLeft" >
+&#160;&#160;&#160;unsigned long&#160;&#160;&#160;<b>value_ulong</b></td></tr>
+<tr class="separator:a759b7c1d24193e6f9edaca22f39d1ecf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad8f9f1665d2f7eb024ecf72a32ae6885"><td class="memItemLeft" >
+&#160;&#160;&#160;long long&#160;&#160;&#160;<b>value_llong</b></td></tr>
+<tr class="separator:ad8f9f1665d2f7eb024ecf72a32ae6885"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae4aa5620e60758ce778c9691237b02a6"><td class="memItemLeft" >
+&#160;&#160;&#160;unsigned long long&#160;&#160;&#160;<b>value_ullong</b></td></tr>
+<tr class="separator:ae4aa5620e60758ce778c9691237b02a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3092594ec3cb90d28afcf98f1ef2ae97"><td class="memItemLeft" valign="top">};&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
+<tr class="separator:a3092594ec3cb90d28afcf98f1ef2ae97"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock">
-<p class="definition">Definition at line <a class="el" href="defs_8h_source.html#l00059">59</a> of file <a class="el" href="defs_8h_source.html">defs.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="defs_8h_source.html#l00061">61</a> of file <a class="el" href="defs_8h_source.html">defs.h</a>.</p>
 </div><hr/>The documentation for this struct was generated from the following file:<ul>
 <li><a class="el" href="defs_8h_source.html">defs.h</a></li>
 </ul>
@@ -116,7 +153,7 @@ uintmax_t&#160;</td><td class="memItemRight" valign="bottom"><b>value</b></td></
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="structIntegerConstant.html">IntegerConstant</a></li>
-    <li class="footer">Generated on Thu Nov 8 2018 16:00:35 for haček by
+    <li class="footer">Generated on Thu Nov 8 2018 18:35:01 for haček by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.13 </li>
   </ul>
