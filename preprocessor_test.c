@@ -75,10 +75,9 @@ TEST test_convert_pp_number(void) {
 TEST test_match_decimal_constant(void) {
   const char *str = "42";
   uintmax_t result;
-  const char *const begin = str;
 
   ASSERT(match_decimal_constant(&str, &result));
-  ASSERT_EQ(begin + 2, str);
+  ASSERT_EQ('\0', *str);
   ASSERT_EQ(42, result);
   PASS();
 }
