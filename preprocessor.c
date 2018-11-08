@@ -4,6 +4,7 @@
 #include "preprocessor.h"
 #include "utils.h"
 #include <ctype.h>
+#include <limits.h>
 
 static void unescape(char *) __attribute__((nonnull));
 static bool str_to_keyword(const char *, const char *, enum Keyword *)
@@ -11,6 +12,8 @@ static bool str_to_keyword(const char *, const char *, enum Keyword *)
 static struct Token *convert_pp_identifier(struct Identifier *)
     __attribute__((nonnull));
 static struct Token *convert_pp_number(struct PPNumber *)
+    __attribute__((nonnull));
+static bool match_decimal_constant(const char **, uintmax_t *)
     __attribute__((nonnull));
 
 void execute_pp_directives(struct PPTokenLine **pp_token_lines) {
@@ -113,7 +116,6 @@ struct Token **convert_pp_tokens_into_tokens(struct PPToken **pp_tokens) {
       buf->punctuator = (*pp_tokens)->punctuator;
       break;
 
-    case PP_NWSC:
     case PP_HEADER_NAME:
       PANIC();
     }
@@ -287,26 +289,51 @@ static struct Token *convert_pp_identifier(struct Identifier *identifier) {
 
 static struct Token *convert_pp_number(struct PPNumber *pp_number) {
   struct Token *result = MALLOC(sizeof(struct Token));
-
+  uintmax_t value;
+  const char *token_str = pp_number->value;
   result->kind = TOKEN_CONSTANT;
   result->constant = MALLOC(sizeof(struct Constant));
 
-  // I think the code below should be moved into another function
-  if (match_decimal_constant(pp_number->value)) {
+  if (match_decimal_constant(&token_str, &value)) {
+    struct IntegerConstant *integer_constant =
+        MALLOC(sizeof(struct IntegerConstant));
+
+    if (value <= INT_MAX) {
+      integer_constant->value_int = (int)value;
+      integer_constant->type = INTEGER_CONSTANT_INT;
+    } else if (value <= LONG_MAX) {
+      integer_constant->value_long = (long)value;
+      integer_constant->type = INTEGER_CONSTANT_LONG;
+    } else if (value <= LLONG_MAX) {
+      integer_constant->value_llong = (long long)value;
+      integer_constant->type = INTEGER_CONSTANT_LLONG;
+    } else {
+      PANIC();
+    }
+
+    PANIC_IF(*token_str != '\0');
+
     result->constant->kind = INTEGER_CONSTANT;
-    result->constant->integer_constant = MALLOC(sizeof(struct IntegerConstant));
-    result->constant->integer_constant->value = /* FIXME */;
-  } else if (match_octal_constant(pp_number->value)) {
-    result->constant->kind = INTEGER_CONSTANT;
-    result->constant->integer_constant = MALLOC(sizeof(struct IntegerConstant));
-    result->constant->integer_constant->value = /* FIXME */;
-  } else if (match_hexdecimal_constant(pp_number->value)) {
-    result->constant->kind = INTEGER_CONSTANT;
-    result->constant->integer_constant = MALLOC(sizeof(struct IntegerConstant));
-    result->constant->integer_constant->value = /* FIXME */;
-  } else {
-    PANIC();
+    result->constant->integer_constant = integer_constant;
+    return result;
   }
+
+  PANIC();
+}
+
+static bool match_decimal_constant(const char **c, uintmax_t *buf) {
+  if (**c < '1' || '9' < **c) {
+    return false;
+  }
+  *buf = (uintmax_t)(**c - '0');
+  ++(*c);
+
+  while ('0' <= **c && **c <= '9') {
+    *buf = *buf * 10 + ((uintmax_t)(**c) - '0');
+    ++(*c);
+  }
+
+  return true;
 }
 
 // vim: set ft=c ts=2 sw=2 et:

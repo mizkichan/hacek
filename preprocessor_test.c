@@ -51,12 +51,43 @@ TEST test_concatenate_adjacent_string_literals(void) {
 }
 
 TEST test_convert_pp_identifier(void) {}
-TEST test_convert_pp_number(void) {}
+
+TEST test_convert_pp_number(void) {
+  char *str = "42";
+  struct PPNumber *pp_number =
+      new_pp_number("foobar2000.c", 0, 0, str, str + 2);
+  struct Token *result = convert_pp_number(pp_number);
+
+  ASSERT(result != NULL);
+  ASSERT_ENUM_EQ(result->kind, TOKEN_CONSTANT, token_kind_str);
+
+  ASSERT(result->constant != NULL);
+  ASSERT_ENUM_EQ(result->constant->kind, INTEGER_CONSTANT, constant_kind_str);
+
+  ASSERT(result->constant->integer_constant != NULL);
+  ASSERT_ENUM_EQ(result->constant->integer_constant->type, INTEGER_CONSTANT_INT,
+                 integer_constant_type_str);
+
+  ASSERT_EQ(result->constant->integer_constant->value_int, 42);
+  PASS();
+}
+
+TEST test_match_decimal_constant(void) {
+  const char *str = "42";
+  uintmax_t result;
+  const char *const begin = str;
+
+  ASSERT(match_decimal_constant(&str, &result));
+  ASSERT_EQ(begin + 2, str);
+  ASSERT_EQ(42, result);
+  PASS();
+}
 
 SUITE(preprocessor) {
   RUN_TEST(test_unescape);
   RUN_TEST(test_concatenate_pp_token_lines);
   RUN_TEST(test_concatenate_adjacent_string_literals);
+  RUN_TEST(test_match_decimal_constant);
   RUN_TEST(test_convert_pp_identifier);
   RUN_TEST(test_convert_pp_number);
 }

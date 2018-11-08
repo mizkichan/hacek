@@ -1,7 +1,9 @@
 #ifndef DEFS_H
 #define DEFS_H
 
+#include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 struct Position {
   char *file;
@@ -58,7 +60,22 @@ enum Keyword {
 
 struct IntegerConstant {
   struct Position pos;
-  uintmax_t value;
+  enum IntegerConstantType {
+    INTEGER_CONSTANT_INT,
+    INTEGER_CONSTANT_UINT,
+    INTEGER_CONSTANT_LONG,
+    INTEGER_CONSTANT_ULONG,
+    INTEGER_CONSTANT_LLONG,
+    INTEGER_CONSTANT_ULLONG,
+  } type;
+  union {
+    int value_int;
+    unsigned int value_uint;
+    long value_long;
+    unsigned long value_ulong;
+    long long value_llong;
+    unsigned long long value_ullong;
+  };
 };
 
 struct Constant {

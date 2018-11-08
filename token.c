@@ -284,6 +284,38 @@ const char *punctuator_kind_str(int x) {
   ERROR("unknown enum variant: %d", x);
 }
 
+const char *constant_kind_str(int x) {
+  switch ((enum ConstantKind)x) {
+  case INTEGER_CONSTANT:
+    return "INTEGER_CONSTANT";
+  case FLOATING_CONSTANT:
+    return "FLOATING_CONSTANT";
+  case ENUMERATION_CONSTANT:
+    return "ENUMERATION_CONSTANT";
+  case CHARACTER_CONSTANT:
+    return "CHARACTER_CONSTANT";
+  }
+  ERROR("unknown enum variant: %d", x);
+}
+
+const char *integer_constant_type_str(int x) {
+  switch ((enum IntegerConstantType)x) {
+  case INTEGER_CONSTANT_INT:
+    return "INTEGER_CONSTANT_INT";
+  case INTEGER_CONSTANT_UINT:
+    return "INTEGER_CONSTANT_UINT";
+  case INTEGER_CONSTANT_LONG:
+    return "INTEGER_CONSTANT_LONG";
+  case INTEGER_CONSTANT_ULONG:
+    return "INTEGER_CONSTANT_ULONG";
+  case INTEGER_CONSTANT_LLONG:
+    return "INTEGER_CONSTANT_LLONG";
+  case INTEGER_CONSTANT_ULLONG:
+    return "INTEGER_CONSTANT_ULLONG";
+  }
+  ERROR("unknown enum variant: %d", x);
+}
+
 struct HeaderName *new_header_name(const char *file, size_t line, size_t column,
                                    enum HeaderNameKind kind, const char *begin,
                                    const char *end) {

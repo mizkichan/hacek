@@ -10,6 +10,8 @@ const char *pp_token_kind_str(int);
 const char *punctuator_kind_str(int);
 const char *string_literal_prefix_str(int);
 const char *token_kind_str(int);
+const char *constant_kind_str(int);
+const char *integer_constant_type_str(int);
 
 struct HeaderName *new_header_name(const char *, size_t, size_t,
                                    enum HeaderNameKind, const char *,
