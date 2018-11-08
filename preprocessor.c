@@ -123,6 +123,8 @@ struct Token **convert_pp_tokens_into_tokens(struct PPToken **pp_tokens) {
     if (buf) {
       PUSH_BACK(struct Token *, result, count, buf);
     }
+
+    ++pp_tokens;
   }
 
   return result;

@@ -164,7 +164,9 @@ bool parse_args(int argc, char **argv, struct Args *args) {
 int main(int argc, char **argv) {
   struct Args args;
 
+#ifdef DEBUG
   alloc_init();
+#endif
   setenv("POSIXLY_CORRECT", "", false);
 
   if (!parse_args(argc, argv, &args)) {
