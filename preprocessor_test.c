@@ -73,12 +73,18 @@ TEST test_convert_pp_number(void) {
 }
 
 TEST test_match_decimal_constant(void) {
-  const char *str = "42";
+  const char *str;
   uintmax_t result;
 
+  str = "42";
   ASSERT(match_decimal_constant(&str, &result));
   ASSERT_EQ('\0', *str);
   ASSERT_EQ(42, result);
+
+  str = "4200000000";
+  ASSERT(match_decimal_constant(&str, &result));
+  ASSERT_EQ('\0', *str);
+  ASSERT_EQ(4200000000, result);
   PASS();
 }
 
