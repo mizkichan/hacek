@@ -1,14 +1,5 @@
 var NAVTREEINDEX1 =
 {
-"structPunctuator.html#a4d988783a65af3e8fa0837c0baa7ff50ab14793440996cbeccc8019c58c15794e":[1,0,23,0,52],
-"structPunctuator.html#a4d988783a65af3e8fa0837c0baa7ff50ab8c7fdb14afde9aaa78c86250b5c41a5":[1,0,23,0,39],
-"structPunctuator.html#a4d988783a65af3e8fa0837c0baa7ff50ab9191d81f55457a48c6583ab1ede9946":[1,0,23,0,29],
-"structPunctuator.html#a4d988783a65af3e8fa0837c0baa7ff50ab9c905b34336d80d28cde00ba36b8fbe":[1,0,23,0,7],
-"structPunctuator.html#a4d988783a65af3e8fa0837c0baa7ff50ac4cb067d6a98b82aaf94ae0a322ad054":[1,0,23,0,28],
-"structPunctuator.html#a4d988783a65af3e8fa0837c0baa7ff50ac9d2ed5b313f607117d391443fffcced":[1,0,23,0,41],
-"structPunctuator.html#a4d988783a65af3e8fa0837c0baa7ff50acc77610206c6853e87c761f728fb915d":[1,0,23,0,0],
-"structPunctuator.html#a4d988783a65af3e8fa0837c0baa7ff50accb5eb734ff4c62d8888b71d4a9ee8a8":[1,0,23,0,47],
-"structPunctuator.html#a4d988783a65af3e8fa0837c0baa7ff50ace9a9fbab28557472ace27617b151798":[1,0,23,0,6],
 "structPunctuator.html#a4d988783a65af3e8fa0837c0baa7ff50ad45a639bb2c308165a2ac6ada0f8529a":[1,0,23,0,13],
 "structPunctuator.html#a4d988783a65af3e8fa0837c0baa7ff50ad5c526d8035940b1351970a0229c5682":[1,0,23,0,15],
 "structPunctuator.html#a4d988783a65af3e8fa0837c0baa7ff50ad72f18b16482a900ca0dd9ba32dc4b66":[1,0,23,0,32],
@@ -86,14 +77,10 @@ var NAVTREEINDEX1 =
 "structUnaryExpression.html#ae2eb39200c97d4b0b070d1c3412c6a5b":[1,0,28,1],
 "structUnaryExpression.html#af8f14ccdddcaf519ad26b1c0d10dfc5c":[1,0,28,3],
 "structUnaryExpression.html#afc865661f063268c4c46029ff09ac459":[1,0,28,4],
-"test_8c_source.html":[2,0,25],
-"test_8d_source.html":[2,0,26],
-"token_8c_source.html":[2,0,27],
-"token_8d_source.html":[2,0,28],
-"token_8h_source.html":[2,0,29],
-"utils_8c_source.html":[2,0,30],
-"utils_8d_source.html":[2,0,31],
-"utils_8h_source.html":[2,0,32],
-"utils__test_8c_source.html":[2,0,33],
-"utils__test_8d_source.html":[2,0,34]
+"test_8c_source.html":[2,0,16],
+"token_8c_source.html":[2,0,17],
+"token_8h_source.html":[2,0,18],
+"utils_8c_source.html":[2,0,19],
+"utils_8h_source.html":[2,0,20],
+"utils__test_8c_source.html":[2,0,21]
 };
