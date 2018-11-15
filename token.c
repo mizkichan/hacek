@@ -417,4 +417,13 @@ struct PPToken *new_pp_token(enum PPTokenKind kind, void *value) {
   return result;
 }
 
+bool compare_token_punctuator(const struct Token *token,
+                              enum PunctuatorKind kind) {
+  return token->kind == TOKEN_PUNCTUATOR && token->punctuator->kind == kind;
+}
+
+bool compare_token_keyword(const struct Token *token, enum Keyword keyword) {
+  return token->kind == TOKEN_KEYWORD && token->keyword == keyword;
+}
+
 // vim: set ft=c ts=2 sw=2 et:

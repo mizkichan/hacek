@@ -36,5 +36,10 @@ struct Punctuator *new_punctuator(const char *, size_t, size_t,
 struct PPToken *new_pp_token(enum PPTokenKind, void *)
     __attribute__((returns_nonnull));
 
+bool compare_token_punctuator(const struct Token *, enum PunctuatorKind)
+    __attribute__((nonnull));
+bool compare_token_keyword(const struct Token *, enum Keyword)
+    __attribute__((nonnull));
+
 #endif
 // vim: set ft=c ts=2 sw=2 et:

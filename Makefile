@@ -9,7 +9,7 @@ PROGRAM_OBJS = $(PROGRAM_SRCS:.c=.o)
 PROGRAM_DEPS = $(PROGRAM_SRCS:.c=.d)
 
 TESTS = test
-TEST_SRCS = test.c lexer_test.c preprocessor_test.c utils_test.c \
+TEST_SRCS = test.c lexer_test.c preprocessor_test.c utils_test.c parser_test.c \
 	    alloc.c error.c token.c
 TEST_OBJS = $(TEST_SRCS:.c=.o)
 TEST_DEPS = $(TEST_SRCS:.c=.d)

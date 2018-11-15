@@ -238,5 +238,271 @@ struct PPTokenLine {
   struct PPToken **pp_tokens;
 };
 
+/*
+ * Phrase structures.
+ * See N2176 A.2
+ */
+
+struct PrimaryExpression {
+  enum PrimaryExpressionKind {
+    PE_IDENTIFIER,
+    PE_CONSTANT,
+    PE_STRING_LITERAL,
+    PE_EXPRESSION,
+    PE_GENERIC_SELECTION,
+  } kind;
+  union {
+    struct Identifier *identifier;
+    struct Constant *constant;
+    struct StringLiteral *string_literal;
+    struct Expression *expression;
+    struct GenericSelection *generic_selection;
+  };
+};
+
+struct GenericSelection;
+struct GenericAssocList;
+struct GenericAssociation;
+
+struct PostfixExpression {
+  enum PostfixExpressionKind {
+    POSTFIX_PRIMARY_EXPRESSION,
+    POSTFIX_ARRAY_SUBSCRIPTING,
+    POSTFIX_FUNCTION_CALL,
+    POSTFIX_MEMBER,
+    POSTFIX_POINTER_MEMBER,
+    POSTFIX_INCREMENT,
+    POSTFIX_DECREMENT,
+    POSTFIX_COMPOUND_LITERAL,
+  } kind;
+  union {
+    struct PrimaryExpression *primary_expression;
+    struct {
+      struct PostfixExpression *postfix_expression;
+      union {
+        struct Expression *expression;
+        struct ArgumentExpressionList *argument_expression_list;
+        struct Identifier *identifier;
+      };
+    };
+    struct {
+      struct TypeName *type_name;
+      struct InitializerList *initializer_list;
+    };
+  };
+};
+
+// DO NOT USE. USE `struct ArgumentExpression**` INSTEAD.
+struct ArgumentExpressionList;
+
+struct UnaryExpression {
+  enum UnaryExpressionKind {
+    UE_POSTFIX_EXPRESSION,
+    UE_INCREMENT,
+    UE_DECREMENT,
+    UE_SIZEOF_EXPRESSION,
+    UE_SIZEOF_TYPE,
+    UE_ALIGNOF,
+
+    UE_REFERENCE,
+    UE_DEREFERENCE,
+    UE_PLUS,
+    UE_MINUS,
+    UE_NEGATE,
+    UE_NOT,
+  } kind;
+  union {
+    struct PostfixExpression *postfix_expression;
+    struct UnaryExpression *unary_expression;
+    struct CastExpression *cast_expression;
+    struct TypeName *type_name;
+  };
+};
+
+struct CastExpression {
+  bool is_unary_expression : 1;
+  union {
+    struct UnaryExpression *unary_expression;
+    struct {
+      struct TypeName *type_name;
+      struct CastExpression *cast_expression;
+    };
+  };
+};
+
+struct MultiplicativeExpression {
+  enum MultiplicativeExpressionKind {
+    ME_CAST_EXPRESSION,
+    ME_MULTIPLY,
+    ME_DIVIDE,
+    ME_REMIND,
+  } kind;
+  union {
+    struct CastExpression *cast_expression;
+    struct {
+      struct MultiplicativeExpression *lhs;
+      struct CastExpression *rhs;
+    };
+  };
+};
+
+struct AdditiveExpression {
+  enum AdditiveExpressionKind {
+    AE_MULTIPLICATIVE_EXPRESSION,
+    AE_ADD,
+    AE_SUBTRACT,
+  } kind;
+  union {
+    struct MultiplicativeExpression *multiplicative_expression;
+    struct {
+      struct AdditiveExpression *lhs;
+      struct MultiplicativeExpression *rhs;
+    };
+  };
+};
+
+struct ShiftExpression {
+  enum ShiftExpressionKind {
+    SE_ADDITIVE_EXPRESSION,
+    SE_LEFT,
+    SE_RIGHT,
+  } kind;
+  union {
+    struct AdditiveExpression *additive_expression;
+    struct {
+      struct ShiftExpression *lhs;
+      struct AdditiveExpression *rhs;
+    };
+  };
+};
+
+struct RelationalExpression {
+  enum RelationalExpressionKind {
+    RE_SHIFT_EXPRESSION,
+    RE_LESS_THAN,
+    RE_GREATER_THAN,
+    RE_LESS_EQUAL,
+    RE_GREATER_EQUAL,
+  } kind;
+  union {
+    struct ShiftExpression *shift_expression;
+    struct {
+      struct RelationalExpression *lhs;
+      struct ShiftExpression *rhs;
+    };
+  };
+};
+
+struct EqualityExpression {
+  enum EqualityExpressionKind {
+    EE_RELATIONAL_EXPRESSION,
+    EE_EQUAL,
+    EE_NOT_EQUAL,
+  } kind;
+  union {
+    struct RelationalExpression *relational_expression;
+    struct {
+      struct EqualityExpression *lhs;
+      struct RelationalExpression *rhs;
+    };
+  };
+};
+
+struct ANDExpression {
+  bool is_equality_expression : 1;
+  union {
+    struct EqualityExpression *equality_expression;
+    struct {
+      struct ANDExpression *lhs;
+      struct EqualityExpression *rhs;
+    };
+  };
+};
+
+struct ExclusiveORExpression {
+  bool is_and_expression : 1;
+  union {
+    struct ANDExpression *and_expression;
+    struct {
+      struct ExclusiveORExpression *lhs;
+      struct ANDExpression *rhs;
+    };
+  };
+};
+
+struct InclusiveORExpression {
+  bool is_exclusive_or_expression : 1;
+  union {
+    struct ExclusiveORExpression *exclusive_or_expression;
+    struct {
+      struct InclusiveORExpression *lhs;
+      struct ExclusiveORExpression *rhs;
+    };
+  };
+};
+
+struct LogicalANDExpression {
+  bool is_inclusive_or_expression : 1;
+  union {
+    struct InclusiveORExpression *inclusive_or_expression;
+    struct {
+      struct LogicalANDExpression *lhs;
+      struct InclusiveORExpression *rhs;
+    };
+  };
+};
+
+struct LogicalORExpression {
+  bool is_logical_and_expression : 1;
+  union {
+    struct LogicalANDExpression *logical_and_expression;
+    struct {
+      struct LogicalORExpression *lhs;
+      struct LogicalANDExpression *rhs;
+    };
+  };
+};
+
+struct ConditionalExpression {
+  bool is_logical_or_expression : 1;
+  union {
+    struct LogicalORExpression *logical_or_expression;
+    struct {
+      struct LogicalORExpression *condition;
+      struct Expression *lhs;
+      struct ConditionalExpression *rhs;
+    };
+  };
+};
+
+struct AssignmentExpression {
+  enum AssignmentExpressionKind {
+    ASSIGNMENT_SIMPLE,
+    ASSIGNMENT_MULTIPLY,
+    ASSIGNMENT_DIVIDE,
+    ASSIGNMENT_REMIND,
+    ASSIGNMENT_ADD,
+    ASSIGNMENT_SUBTRACT,
+    ASSIGNMENT_LEFT_SHIFT,
+    ASSIGNMENT_RIGHT_SHIFT,
+    ASSIGNMENT_AND,
+    ASSIGNMENT_EXCLUSIVE_OR,
+    ASSIGNMENT_INCLUSIVE_OR,
+  } kind;
+  union {
+    struct ConditionalExpression *conditional_expression;
+    struct {
+      struct UnaryExpression *lhs;
+      struct AssignmentExpression *rhs;
+    };
+  };
+};
+
+// DO NOT USE. USE `struct AssignmentExpression**` INSTEAD.
+struct Expression;
+
+// Does this really needed?
+struct ConstantExpression;
+
 #endif
 // vim: set ft=c ts=2 sw=2 et:
