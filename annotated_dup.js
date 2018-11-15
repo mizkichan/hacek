@@ -1,16 +1,32 @@
 var annotated_dup =
 [
+    [ "AdditiveExpression", "structAdditiveExpression.html", "structAdditiveExpression" ],
+    [ "ANDExpression", "structANDExpression.html", "structANDExpression" ],
+    [ "AssignmentExpression", "structAssignmentExpression.html", "structAssignmentExpression" ],
+    [ "CastExpression", "structCastExpression.html", "structCastExpression" ],
     [ "CharacterConstant", "structCharacterConstant.html", "structCharacterConstant" ],
+    [ "ConditionalExpression", "structConditionalExpression.html", "structConditionalExpression" ],
     [ "Constant", "structConstant.html", "structConstant" ],
+    [ "EqualityExpression", "structEqualityExpression.html", "structEqualityExpression" ],
+    [ "ExclusiveORExpression", "structExclusiveORExpression.html", "structExclusiveORExpression" ],
     [ "HeaderName", "structHeaderName.html", "structHeaderName" ],
     [ "Identifier", "structIdentifier.html", "structIdentifier" ],
+    [ "InclusiveORExpression", "structInclusiveORExpression.html", "structInclusiveORExpression" ],
     [ "IntegerConstant", "structIntegerConstant.html", "structIntegerConstant" ],
     [ "Line", "structLine.html", "structLine" ],
+    [ "LogicalANDExpression", "structLogicalANDExpression.html", "structLogicalANDExpression" ],
+    [ "LogicalORExpression", "structLogicalORExpression.html", "structLogicalORExpression" ],
+    [ "MultiplicativeExpression", "structMultiplicativeExpression.html", "structMultiplicativeExpression" ],
     [ "Position", "structPosition.html", "structPosition" ],
+    [ "PostfixExpression", "structPostfixExpression.html", "structPostfixExpression" ],
     [ "PPNumber", "structPPNumber.html", "structPPNumber" ],
     [ "PPToken", "structPPToken.html", "structPPToken" ],
     [ "PPTokenLine", "structPPTokenLine.html", "structPPTokenLine" ],
+    [ "PrimaryExpression", "structPrimaryExpression.html", "structPrimaryExpression" ],
     [ "Punctuator", "structPunctuator.html", "structPunctuator" ],
+    [ "RelationalExpression", "structRelationalExpression.html", "structRelationalExpression" ],
+    [ "ShiftExpression", "structShiftExpression.html", "structShiftExpression" ],
     [ "StringLiteral", "structStringLiteral.html", "structStringLiteral" ],
-    [ "Token", "structToken.html", "structToken" ]
+    [ "Token", "structToken.html", "structToken" ],
+    [ "UnaryExpression", "structUnaryExpression.html", "structUnaryExpression" ]
 ];
